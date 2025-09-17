@@ -18,6 +18,7 @@ model Lookup {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@unique([type, value])
   @@index([type, value])
 }
 
@@ -29,7 +30,7 @@ model Ticket {
   requesterName   String?
   status          String   @default("CREATED")
   totalSlaHours   Int?
-  details         Json?
+  details         String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 

@@ -32,7 +32,7 @@ publicRouter.post('/requests', async (req: Request, res: Response) => {
       requesterName: requesterName ?? null,
       status: 'CREATED',
       totalSlaHours: targetSlaHours ?? null,
-      details: details ?? undefined,
+      details: details ? JSON.stringify(details) : null,
       stages: {
         create: [
           {

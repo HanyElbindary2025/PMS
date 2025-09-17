@@ -13,6 +13,8 @@ class PmsApp extends StatefulWidget {
 class _PmsAppState extends State<PmsApp> {
 	Future<bool> _isLoggedIn() async {
 		final sp = await SharedPreferences.getInstance();
+		// For development: uncomment the next line to force logout
+		// await sp.remove('authToken');
 		return sp.getString('authToken') != null;
 	}
 
