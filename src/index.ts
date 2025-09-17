@@ -4,6 +4,9 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import { publicRouter } from './routes/public.js';
+import { ticketsRouter } from './routes/tickets.js';
+import { sseRouter } from './routes/sse.js';
+import { startSlaTicker } from './sla.js';
 
 const app = express();
 
@@ -17,6 +20,8 @@ app.get('/health', (_req: Request, res: Response) => {
 });
 
 app.use('/public', publicRouter);
+app.use('/tickets', ticketsRouter);
+app.use('/events', sseRouter);
 
 // Global error handler
 app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
@@ -30,5 +35,7 @@ app.listen(PORT, () => {
   // eslint-disable-next-line no-console
   console.log(`Server listening on http://localhost:${PORT}`);
 });
+
+startSlaTicker();
 
 

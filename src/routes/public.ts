@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { PrismaClient } from '@prisma/client';
+import { bus } from '../events.js';
 
 export const publicRouter = Router();
 const prisma = new PrismaClient();
@@ -44,6 +45,9 @@ publicRouter.post('/requests', async (req: Request, res: Response) => {
     },
     include: { stages: true },
   });
+
+  // emit creation event
+  bus.emit('event', { type: 'ticket.created', payload: { id: ticket.id, status: ticket.status } });
 
   return res.status(201).json({ id: ticket.id, status: ticket.status });
 });

@@ -15,7 +15,7 @@ model Ticket {
   description     String
   requesterEmail  String
   requesterName   String?
-  status          TicketStatus @default(CREATED)
+  status          String   @default("CREATED")
   totalSlaHours   Int?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
@@ -28,7 +28,7 @@ model Stage {
   ticketId   String
   ticket     Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
   name       String
-  key        StageKey
+  key        String
   order      Int
   startedAt  DateTime
   dueAt      DateTime?
@@ -38,22 +38,5 @@ model Stage {
   @@index([ticketId, order])
 }
 
-enum TicketStatus {
-  CREATED
-  ANALYSIS
-  CONFIRM_DUE
-  TESTING
-  READY_DELIVERY
-  DELIVERED
-}
-
-enum StageKey {
-  CREATED
-  ANALYSIS
-  CONFIRM_DUE
-  TESTING
-  READY_DELIVERY
-  DELIVERED
-}
 
 
