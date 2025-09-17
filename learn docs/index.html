@@ -43,6 +43,9 @@
 			<label for="sla">Target SLA Hours (optional)</label>
 			<input id="sla" name="sla" type="number" min="1" max="2160" placeholder="72">
 
+			<label for="details">Details JSON (optional)</label>
+			<textarea id="details" name="details" placeholder='{"Project":"...","Priority":"..."}'></textarea>
+
 			<button id="submitBtn" type="submit">Create Request</button>
 		</form>
 
@@ -84,6 +87,10 @@
 			const payload = { title, description, requesterEmail };
 			if (requesterName) payload.requesterName = requesterName;
 			if (targetSlaHours) payload.targetSlaHours = Number(targetSlaHours);
+			const detailsRaw = document.getElementById('details').value.trim();
+			if (detailsRaw) {
+				try { payload.details = JSON.parse(detailsRaw); } catch(e) { alert('Details must be valid JSON'); throw e; }
+			}
 			return payload;
 		}
 

@@ -7,6 +7,7 @@ import { publicRouter } from './routes/public.js';
 import { ticketsRouter } from './routes/tickets.js';
 import { sseRouter } from './routes/sse.js';
 import { startSlaTicker } from './sla.js';
+import { lookupsRouter } from './routes/lookups.js';
 
 const app = express();
 
@@ -22,6 +23,7 @@ app.get('/health', (_req: Request, res: Response) => {
 app.use('/public', publicRouter);
 app.use('/tickets', ticketsRouter);
 app.use('/events', sseRouter);
+app.use('/lookups', lookupsRouter);
 
 // Global error handler
 app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {

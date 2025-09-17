@@ -9,6 +9,18 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Lookup {
+  id        String   @id @default(cuid())
+  type      String   // e.g., PROJECT, PLATFORM, CATEGORY, PRIORITY
+  value     String
+  order     Int      @default(0)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([type, value])
+}
+
 model Ticket {
   id              String   @id @default(cuid())
   title           String
@@ -17,6 +29,7 @@ model Ticket {
   requesterName   String?
   status          String   @default("CREATED")
   totalSlaHours   Int?
+  details         Json?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 

@@ -13,6 +13,7 @@ const createRequestSchema = z.object({
   requesterName: z.string().min(2).max(100).optional(),
   // optional initial SLA target in hours
   targetSlaHours: z.number().int().positive().max(24 * 90).optional(),
+  details: z.record(z.any()).optional(),
 });
 
 publicRouter.post('/requests', async (req: Request, res: Response) => {
@@ -20,7 +21,7 @@ publicRouter.post('/requests', async (req: Request, res: Response) => {
   if (!parseResult.success) {
     return res.status(400).json({ error: 'Invalid payload', details: parseResult.error.flatten() });
   }
-  const { title, description, requesterEmail, requesterName, targetSlaHours } = parseResult.data;
+  const { title, description, requesterEmail, requesterName, targetSlaHours, details } = parseResult.data;
 
   const now = new Date();
   const ticket = await prisma.ticket.create({
@@ -31,6 +32,7 @@ publicRouter.post('/requests', async (req: Request, res: Response) => {
       requesterName: requesterName ?? null,
       status: 'CREATED',
       totalSlaHours: targetSlaHours ?? null,
+      details: details ?? undefined,
       stages: {
         create: [
           {

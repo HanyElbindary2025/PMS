@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>PMS | PDS Request Form</title>
+	<style>
+		body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 24px; color: #111; background: #f8f9fa; }
+		.container { max-width: 1000px; margin: 0 auto; background: white; padding: 24px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+		.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+		.form-full { grid-column: 1 / -1; }
+		label { display: block; margin: 8px 0 4px; font-weight: 600; color: #333; }
+		input, textarea, select { width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
+		textarea { min-height: 80px; resize: vertical; }
+		select { background: white; }
+		button { margin-top: 20px; padding: 12px 24px; border: 0; border-radius: 8px; background: #1f6feb; color: #fff; font-weight: 600; cursor: pointer; font-size: 16px; }
+		button:disabled { opacity: .6; cursor: default; }
+		pre { background: #f1f3f4; padding: 12px; border-radius: 6px; overflow: auto; font-size: 13px; }
+		.required { color: #d32f2f; }
+		.section { margin: 24px 0; padding: 16px; background: #f8f9fa; border-radius: 8px; }
+		.section h3 { margin: 0 0 16px; color: #1f6feb; }
+	</style>
+</head>
+<body>
+	<div class="container">
+		<h1>PDS Request Form</h1>
+		<p>Complete all required fields to submit your request.</p>
+
+		<form id="pdsForm">
+			<div class="section">
+				<h3>Basic Information</h3>
+				<div class="form-grid">
+					<div>
+						<label for="title">Title <span class="required">*</span></label>
+						<input id="title" name="title" required placeholder="Brief description of your request">
+					</div>
+					<div>
+						<label for="project">Project <span class="required">*</span></label>
+						<select id="project" name="project" required>
+							<option value="">Select Project</option>
+							<option value="Orange">Orange</option>
+							<option value="ET">ET</option>
+							<option value="MOD">MOD</option>
+						</select>
+					</div>
+					<div>
+						<label for="platform">Platform <span class="required">*</span></label>
+						<select id="platform" name="platform" required>
+							<option value="">Select Platform</option>
+							<option value="Autin">Autin</option>
+							<option value="Tool">Tool</option>
+						</select>
+					</div>
+					<div>
+						<label for="category">Category <span class="required">*</span></label>
+						<select id="category" name="category" required>
+							<option value="">Select Category</option>
+							<option value="Issue">Issue</option>
+							<option value="Requirement">Requirement</option>
+							<option value="Change">Change</option>
+						</select>
+					</div>
+					<div>
+						<label for="priority">Priority <span class="required">*</span></label>
+						<select id="priority" name="priority" required>
+							<option value="">Select Priority</option>
+							<option value="High">High</option>
+							<option value="Medium">Medium</option>
+							<option value="Low">Low</option>
+						</select>
+					</div>
+					<div>
+						<label for="requesterEmail">Requester Email <span class="required">*</span></label>
+						<input id="requesterEmail" name="requesterEmail" type="email" required placeholder="your.email@company.com">
+					</div>
+					<div>
+						<label for="requesterName">Requester Name</label>
+						<input id="requesterName" name="requesterName" placeholder="Your full name">
+					</div>
+					<div>
+						<label for="requester">Manager/Head Requester</label>
+						<input id="requester" name="requester" placeholder="Manager who requested this">
+					</div>
+				</div>
+			</div>
+
+			<div class="section">
+				<h3>Request Details</h3>
+				<div class="form-grid">
+					<div class="form-full">
+						<label for="description">Description <span class="required">*</span></label>
+						<textarea id="description" name="description" required placeholder="Detailed description of your request"></textarea>
+					</div>
+					<div id="painPointSection" style="display: none;">
+						<label for="painPoint">Pain Point</label>
+						<textarea id="painPoint" name="painPoint" placeholder="What problem does this solve?"></textarea>
+					</div>
+					<div id="businessValueSection" style="display: none;">
+						<label for="businessValue">Business Value</label>
+						<textarea id="businessValue" name="businessValue" placeholder="What value will this provide?"></textarea>
+					</div>
+					<div id="issueDescriptionSection" style="display: none;">
+						<label for="issueDescription">Issue Description</label>
+						<textarea id="issueDescription" name="issueDescription" placeholder="Describe the issue in detail"></textarea>
+					</div>
+				</div>
+			</div>
+
+			<div class="section">
+				<h3>Assignment & Dates</h3>
+				<div class="form-grid">
+					<div>
+						<label for="flSe">FL SE</label>
+						<input id="flSe" name="flSe" placeholder="Auto-filled based on project">
+					</div>
+					<div>
+						<label for="gscSe">GSC SE</label>
+						<input id="gscSe" name="gscSe" placeholder="GSC SE">
+					</div>
+					<div>
+						<label for="startDate">Start Date</label>
+						<input id="startDate" name="startDate" type="date">
+					</div>
+					<div>
+						<label for="dueDate">Due Date</label>
+						<input id="dueDate" name="dueDate" type="date">
+					</div>
+					<div>
+						<label for="gscRrNumber">GSC RR Number</label>
+						<input id="gscRrNumber" name="gscRrNumber" placeholder="GSC RR number">
+					</div>
+					<div>
+						<label for="targetSlaHours">Target SLA Hours</label>
+						<input id="targetSlaHours" name="targetSlaHours" type="number" min="1" max="2160" placeholder="72">
+					</div>
+				</div>
+			</div>
+
+			<div class="section">
+				<h3>Additional Information</h3>
+				<div class="form-grid">
+					<div>
+						<label for="notes">Notes</label>
+						<textarea id="notes" name="notes" placeholder="Additional notes"></textarea>
+					</div>
+					<div>
+						<label for="risks">Risks</label>
+						<input id="risks" name="risks" placeholder="Potential risks">
+					</div>
+					<div>
+						<label for="flHandler">FL Handler</label>
+						<input id="flHandler" name="flHandler" placeholder="FL Handler">
+					</div>
+					<div>
+						<label for="gscHandler">GSC Handler</label>
+						<input id="gscHandler" name="gscHandler" placeholder="GSC Handler">
+					</div>
+					<div>
+						<label for="taskName">Task Name</label>
+						<input id="taskName" name="taskName" placeholder="Task name">
+					</div>
+					<div>
+						<label for="percentComplete">% Complete</label>
+						<input id="percentComplete" name="percentComplete" type="number" min="0" max="100" placeholder="0">
+					</div>
+				</div>
+			</div>
+
+			<button id="submitBtn" type="submit">Submit Request</button>
+		</form>
+
+		<h3>Result</h3>
+		<pre id="result">(Awaiting submission...)</pre>
+	</div>
+
+	<script>
+		const form = document.getElementById('pdsForm');
+		const result = document.getElementById('result');
+		const submitBtn = document.getElementById('submitBtn');
+		const categorySelect = document.getElementById('category');
+
+		// Show/hide fields based on category
+		categorySelect.addEventListener('change', () => {
+			const category = categorySelect.value;
+			document.getElementById('painPointSection').style.display = (category === 'Requirement' || category === 'Change') ? 'block' : 'none';
+			document.getElementById('businessValueSection').style.display = (category === 'Requirement' || category === 'Change') ? 'block' : 'none';
+			document.getElementById('issueDescriptionSection').style.display = category === 'Issue' ? 'block' : 'none';
+		});
+
+		form.addEventListener('submit', async (e) => {
+			e.preventDefault();
+			result.textContent = 'Submitting...';
+			submitBtn.disabled = true;
+
+			try {
+				const formData = new FormData(form);
+				const payload = {
+					title: formData.get('title'),
+					description: formData.get('description'),
+					requesterEmail: formData.get('requesterEmail'),
+					requesterName: formData.get('requesterName'),
+					targetSlaHours: formData.get('targetSlaHours') ? Number(formData.get('targetSlaHours')) : undefined,
+					details: {
+						project: formData.get('project'),
+						platform: formData.get('platform'),
+						category: formData.get('category'),
+						priority: formData.get('priority'),
+						requester: formData.get('requester'),
+						painPoint: formData.get('painPoint'),
+						businessValue: formData.get('businessValue'),
+						issueDescription: formData.get('issueDescription'),
+						flSe: formData.get('flSe'),
+						gscSe: formData.get('gscSe'),
+						startDate: formData.get('startDate'),
+						dueDate: formData.get('dueDate'),
+						gscRrNumber: formData.get('gscRrNumber'),
+						notes: formData.get('notes'),
+						risks: formData.get('risks'),
+						flHandler: formData.get('flHandler'),
+						gscHandler: formData.get('gscHandler'),
+						taskName: formData.get('taskName'),
+						percentComplete: formData.get('percentComplete') ? Number(formData.get('percentComplete')) : undefined,
+					}
+				};
+
+				const res = await fetch('http://localhost:3000/public/requests', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify(payload)
+				});
+				const text = await res.text();
+				let formatted = text;
+				try { formatted = JSON.stringify(JSON.parse(text), null, 2); } catch {}
+				result.textContent = `Status: ${res.status}\n${formatted}`;
+			} catch (err) {
+				result.textContent = 'Error: ' + (err && err.message ? err.message : String(err));
+			} finally {
+				submitBtn.disabled = false;
+			}
+		});
+	</script>
+</body>
+</html>
