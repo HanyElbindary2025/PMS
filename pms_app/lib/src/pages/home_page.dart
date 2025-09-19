@@ -4,7 +4,8 @@ import 'tickets_page.dart';
 import 'dashboard_page.dart';
 import 'user_management_page.dart';
 import 'create_request_page.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'professional_tickets_page.dart';
+import 'professional_dashboard_page.dart';
 import 'login_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -16,9 +17,16 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
 	int _selected = 0; // 0: Dashboard, 1: Create, 2: Tickets, 3: Users
-	final _pages = const [DashboardPage(), CreateRequestPage(), TicketsPage(), UserManagementPage()];
-	final _titles = const ['Dashboard', 'Create Request', 'My Tickets', 'Users'];
+	bool _useProfessionalUI = true; // Toggle between basic and professional UI
 	String _role = 'CREATOR';
+	
+	List<Widget> get _pages => _useProfessionalUI 
+		? [ProfessionalDashboardPage(), CreateRequestPage(), ProfessionalTicketsPage(), UserManagementPage()]
+		: [DashboardPage(), CreateRequestPage(), TicketsPage(), UserManagementPage()];
+	
+	List<String> get _titles => _useProfessionalUI
+		? ['Professional Dashboard', 'Create Request', 'Professional Tickets', 'Users']
+		: ['Dashboard', 'Create Request', 'My Tickets', 'Users'];
 
 	@override
 	void initState() {
@@ -42,18 +50,77 @@ class _HomePageState extends State<HomePage> {
 	@override
 	Widget build(BuildContext context) {
 		return Scaffold(
-			appBar: AppBar(title: Text(_titles[_selected])),
+			appBar: AppBar(
+				title: Text(_titles[_selected]),
+				actions: [
+					PopupMenuButton<String>(
+						onSelected: (value) {
+							if (value == 'toggle_ui') {
+								setState(() => _useProfessionalUI = !_useProfessionalUI);
+							}
+						},
+						itemBuilder: (context) => [
+							PopupMenuItem(
+								value: 'toggle_ui',
+								child: Row(
+									children: [
+										Icon(_useProfessionalUI ? Icons.toggle_on : Icons.toggle_off),
+										const SizedBox(width: 8),
+										Text(_useProfessionalUI ? 'Switch to Basic UI' : 'Switch to Professional UI'),
+									],
+								),
+							),
+						],
+						child: const Icon(Icons.settings),
+					),
+				],
+			),
 			drawer: Drawer(
 				child: SafeArea(
 					child: ListView(
 						children: [
-							const DrawerHeader(child: Text('PMS', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold))),
-						ListTile(selected: _selected == 0, leading: const Icon(Icons.dashboard_customize), title: const Text('Dashboard'), onTap: () => setState(() => _selected = 0)),
-						ListTile(selected: _selected == 1, leading: const Icon(Icons.add_box_outlined), title: const Text('Create Request'), onTap: () => setState(() => _selected = 1)),
-						ListTile(selected: _selected == 2, leading: const Icon(Icons.list_alt), title: const Text('My Tickets'), onTap: () => setState(() => _selected = 2)),
-						if (_role == 'ADMIN') ListTile(selected: _selected == 3, leading: const Icon(Icons.group), title: const Text('User Management'), onTap: () => setState(() => _selected = 3)),
+							DrawerHeader(
+								child: Column(
+									crossAxisAlignment: CrossAxisAlignment.start,
+									children: [
+										const Text('Professional PMS', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+										const SizedBox(height: 8),
+										Text('Role: $_role', style: TextStyle(color: Colors.grey.shade600)),
+										Text('UI: ${_useProfessionalUI ? 'Professional' : 'Basic'}', style: TextStyle(color: Colors.grey.shade600)),
+									],
+								),
+							),
+							ListTile(
+								selected: _selected == 0,
+								leading: const Icon(Icons.dashboard_customize),
+								title: Text(_useProfessionalUI ? 'Professional Dashboard' : 'Dashboard'),
+								onTap: () => setState(() => _selected = 0),
+							),
+							ListTile(
+								selected: _selected == 1,
+								leading: const Icon(Icons.add_box_outlined),
+								title: const Text('Create Request'),
+								onTap: () => setState(() => _selected = 1),
+							),
+							ListTile(
+								selected: _selected == 2,
+								leading: const Icon(Icons.list_alt),
+								title: Text(_useProfessionalUI ? 'Professional Tickets' : 'My Tickets'),
+								onTap: () => setState(() => _selected = 2),
+							),
+							if (_role == 'ADMIN')
+								ListTile(
+									selected: _selected == 3,
+									leading: const Icon(Icons.group),
+									title: const Text('User Management'),
+									onTap: () => setState(() => _selected = 3),
+								),
 							const Divider(),
-							ListTile(leading: const Icon(Icons.logout), title: const Text('Logout'), onTap: _logout),
+							ListTile(
+								leading: const Icon(Icons.logout),
+								title: const Text('Logout'),
+								onTap: _logout,
+							),
 						],
 					),
 				),
