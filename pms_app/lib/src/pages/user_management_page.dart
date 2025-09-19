@@ -48,11 +48,17 @@ class _UserManagementPageState extends State<UserManagementPage> {
       final response = await http.get(Uri.parse('http://localhost:3000/users'));
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
+        print('Raw API response: $data'); // Debug log
         setState(() {
-          _users = List<Map<String, dynamic>>.from(data['data'] ?? []);
+          // Backend returns users directly as array, not wrapped in 'data' property
+          _users = List<Map<String, dynamic>>.from(data ?? []);
         });
+        print('Users loaded: ${_users.length}'); // Debug log
+      } else {
+        _showError('Failed to load users: HTTP ${response.statusCode}');
       }
     } catch (e) {
+      print('Error loading users: $e'); // Debug log
       _showError('Failed to load users: $e');
     } finally {
       setState(() => _loading = false);
