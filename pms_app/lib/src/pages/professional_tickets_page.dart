@@ -124,7 +124,7 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
       final now = DateTime.now();
       final slaHours = dueDate.difference(now).inHours;
       body['slaHours'] = slaHours;
-    } else if (to == 'DEPLOYMENT' && existing.status == 'CUSTOMER_APPROVAL') {
+    } else if (to == 'DEPLOYMENT') {
       // Show customer approval dialog with email attachment and deployment time
       final result = await _showCustomerApprovalDialog();
       if (result == null) return;
@@ -137,7 +137,7 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
       if (result['comment'] != null) {
         body['comment'] = result['comment'];
       }
-    } else if (to == 'DEPLOYMENT' || to == 'VERIFICATION') {
+    } else if (to == 'VERIFICATION') {
       final dueDate = await _showDatePicker('Set deployment date');
       if (dueDate == null) return;
       body['dueAt'] = dueDate.toUtc().toIso8601String();
