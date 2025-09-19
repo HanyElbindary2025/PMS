@@ -698,7 +698,7 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
       builder: (context) => Dialog(
         child: Container(
           width: 800,
-          height: 600,
+          height: MediaQuery.of(context).size.height * 0.9, // Use 90% of screen height
           padding: const EdgeInsets.all(24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -764,7 +764,13 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
               ),
               const SizedBox(height: 20),
               
-              // Enhanced Ticket Info Cards
+              // Scrollable content
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Enhanced Ticket Info Cards
               Row(
                 children: [
                   Expanded(
@@ -910,7 +916,7 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
                     ),
                     const SizedBox(height: 16),
                     SizedBox(
-                      height: 300, // Fixed height for timeline
+                      height: 250, // Reduced height for timeline in scrollable container
                       child: ListView.builder(
                         itemCount: stages.length,
                         itemBuilder: (context, index) {
@@ -1138,6 +1144,10 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
                 ),
               ],
+                    ],
+                  ),
+                ),
+              ),
             ],
           ),
         ),
