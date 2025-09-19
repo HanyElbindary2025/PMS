@@ -1039,7 +1039,7 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
                         itemBuilder: (context, index) {
                           final stage = stages[index];
                           final isLast = index == stages.length - 1;
-                          final isCompleted = stage['completedAt'] != null;
+                          final isCompleted = stage['completedAt'] != null || stage['key'] == 'CLOSED';
                           final phaseInfo = _workflowPhases[stage['key']] ?? {'name': stage['name'], 'color': Colors.grey, 'icon': '📋'};
                           
                           return Container(
@@ -1607,6 +1607,8 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
                             ),
                             const DataColumn(label: Text('Category')),
                             const DataColumn(label: Text('Requester')),
+                            const DataColumn(label: Text('Assignee')),
+                            const DataColumn(label: Text('SLA Status')),
                             DataColumn(
                               label: const Text('Created At'),
                               onSort: (i, asc) {
@@ -1670,6 +1672,12 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
                                   Text(ticket['requesterEmail'] ?? ''),
                                 ),
                                 DataCell(
+                                  Text(ticket['assignedTo']?['name'] ?? 'Unassigned'),
+                                ),
+                                DataCell(
+                                  _buildSLAStatusChip(ticket['slaStatus']),
+                                ),
+                                DataCell(
                                   Text(
                                     DateFormat('yyyy-MM-dd HH:mm').format(
                                       DateTime.parse(ticket['createdAt']).toLocal(),
@@ -1720,6 +1728,36 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
       label: Text(priorityInfo['name']),
       backgroundColor: (priorityInfo['color'] as Color).withOpacity(0.12),
       labelStyle: TextStyle(color: priorityInfo['color'] as Color),
+    );
+  }
+
+  Widget _buildSLAStatusChip(String? slaStatus) {
+    if (slaStatus == null || slaStatus == 'NO_SLA_SET') {
+      return Chip(
+        label: const Text('No SLA'),
+        backgroundColor: Colors.grey.withOpacity(0.12),
+        labelStyle: const TextStyle(color: Colors.grey),
+      );
+    }
+
+    Color color;
+    String displayText;
+    
+    if (slaStatus.startsWith('WITHIN_SLA_')) {
+      color = Colors.green;
+      displayText = 'On Track';
+    } else if (slaStatus.startsWith('SLA_BREACH_')) {
+      color = Colors.red;
+      displayText = 'Breached';
+    } else {
+      color = Colors.orange;
+      displayText = 'Warning';
+    }
+
+    return Chip(
+      label: Text(displayText),
+      backgroundColor: color.withOpacity(0.12),
+      labelStyle: TextStyle(color: color),
     );
   }
 
