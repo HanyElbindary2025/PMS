@@ -83,36 +83,38 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
     String? decision;
     String? comment;
 
-    // Professional transition logic based on phase
-    if (to == 'ANALYSIS' || to == 'REJECTED') {
-      final result = await _showApprovalDialog(to);
+    // Show appropriate dialog based on action
+    if (to == 'REJECTED' || to == 'CANCELLED') {
+      final result = await _showRejectionDialog(to);
       if (result == null) return;
-      decision = result['decision'];
+      decision = 'REJECT';
       comment = result['comment'];
-    }
-
-    if (to == 'APPROVAL') {
-      final result = await _showApprovalDialog(to);
-      if (result == null) return;
-      decision = result['decision'];
-      comment = result['comment'];
-    }
-
-    if (to == 'CONFIRM_DUE' || to == 'DEPLOYMENT') {
-      final dueDate = await _showDatePicker();
-      if (dueDate == null) return;
-      body['dueAt'] = dueDate.toUtc().toIso8601String();
-    }
-
-    if (to == 'ON_HOLD') {
+    } else if (to == 'ON_HOLD') {
       final result = await _showHoldDialog();
       if (result == null) return;
+      comment = result['reason'];
       body['holdReason'] = result['reason'];
-      body['expectedResolutionDate'] = result['expectedDate'];
+      if (result['expectedDate'] != null) {
+        body['expectedResolutionDate'] = result['expectedDate'].toUtc().toIso8601String();
+      }
+    } else if (to == 'APPROVAL') {
+      final result = await _showApprovalDialog(to);
+      if (result == null) return;
+      decision = result['decision'];
+      comment = result['comment'];
+    } else if (to == 'DEPLOYMENT' || to == 'VERIFICATION') {
+      final dueDate = await _showDatePicker('Set deployment date');
+      if (dueDate == null) return;
+      body['dueAt'] = dueDate.toUtc().toIso8601String();
+    } else {
+      // For other transitions, ask for optional comment
+      final result = await _showCommentDialog(to);
+      if (result == null) return;
+      comment = result['comment'];
     }
 
     if (decision != null) body['decision'] = decision;
-    if (comment != null) body['comment'] = comment;
+    if (comment != null && comment.isNotEmpty) body['comment'] = comment;
 
     setState(() => _transitioning = true);
 
@@ -129,18 +131,154 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
         Navigator.of(context).pop();
         await _load();
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Status updated to ${_workflowPhases[to]?['name'] ?? to}')),
+          SnackBar(
+            content: Text('✅ Ticket moved to ${to.replaceAll('_', ' ')}'),
+            backgroundColor: Colors.green,
+          ),
         );
       } else {
+        final errorData = json.decode(res.body);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed: ${res.statusCode}')),
+          SnackBar(
+            content: Text('❌ Failed: ${errorData['error'] ?? 'Unknown error'}'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('❌ Error: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
     } finally {
-      if (mounted) {
-        setState(() => _transitioning = false);
-      }
+      if (mounted) setState(() => _transitioning = false);
     }
+  }
+
+  // Dialog for rejection/cancellation
+  Future<Map<String, String>?> _showRejectionDialog(String action) async {
+    final commentController = TextEditingController();
+    
+    return await showDialog<Map<String, String>>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.cancel, color: Colors.red),
+            const SizedBox(width: 8),
+            Text(action == 'REJECTED' ? 'Reject Request' : 'Cancel Request'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              action == 'REJECTED' 
+                ? 'Please provide a reason for rejecting this request:'
+                : 'Please provide a reason for cancelling this request:',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: commentController,
+              maxLines: 3,
+              decoration: const InputDecoration(
+                labelText: 'Reason (required)',
+                hintText: 'Explain why this request is being rejected/cancelled...',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () {
+              if (commentController.text.trim().isNotEmpty) {
+                Navigator.of(context).pop({
+                  'comment': commentController.text.trim(),
+                });
+              }
+            },
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            child: Text(action == 'REJECTED' ? 'Reject' : 'Cancel'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Dialog for comments on transitions
+  Future<Map<String, String>?> _showCommentDialog(String action) async {
+    final commentController = TextEditingController();
+    
+    return await showDialog<Map<String, String>>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.comment, color: Colors.blue),
+            const SizedBox(width: 8),
+            Text('Add Comment'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Moving to: ${action.replaceAll('_', ' ')}',
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Add an optional comment for this transition:',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: commentController,
+              maxLines: 3,
+              decoration: const InputDecoration(
+                labelText: 'Comment (optional)',
+                hintText: 'Add notes about this transition...',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Skip'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop({
+              'comment': commentController.text.trim(),
+            }),
+            child: const Text('Continue'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Enhanced date picker
+  Future<DateTime?> _showDatePicker(String title) async {
+    return await showDatePicker(
+      context: context,
+      initialDate: DateTime.now().add(const Duration(days: 7)),
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+      helpText: title,
+    );
   }
 
   Future<Map<String, String>?> _showApprovalDialog(String action) async {
@@ -221,61 +359,81 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
     );
   }
 
-  Future<Map<String, String>?> _showHoldDialog() async {
+  Future<Map<String, dynamic>?> _showHoldDialog() async {
     final reasonController = TextEditingController();
     DateTime? expectedDate;
 
-    return await showDialog<Map<String, String>>(
+    return await showDialog<Map<String, dynamic>>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Put Request On Hold'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: reasonController,
-              maxLines: 3,
-              decoration: InputDecoration(
-                labelText: 'Hold Reason',
-                hintText: 'Why is this request being put on hold?',
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: Row(
+            children: [
+              Icon(Icons.pause_circle, color: Colors.orange),
+              const SizedBox(width: 8),
+              const Text('Put Request On Hold'),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Please provide a reason for putting this request on hold:',
+                style: Theme.of(context).textTheme.bodyMedium,
               ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: reasonController,
+                maxLines: 3,
+                decoration: const InputDecoration(
+                  labelText: 'Hold Reason (required)',
+                  hintText: 'Why is this request being put on hold?',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Expected Resolution Date (optional):',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+              const SizedBox(height: 8),
+              ListTile(
+                title: Text('Expected Resolution Date'),
+                subtitle: Text(expectedDate != null 
+                  ? DateFormat('yyyy-MM-dd').format(expectedDate!)
+                  : 'Select date (optional)'),
+                trailing: Icon(Icons.calendar_today),
+                onTap: () async {
+                  final date = await showDatePicker(
+                    context: context,
+                    initialDate: DateTime.now().add(const Duration(days: 7)),
+                    firstDate: DateTime.now(),
+                    lastDate: DateTime.now().add(const Duration(days: 365)),
+                  );
+                  if (date != null) {
+                    setState(() => expectedDate = date);
+                  }
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
             ),
-            const SizedBox(height: 16),
-            ListTile(
-              title: Text('Expected Resolution Date'),
-              subtitle: Text(expectedDate != null 
-                ? DateFormat('yyyy-MM-dd').format(expectedDate!)
-                : 'Select date'),
-              trailing: Icon(Icons.calendar_today),
-              onTap: () async {
-                final date = await showDatePicker(
-                  context: context,
-                  initialDate: DateTime.now().add(Duration(days: 7)),
-                  firstDate: DateTime.now(),
-                  lastDate: DateTime.now().add(Duration(days: 365)),
-                );
-                if (date != null) {
-                  setState(() => expectedDate = date);
+            FilledButton(
+              onPressed: () {
+                if (reasonController.text.trim().isNotEmpty) {
+                  Navigator.of(context).pop({
+                    'reason': reasonController.text.trim(),
+                    'expectedDate': expectedDate,
+                  });
                 }
               },
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () {
-              if (reasonController.text.trim().isNotEmpty && expectedDate != null) {
-                Navigator.of(context).pop({
-                  'reason': reasonController.text.trim(),
-                  'expectedDate': expectedDate!.toUtc().toIso8601String(),
-                });
-              }
-            },
-            child: const Text('Put On Hold'),
+              style: FilledButton.styleFrom(backgroundColor: Colors.orange),
+              child: const Text('Put On Hold'),
           ),
         ],
       ),
@@ -283,23 +441,119 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
   }
 
   List<String> _getNextStates(String status) {
-    if (_role != 'ADMIN' && _role != 'SERVICE_MANAGER') return [];
+    // Allow actions based on role
+    if (_role != 'ADMIN' && _role != 'SERVICE_MANAGER' && _role != 'SERVICE_DESK') return [];
     
-    // Professional workflow transitions
+    // Professional workflow transitions with clear actions
     switch (status) {
-      case 'SUBMITTED': return ['CATEGORIZED', 'REJECTED'];
-      case 'CATEGORIZED': return ['PRIORITIZED', 'REJECTED'];
-      case 'PRIORITIZED': return ['ANALYSIS', 'REJECTED'];
-      case 'ANALYSIS': return ['DESIGN', 'ON_HOLD', 'REJECTED'];
-      case 'DESIGN': return ['APPROVAL', 'ON_HOLD', 'REJECTED'];
-      case 'APPROVAL': return ['DEVELOPMENT', 'ON_HOLD', 'REJECTED'];
-      case 'DEVELOPMENT': return ['TESTING', 'ON_HOLD', 'CANCELLED'];
-      case 'TESTING': return ['UAT', 'DEVELOPMENT', 'ON_HOLD'];
-      case 'UAT': return ['DEPLOYMENT', 'TESTING', 'ON_HOLD'];
-      case 'DEPLOYMENT': return ['VERIFICATION', 'ON_HOLD'];
-      case 'VERIFICATION': return ['CLOSED', 'DEPLOYMENT', 'ON_HOLD'];
-      case 'ON_HOLD': return ['ANALYSIS', 'DESIGN', 'DEVELOPMENT', 'TESTING', 'UAT', 'DEPLOYMENT', 'CANCELLED'];
-      default: return [];
+      case 'SUBMITTED': 
+        return ['CATEGORIZED', 'REJECTED'];
+      case 'CATEGORIZED': 
+        return ['PRIORITIZED', 'REJECTED'];
+      case 'PRIORITIZED': 
+        return ['ANALYSIS', 'REJECTED'];
+      case 'ANALYSIS': 
+        return ['DESIGN', 'ON_HOLD', 'REJECTED'];
+      case 'DESIGN': 
+        return ['APPROVAL', 'ON_HOLD', 'REJECTED'];
+      case 'APPROVAL': 
+        return ['DEVELOPMENT', 'ON_HOLD', 'REJECTED'];
+      case 'DEVELOPMENT': 
+        return ['TESTING', 'ON_HOLD', 'CANCELLED'];
+      case 'TESTING': 
+        return ['UAT', 'DEVELOPMENT', 'ON_HOLD'];
+      case 'UAT': 
+        return ['DEPLOYMENT', 'TESTING', 'ON_HOLD'];
+      case 'DEPLOYMENT': 
+        return ['VERIFICATION', 'ON_HOLD'];
+      case 'VERIFICATION': 
+        return ['CLOSED', 'DEPLOYMENT', 'ON_HOLD'];
+      case 'ON_HOLD': 
+        return ['ANALYSIS', 'DESIGN', 'DEVELOPMENT', 'TESTING', 'UAT', 'DEPLOYMENT', 'CANCELLED'];
+      default: 
+        return [];
+    }
+  }
+
+  // Get action buttons with proper labels and icons
+  List<Map<String, dynamic>> _getActionButtons(String status) {
+    if (_role != 'ADMIN' && _role != 'SERVICE_MANAGER' && _role != 'SERVICE_DESK') return [];
+    
+    switch (status) {
+      case 'SUBMITTED':
+        return [
+          {'action': 'CATEGORIZED', 'label': 'Accept & Categorize', 'icon': Icons.check_circle, 'color': Colors.green},
+          {'action': 'REJECTED', 'label': 'Reject Request', 'icon': Icons.cancel, 'color': Colors.red},
+        ];
+      case 'CATEGORIZED':
+        return [
+          {'action': 'PRIORITIZED', 'label': 'Set Priority', 'icon': Icons.priority_high, 'color': Colors.orange},
+          {'action': 'REJECTED', 'label': 'Reject', 'icon': Icons.cancel, 'color': Colors.red},
+        ];
+      case 'PRIORITIZED':
+        return [
+          {'action': 'ANALYSIS', 'label': 'Start Analysis', 'icon': Icons.analytics, 'color': Colors.blue},
+          {'action': 'REJECTED', 'label': 'Reject', 'icon': Icons.cancel, 'color': Colors.red},
+        ];
+      case 'ANALYSIS':
+        return [
+          {'action': 'DESIGN', 'label': 'Move to Design', 'icon': Icons.design_services, 'color': Colors.purple},
+          {'action': 'ON_HOLD', 'label': 'Put on Hold', 'icon': Icons.pause_circle, 'color': Colors.orange},
+          {'action': 'REJECTED', 'label': 'Reject', 'icon': Icons.cancel, 'color': Colors.red},
+        ];
+      case 'DESIGN':
+        return [
+          {'action': 'APPROVAL', 'label': 'Send for Approval', 'icon': Icons.approval, 'color': Colors.indigo},
+          {'action': 'ON_HOLD', 'label': 'Put on Hold', 'icon': Icons.pause_circle, 'color': Colors.orange},
+          {'action': 'REJECTED', 'label': 'Reject', 'icon': Icons.cancel, 'color': Colors.red},
+        ];
+      case 'APPROVAL':
+        return [
+          {'action': 'DEVELOPMENT', 'label': 'Approve & Start Development', 'icon': Icons.code, 'color': Colors.green},
+          {'action': 'ON_HOLD', 'label': 'Put on Hold', 'icon': Icons.pause_circle, 'color': Colors.orange},
+          {'action': 'REJECTED', 'label': 'Reject', 'icon': Icons.cancel, 'color': Colors.red},
+        ];
+      case 'DEVELOPMENT':
+        return [
+          {'action': 'TESTING', 'label': 'Move to Testing', 'icon': Icons.bug_report, 'color': Colors.teal},
+          {'action': 'ON_HOLD', 'label': 'Put on Hold', 'icon': Icons.pause_circle, 'color': Colors.orange},
+          {'action': 'CANCELLED', 'label': 'Cancel', 'icon': Icons.cancel, 'color': Colors.red},
+        ];
+      case 'TESTING':
+        return [
+          {'action': 'UAT', 'label': 'Move to UAT', 'icon': Icons.verified_user, 'color': Colors.cyan},
+          {'action': 'DEVELOPMENT', 'label': 'Back to Development', 'icon': Icons.arrow_back, 'color': Colors.blue},
+          {'action': 'ON_HOLD', 'label': 'Put on Hold', 'icon': Icons.pause_circle, 'color': Colors.orange},
+        ];
+      case 'UAT':
+        return [
+          {'action': 'DEPLOYMENT', 'label': 'Deploy', 'icon': Icons.rocket_launch, 'color': Colors.deepOrange},
+          {'action': 'TESTING', 'label': 'Back to Testing', 'icon': Icons.arrow_back, 'color': Colors.teal},
+          {'action': 'ON_HOLD', 'label': 'Put on Hold', 'icon': Icons.pause_circle, 'color': Colors.orange},
+        ];
+      case 'DEPLOYMENT':
+        return [
+          {'action': 'VERIFICATION', 'label': 'Verify Deployment', 'icon': Icons.verified, 'color': Colors.green},
+          {'action': 'ON_HOLD', 'label': 'Put on Hold', 'icon': Icons.pause_circle, 'color': Colors.orange},
+        ];
+      case 'VERIFICATION':
+        return [
+          {'action': 'CLOSED', 'label': 'Close Ticket', 'icon': Icons.check_circle_outline, 'color': Colors.green},
+          {'action': 'DEPLOYMENT', 'label': 'Back to Deployment', 'icon': Icons.arrow_back, 'color': Colors.deepOrange},
+          {'action': 'ON_HOLD', 'label': 'Put on Hold', 'icon': Icons.pause_circle, 'color': Colors.orange},
+        ];
+      case 'ON_HOLD':
+        return [
+          {'action': 'ANALYSIS', 'label': 'Resume Analysis', 'icon': Icons.play_arrow, 'color': Colors.blue},
+          {'action': 'DESIGN', 'label': 'Resume Design', 'icon': Icons.play_arrow, 'color': Colors.purple},
+          {'action': 'DEVELOPMENT', 'label': 'Resume Development', 'icon': Icons.play_arrow, 'color': Colors.green},
+          {'action': 'TESTING', 'label': 'Resume Testing', 'icon': Icons.play_arrow, 'color': Colors.teal},
+          {'action': 'UAT', 'label': 'Resume UAT', 'icon': Icons.play_arrow, 'color': Colors.cyan},
+          {'action': 'DEPLOYMENT', 'label': 'Resume Deployment', 'icon': Icons.play_arrow, 'color': Colors.deepOrange},
+          {'action': 'CANCELLED', 'label': 'Cancel', 'icon': Icons.cancel, 'color': Colors.red},
+        ];
+      default:
+        return [];
     }
   }
 
@@ -465,28 +719,40 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
               ),
               
               // Action Buttons
-              if (_role == 'ADMIN' && _getNextStates((ticket['status'] ?? '') as String).isNotEmpty) ...[
+              if (_getActionButtons((ticket['status'] ?? '') as String).isNotEmpty) ...[
                 const SizedBox(height: 16),
                 const Divider(),
                 const SizedBox(height: 16),
-                Text('Next Actions', style: Theme.of(context).textTheme.titleMedium),
-                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Icon(Icons.settings, size: 20, color: Colors.grey[600]),
+                    const SizedBox(width: 8),
+                    Text('Available Actions', style: Theme.of(context).textTheme.titleMedium),
+                  ],
+                ),
+                const SizedBox(height: 12),
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
-                  children: _getNextStates((ticket['status'] ?? '') as String).map((nextState) {
-                    final phaseInfo = _workflowPhases[nextState] ?? {'name': nextState, 'color': Colors.grey};
-                    return FilledButton.tonal(
-                      onPressed: _transitioning ? null : () => _transition((ticket['id'] as String), nextState),
+                  children: _getActionButtons((ticket['status'] ?? '') as String).map((action) {
+                    return FilledButton.icon(
+                      onPressed: _transitioning ? null : () => _transition((ticket['id'] as String), action['action']),
                       style: FilledButton.styleFrom(
-                        backgroundColor: phaseInfo['color'].withOpacity(0.1),
-                        foregroundColor: phaseInfo['color'],
+                        backgroundColor: (action['color'] as Color).withOpacity(0.1),
+                        foregroundColor: action['color'] as Color,
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       ),
-                      child: _transitioning 
+                      icon: _transitioning 
                         ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                        : Text(phaseInfo['name']),
+                        : Icon(action['icon'] as IconData, size: 18),
+                      label: Text(action['label'] as String),
                     );
                   }).toList(),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Role: $_role • Status: ${ticket['status']}',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
                 ),
               ],
             ],
