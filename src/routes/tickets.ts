@@ -178,10 +178,10 @@ ticketsRouter.post('/:id/transition', async (req: Request, res: Response) => {
   const existing = await prisma.ticket.findUnique({ where: { id }, include: { stages: { orderBy: { order: 'asc' } } } });
   if (!existing) return res.status(404).json({ error: 'Not found' });
 
-  // Check role-based permissions
+  // Check role-based permissions - user must be able to perform actions on the target phase
   const userPermissions = rolePermissions[userRole || 'CREATOR'] || [];
-  if (!userPermissions.includes(existing.status)) {
-    return res.status(403).json({ error: `User role ${userRole} cannot perform actions on ${existing.status} phase` });
+  if (!userPermissions.includes(to)) {
+    return res.status(403).json({ error: `User role ${userRole} cannot perform actions on ${to} phase` });
   }
 
   const nexts = allowedNext[existing.status] ?? [];
