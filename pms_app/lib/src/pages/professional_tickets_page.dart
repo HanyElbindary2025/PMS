@@ -909,7 +909,8 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    Expanded(
+                    SizedBox(
+                      height: 300, // Fixed height for timeline
                       child: ListView.builder(
                         itemCount: stages.length,
                         itemBuilder: (context, index) {
