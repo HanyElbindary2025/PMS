@@ -7,6 +7,7 @@ import 'create_request_page.dart';
 import 'professional_tickets_page.dart';
 import 'professional_dashboard_page.dart';
 import 'admin_settings_page.dart';
+import 'sla_configuration_page.dart';
 import 'login_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -22,12 +23,12 @@ class _HomePageState extends State<HomePage> {
 	String _role = 'CREATOR';
 	
 	List<Widget> get _pages => _useProfessionalUI 
-		? [ProfessionalDashboardPage(), CreateRequestPage(), ProfessionalTicketsPage(), UserManagementPage(), AdminSettingsPage()]
-		: [DashboardPage(), CreateRequestPage(), TicketsPage(), UserManagementPage(), AdminSettingsPage()];
+		? [ProfessionalDashboardPage(), CreateRequestPage(), ProfessionalTicketsPage(), UserManagementPage(), AdminSettingsPage(), SLAConfigurationPage()]
+		: [DashboardPage(), CreateRequestPage(), TicketsPage(), UserManagementPage(), AdminSettingsPage(), SLAConfigurationPage()];
 	
 	List<String> get _titles => _useProfessionalUI
-		? ['Professional Dashboard', 'Create Request', 'Professional Tickets', 'Users', 'Admin Settings']
-		: ['Dashboard', 'Create Request', 'My Tickets', 'Users', 'Admin Settings'];
+		? ['Professional Dashboard', 'Create Request', 'Professional Tickets', 'Users', 'Admin Settings', 'SLA Configuration']
+		: ['Dashboard', 'Create Request', 'My Tickets', 'Users', 'Admin Settings', 'SLA Configuration'];
 
 	@override
 	void initState() {
@@ -121,6 +122,12 @@ class _HomePageState extends State<HomePage> {
 									leading: const Icon(Icons.settings),
 									title: const Text('Admin Settings'),
 									onTap: () => setState(() => _selected = 4),
+								),
+								ListTile(
+									selected: _selected == 5,
+									leading: const Icon(Icons.schedule),
+									title: const Text('SLA Configuration'),
+									onTap: () => setState(() => _selected = 5),
 								),
 							],
 							const Divider(),
