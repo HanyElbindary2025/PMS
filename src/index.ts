@@ -8,6 +8,7 @@ import { ticketsRouter } from './routes/tickets.js';
 import { sseRouter } from './routes/sse.js';
 import { startSlaTicker } from './sla.js';
 import { lookupsRouter } from './routes/lookups.js';
+import { attachmentsRouter } from './routes/attachments.js';
 
 const app = express();
 
@@ -24,6 +25,7 @@ app.use('/public', publicRouter);
 app.use('/tickets', ticketsRouter);
 app.use('/events', sseRouter);
 app.use('/lookups', lookupsRouter);
+app.use('/attachments', attachmentsRouter);
 
 // Global error handler
 app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
