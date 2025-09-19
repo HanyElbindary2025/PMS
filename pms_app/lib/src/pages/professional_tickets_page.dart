@@ -900,6 +900,30 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
               ),
               const SizedBox(height: 16),
               
+              // SLA Status Row
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildInfoCard(
+                      'SLA Status',
+                      _formatSLAStatus(ticket['slaStatus']),
+                      Icons.schedule,
+                      _getSLAStatusColor(ticket['slaStatus']),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildInfoCard(
+                      'Current Phase',
+                      _getPhaseDisplayName(ticket['status']),
+                      Icons.work,
+                      _getPhaseColor(ticket['status']),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              
               // Requester Info
               Container(
                 padding: const EdgeInsets.all(16),
@@ -1763,5 +1787,83 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
         ],
       ),
     );
+  }
+
+  String _formatSLAStatus(String? slaStatus) {
+    if (slaStatus == null || slaStatus == 'NO_SLA_SET') {
+      return 'No SLA Set';
+    }
+    
+    if (slaStatus.startsWith('WITHIN_SLA_')) {
+      final timeStr = slaStatus.replaceAll('WITHIN_SLA_', '').replaceAll('_REMAINING', '');
+      return 'Within SLA ($timeStr)';
+    }
+    
+    if (slaStatus.startsWith('SLA_BREACH_')) {
+      final timeStr = slaStatus.replaceAll('SLA_BREACH_', '').replaceAll('_OVERDUE', '');
+      return 'SLA Breached ($timeStr)';
+    }
+    
+    return slaStatus;
+  }
+
+  Color _getSLAStatusColor(String? slaStatus) {
+    if (slaStatus == null || slaStatus == 'NO_SLA_SET') {
+      return Colors.grey;
+    }
+    
+    if (slaStatus.startsWith('WITHIN_SLA_')) {
+      return Colors.green;
+    }
+    
+    if (slaStatus.startsWith('SLA_BREACH_')) {
+      return Colors.red;
+    }
+    
+    return Colors.orange;
+  }
+
+  String _getPhaseDisplayName(String status) {
+    switch (status) {
+      case 'SUBMITTED': return 'Submitted';
+      case 'ANALYSIS': return 'Analysis';
+      case 'CONFIRM_DUE': return 'Confirm Due Date';
+      case 'MEETING_REQUESTED': return 'Meeting Requested';
+      case 'DESIGN': return 'Design';
+      case 'DIGITAL_APPROVAL': return 'Digital Approval';
+      case 'DEVELOPMENT': return 'Development';
+      case 'TESTING': return 'Testing';
+      case 'CUSTOMER_APPROVAL': return 'Customer Approval';
+      case 'DEPLOYMENT': return 'Deployment';
+      case 'UAT': return 'User Acceptance Testing';
+      case 'VERIFICATION': return 'Verification';
+      case 'CLOSED': return 'Closed';
+      case 'ON_HOLD': return 'On Hold';
+      case 'REJECTED': return 'Rejected';
+      case 'CANCELLED': return 'Cancelled';
+      default: return status;
+    }
+  }
+
+  Color _getPhaseColor(String status) {
+    switch (status) {
+      case 'SUBMITTED': return Colors.grey;
+      case 'ANALYSIS': return Colors.amber;
+      case 'CONFIRM_DUE': return Colors.blue;
+      case 'MEETING_REQUESTED': return Colors.orange;
+      case 'DESIGN': return Colors.blue;
+      case 'DIGITAL_APPROVAL': return Colors.purple;
+      case 'DEVELOPMENT': return Colors.green;
+      case 'TESTING': return Colors.orange;
+      case 'CUSTOMER_APPROVAL': return Colors.brown;
+      case 'DEPLOYMENT': return Colors.blueGrey;
+      case 'UAT': return Colors.brown;
+      case 'VERIFICATION': return Colors.indigo;
+      case 'CLOSED': return Colors.green;
+      case 'ON_HOLD': return Colors.amber;
+      case 'REJECTED': return Colors.red;
+      case 'CANCELLED': return Colors.grey;
+      default: return Colors.grey;
+    }
   }
 }
