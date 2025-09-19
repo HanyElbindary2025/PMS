@@ -78,7 +78,7 @@ class _TeamAssignmentWidgetState extends State<TeamAssignmentWidget> {
         Uri.parse('http://localhost:3000/tickets/${widget.ticketId}/assign'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
-          'assignedToId': _selectedAssigneeId,
+          if (_selectedAssigneeId != null) 'assignedToId': _selectedAssigneeId,
           'teamMembers': _selectedTeamMembers,
           'comment': 'Ticket assigned via team assignment widget',
         }),

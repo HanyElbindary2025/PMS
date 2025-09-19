@@ -37,7 +37,11 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
     'CATEGORIZED': {'name': 'Categorized', 'color': Color(0xFFFF9800), 'icon': '🏷️'},
     'PRIORITIZED': {'name': 'Prioritized', 'color': Color(0xFFFF5722), 'icon': '⚡'},
     'ANALYSIS': {'name': 'Analysis', 'color': Color(0xFFFFC107), 'icon': '🔍'},
+    'CONFIRM_DUE': {'name': 'Confirm Due Date', 'color': Color(0xFF00BCD4), 'icon': '📅'},
+    'MEETING_REQUESTED': {'name': 'Meeting Requested', 'color': Color(0xFFE91E63), 'icon': '🤝'},
     'DESIGN': {'name': 'Design', 'color': Color(0xFF2196F3), 'icon': '🎨'},
+    'DIGITAL_APPROVAL': {'name': 'Digital Approval', 'color': Color(0xFF673AB7), 'icon': '👨‍💼'},
+    'CUSTOMER_APPROVAL': {'name': 'Customer Approval', 'color': Color(0xFF009688), 'icon': '👤'},
     'APPROVAL': {'name': 'Approval', 'color': Color(0xFF9C27B0), 'icon': '✅'},
     'DEVELOPMENT': {'name': 'Development', 'color': Color(0xFF4CAF50), 'icon': '💻'},
     'TESTING': {'name': 'Testing', 'color': Color(0xFFFF9800), 'icon': '🧪'},
@@ -111,6 +115,15 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
       if (result == null) return;
       decision = result['decision'];
       comment = result['comment'];
+    } else if (to == 'CONFIRM_DUE') {
+      // Show date picker for SLA calculation
+      final dueDate = await _showDatePicker('Set SLA due date');
+      if (dueDate == null) return;
+      body['dueAt'] = dueDate.toUtc().toIso8601String();
+      // Calculate SLA hours from now to due date
+      final now = DateTime.now();
+      final slaHours = dueDate.difference(now).inHours;
+      body['slaHours'] = slaHours;
     } else if (to == 'DEPLOYMENT' || to == 'VERIFICATION') {
       final dueDate = await _showDatePicker('Set deployment date');
       if (dueDate == null) return;

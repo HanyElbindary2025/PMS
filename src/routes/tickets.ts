@@ -105,14 +105,14 @@ const transitionSchema = z.object({
 
 // Role-based workflow permissions
 const rolePermissions: Record<string, string[]> = {
-  ADMIN: ['SUBMITTED', 'ANALYSIS', 'DESIGN', 'APPROVAL', 'DEVELOPMENT', 'TESTING', 'UAT', 'DEPLOYMENT', 'VERIFICATION', 'CLOSED', 'ON_HOLD', 'REJECTED', 'CANCELLED'],
-  SERVICE_MANAGER: ['ANALYSIS', 'DESIGN', 'APPROVAL', 'DEVELOPMENT', 'TESTING', 'UAT', 'DEPLOYMENT', 'VERIFICATION', 'ON_HOLD'],
-  TECHNICAL_ANALYST: ['ANALYSIS', 'DESIGN', 'ON_HOLD'],
-  SOLUTION_ARCHITECT: ['DESIGN', 'APPROVAL', 'ON_HOLD'],
+  ADMIN: ['SUBMITTED', 'ANALYSIS', 'CONFIRM_DUE', 'MEETING_REQUESTED', 'DESIGN', 'DIGITAL_APPROVAL', 'CUSTOMER_APPROVAL', 'APPROVAL', 'DEVELOPMENT', 'TESTING', 'UAT', 'DEPLOYMENT', 'VERIFICATION', 'CLOSED', 'ON_HOLD', 'REJECTED', 'CANCELLED'],
+  SERVICE_MANAGER: ['ANALYSIS', 'CONFIRM_DUE', 'MEETING_REQUESTED', 'DESIGN', 'DIGITAL_APPROVAL', 'CUSTOMER_APPROVAL', 'APPROVAL', 'DEVELOPMENT', 'TESTING', 'UAT', 'DEPLOYMENT', 'VERIFICATION', 'ON_HOLD'],
+  TECHNICAL_ANALYST: ['ANALYSIS', 'CONFIRM_DUE', 'MEETING_REQUESTED', 'DESIGN', 'ON_HOLD'],
+  SOLUTION_ARCHITECT: ['DESIGN', 'DIGITAL_APPROVAL', 'APPROVAL', 'ON_HOLD'],
   DEVELOPER: ['DEVELOPMENT', 'TESTING', 'ON_HOLD'],
   QA_ENGINEER: ['TESTING', 'UAT', 'ON_HOLD'],
   DEVOPS_ENGINEER: ['DEPLOYMENT', 'VERIFICATION', 'ON_HOLD'],
-  CREATOR: ['SUBMITTED', 'UAT', 'VERIFICATION'], // Requester can only approve UAT and final verification
+  CREATOR: ['SUBMITTED', 'UAT', 'CUSTOMER_APPROVAL', 'VERIFICATION'], // Requester can approve UAT, customer approval, and final verification
 };
 
 const allowedNext: Record<string, string[]> = {
@@ -172,7 +172,19 @@ ticketsRouter.post('/:id/transition', async (req: Request, res: Response) => {
   // Auto-transition through CATEGORIZED and PRIORITIZED if going to ANALYSIS
   const stagesToCreate = [];
   
-  if (to === 'ANALYSIS' && existing.status === 'SUBMITTED') {
+  if (to === 'CONFIRM_DUE' && existing.status === 'ANALYSIS') {
+    // Create CONFIRM_DUE stage with SLA calculation
+    stagesToCreate.push({
+      name: 'Confirm Due Date',
+      key: 'CONFIRM_DUE',
+      order: nextOrder,
+      startedAt: now,
+      dueAt: dueAt ? new Date(dueAt) : null,
+      slaHours: typeof slaHours === 'number' ? slaHours : (computedSla ?? null),
+      decision: decision ?? null,
+      comment: comment ?? null,
+    });
+  } else if (to === 'ANALYSIS' && existing.status === 'SUBMITTED') {
     // Create CATEGORIZED stage (automatic)
     stagesToCreate.push({
       name: 'Categorized',
