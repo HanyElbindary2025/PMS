@@ -30,8 +30,11 @@ ticketsRouter.get('/', async (req: Request, res: Response) => {
       take: pageSize,
       select: {
         id: true,
+        ticketNumber: true,
         title: true,
         status: true,
+        priority: true,
+        category: true,
         totalSlaHours: true,
         createdAt: true,
         updatedAt: true,

@@ -6,6 +6,31 @@ import { bus } from '../events.js';
 export const publicRouter = Router();
 const prisma = new PrismaClient();
 
+// Generate unique ticket number: PDS-yyyy-m-dd-0000000
+async function generateTicketNumber(): Promise<string> {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth() + 1;
+  const day = now.getDate();
+  
+  // Get count of tickets created today
+  const startOfDay = new Date(year, month - 1, day);
+  const endOfDay = new Date(year, month - 1, day + 1);
+  
+  const count = await prisma.ticket.count({
+    where: {
+      createdAt: {
+        gte: startOfDay,
+        lt: endOfDay,
+      }
+    }
+  });
+  
+  // Format: PDS-yyyy-m-dd-0000000 (7 digits)
+  const sequence = String(count + 1).padStart(7, '0');
+  return `PDS-${year}-${month}-${day}-${sequence}`;
+}
+
 const createRequestSchema = z.object({
   title: z.string().min(3).max(200),
   description: z.string().min(5).max(5000),
@@ -24,8 +49,11 @@ publicRouter.post('/requests', async (req: Request, res: Response) => {
   const { title, description, requesterEmail, requesterName, targetSlaHours, details } = parseResult.data;
 
   const now = new Date();
+  const ticketNumber = await generateTicketNumber();
+  
   const ticket = await prisma.ticket.create({
     data: {
+      ticketNumber,
       title,
       description,
       requesterEmail,

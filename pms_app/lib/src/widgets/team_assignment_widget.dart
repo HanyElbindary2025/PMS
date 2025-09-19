@@ -43,9 +43,9 @@ class _TeamAssignmentWidgetState extends State<TeamAssignmentWidget> {
       );
 
       if (response.statusCode == 200) {
-        final List<dynamic> usersData = json.decode(response.body);
+        final data = json.decode(response.body);
         setState(() {
-          _users = usersData.cast<Map<String, dynamic>>();
+          _users = List<Map<String, dynamic>>.from(data['data'] ?? []);
           _loadingUsers = false;
         });
       } else {
@@ -110,6 +110,56 @@ class _TeamAssignmentWidgetState extends State<TeamAssignmentWidget> {
     );
   }
 
+  String _getRoleLabel(String role) {
+    switch (role) {
+      case 'ADMIN':
+        return 'System Administrator';
+      case 'SERVICE_MANAGER':
+        return 'Service Manager';
+      case 'SERVICE_DESK':
+        return 'Service Desk Agent';
+      case 'TECHNICAL_ANALYST':
+        return 'Technical Analyst';
+      case 'DEVELOPER':
+        return 'Senior Developer';
+      case 'QA_ENGINEER':
+        return 'QA Engineer';
+      case 'SOLUTION_ARCHITECT':
+        return 'Solution Architect';
+      case 'DEVOPS_ENGINEER':
+        return 'DevOps Engineer';
+      case 'CREATOR':
+        return 'Request Creator';
+      default:
+        return role;
+    }
+  }
+
+  Color _getRoleColor(String role) {
+    switch (role) {
+      case 'ADMIN':
+        return Colors.red;
+      case 'SERVICE_MANAGER':
+        return Colors.purple;
+      case 'SERVICE_DESK':
+        return Colors.blue;
+      case 'TECHNICAL_ANALYST':
+        return Colors.orange;
+      case 'DEVELOPER':
+        return Colors.green;
+      case 'QA_ENGINEER':
+        return Colors.teal;
+      case 'SOLUTION_ARCHITECT':
+        return Colors.indigo;
+      case 'DEVOPS_ENGINEER':
+        return Colors.cyan;
+      case 'CREATOR':
+        return Colors.pink;
+      default:
+        return Colors.grey;
+    }
+  }
+
   Widget _buildUserChip(Map<String, dynamic> user) {
     final isSelected = _selectedTeamMembers.contains(user['id']);
     final isAssignee = _selectedAssigneeId == user['id'];
@@ -140,7 +190,7 @@ class _TeamAssignmentWidgetState extends State<TeamAssignmentWidget> {
                 style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
               ),
               Text(
-                user['role'].replaceAll('_', ' '),
+                _getRoleLabel(user['role']),
                 style: TextStyle(
                   fontSize: 10,
                   color: Colors.grey[600],
@@ -195,9 +245,10 @@ class _TeamAssignmentWidgetState extends State<TeamAssignmentWidget> {
         width: 600,
         height: 500,
         padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
             Row(
               children: [
                 Icon(Icons.group_add, color: Colors.blue),
@@ -361,6 +412,7 @@ class _TeamAssignmentWidgetState extends State<TeamAssignmentWidget> {
               ],
             ),
           ],
+          ),
         ),
       ),
     );

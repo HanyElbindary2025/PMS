@@ -1094,6 +1094,7 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
                           sortAscending: _sortAscending,
                           columnSpacing: 28,
                           columns: [
+                            const DataColumn(label: Text('Ticket #')),
                             DataColumn(
                               label: const Text('Title'),
                               onSort: (i, asc) {
@@ -1160,6 +1161,15 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
                                 });
                               },
                               cells: [
+                                DataCell(
+                                  Text(
+                                    ticket['ticketNumber'] ?? 'N/A',
+                                    style: const TextStyle(
+                                      fontFamily: 'monospace',
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
                                 DataCell(
                                   Text(
                                     ticket['title'] ?? '',
