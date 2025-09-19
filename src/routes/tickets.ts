@@ -97,6 +97,8 @@ const transitionSchema = z.object({
   comment: z.string().max(2000).optional(),
   assignedToId: z.string().optional(), // Team assignment
   teamMembers: z.array(z.string()).optional(), // Multiple team members
+  priority: z.string().optional(), // Priority from confirmation dialog
+  category: z.string().optional(), // Category from confirmation dialog
 });
 
 const allowedNext: Record<string, string[]> = {
@@ -125,7 +127,7 @@ ticketsRouter.post('/:id/transition', async (req: Request, res: Response) => {
   const { id } = req.params;
   const parse = transitionSchema.safeParse(req.body ?? {});
   if (!parse.success) return res.status(400).json({ error: 'Invalid payload', details: parse.error.flatten() });
-  const { to, dueAt, slaHours, decision, comment } = parse.data;
+  const { to, dueAt, slaHours, decision, comment, priority, category } = parse.data;
 
   const existing = await prisma.ticket.findUnique({ where: { id }, include: { stages: { orderBy: { order: 'asc' } } } });
   if (!existing) return res.status(404).json({ error: 'Not found' });
@@ -197,6 +199,9 @@ ticketsRouter.post('/:id/transition', async (req: Request, res: Response) => {
       stages: {
         create: stagesToCreate,
       },
+      // Update priority and category if provided
+      ...(priority ? { priority } : {}),
+      ...(category ? { category } : {}),
       ...(to === 'CONFIRM_DUE' && ((computedSla ?? null) || typeof slaHours === 'number')
         ? { totalSlaHours: (computedSla ?? (slaHours as number)) }
         : {}),

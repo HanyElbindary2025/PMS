@@ -552,11 +552,11 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
     // Professional workflow transitions with clear actions
     switch (status) {
       case 'SUBMITTED': 
-        return ['CATEGORIZED', 'REJECTED'];
+        return ['ANALYSIS', 'REJECTED']; // Skip CATEGORIZED and PRIORITIZED
       case 'CATEGORIZED': 
-        return ['PRIORITIZED', 'REJECTED'];
+        return ['PRIORITIZED']; // Automatic transition
       case 'PRIORITIZED': 
-        return ['ANALYSIS', 'REJECTED'];
+        return ['ANALYSIS']; // Automatic transition
       case 'ANALYSIS': 
         return ['DESIGN', 'ON_HOLD', 'REJECTED'];
       case 'DESIGN': 
@@ -587,7 +587,7 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
     switch (status) {
       case 'SUBMITTED':
         return [
-          {'action': 'CATEGORIZED', 'label': 'Accept & Categorize', 'icon': Icons.check_circle, 'color': Colors.green},
+          {'action': 'ANALYSIS', 'label': 'Accept & Start Analysis', 'icon': Icons.check_circle, 'color': Colors.green},
           {'action': 'REJECTED', 'label': 'Reject Request', 'icon': Icons.cancel, 'color': Colors.red},
         ];
       case 'CATEGORIZED':
