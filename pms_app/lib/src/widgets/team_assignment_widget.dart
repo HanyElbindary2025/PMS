@@ -153,6 +153,10 @@ class _TeamAssignmentWidgetState extends State<TeamAssignmentWidget> {
         return Colors.indigo;
       case 'DEVOPS_ENGINEER':
         return Colors.cyan;
+      case 'OPERATIONS_ENGINEER':
+        return Colors.brown;
+      case 'MANAGER':
+        return Colors.grey;
       case 'CREATOR':
         return Colors.pink;
       default:
@@ -221,22 +225,6 @@ class _TeamAssignmentWidgetState extends State<TeamAssignmentWidget> {
     );
   }
 
-  Color _getRoleColor(String role) {
-    switch (role) {
-      case 'ADMIN': return Colors.red;
-      case 'SERVICE_MANAGER': return Colors.purple;
-      case 'SERVICE_DESK': return Colors.blue;
-      case 'TECHNICAL_ANALYST': return Colors.orange;
-      case 'DEVELOPER': return Colors.green;
-      case 'QA_ENGINEER': return Colors.teal;
-      case 'SOLUTION_ARCHITECT': return Colors.indigo;
-      case 'DEVOPS_ENGINEER': return Colors.cyan;
-      case 'OPERATIONS_ENGINEER': return Colors.brown;
-      case 'MANAGER': return Colors.grey;
-      case 'CREATOR': return Colors.pink;
-      default: return Colors.grey;
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
