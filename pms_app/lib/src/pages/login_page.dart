@@ -24,10 +24,43 @@ class _LoginPageState extends State<LoginPage> {
 			return;
 		}
 		final sp = await SharedPreferences.getInstance();
-		// Simple role mapping for testing: emails containing 'sys' => ADMIN (system user)
-		// otherwise CREATOR (normal requester)
+		// Role mapping for demo accounts
 		final email = _email.text.trim().toLowerCase();
-		final role = email.contains('sys') ? 'ADMIN' : 'CREATOR';
+		String role = 'CREATOR'; // Default role
+		
+		// Map specific demo accounts to their roles
+		switch (email) {
+			case 'admin@test.com':
+				role = 'ADMIN';
+				break;
+			case 'manager@test.com':
+				role = 'SERVICE_MANAGER';
+				break;
+			case 'servicedesk@test.com':
+				role = 'SERVICE_DESK';
+				break;
+			case 'analyst@test.com':
+				role = 'TECHNICAL_ANALYST';
+				break;
+			case 'developer@test.com':
+				role = 'DEVELOPER';
+				break;
+			case 'qa@test.com':
+				role = 'QA_ENGINEER';
+				break;
+			case 'architect@test.com':
+				role = 'SOLUTION_ARCHITECT';
+				break;
+			case 'devops@test.com':
+				role = 'DEVOPS_ENGINEER';
+				break;
+			case 'creator@test.com':
+				role = 'CREATOR';
+				break;
+			default:
+				role = 'CREATOR'; // Default for any other email
+		}
+		
 		await sp.setString('authToken', 'demo-token');
 		await sp.setString('userRole', role);
 		await sp.setString('userEmail', email);

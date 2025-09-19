@@ -5,14 +5,21 @@ import { PrismaClient } from '@prisma/client';
 export const ticketsRouter = Router();
 const prisma = new PrismaClient();
 
-// GET /tickets?status=CREATED&page=1&pageSize=10
+// GET /tickets?status=CREATED&page=1&pageSize=10&requesterEmail=user@example.com
 ticketsRouter.get('/', async (req: Request, res: Response) => {
   const status = typeof req.query.status === 'string' ? req.query.status : undefined;
+  const priority = typeof req.query.priority === 'string' ? req.query.priority : undefined;
+  const category = typeof req.query.category === 'string' ? req.query.category : undefined;
+  const requesterEmail = typeof req.query.requesterEmail === 'string' ? req.query.requesterEmail : undefined;
   const page = Math.max(1, parseInt(String(req.query.page ?? '1'), 10) || 1);
   const pageSize = Math.min(100, Math.max(1, parseInt(String(req.query.pageSize ?? '10'), 10) || 10));
   const skip = (page - 1) * pageSize;
 
-  const where = status ? { status } : {};
+  const where: any = {};
+  if (status) where.status = status;
+  if (priority) where.priority = priority;
+  if (category) where.category = category;
+  if (requesterEmail) where.requesterEmail = requesterEmail;
 
   const [total, rows] = await Promise.all([
     prisma.ticket.count({ where }),
@@ -47,7 +54,12 @@ ticketsRouter.get('/', async (req: Request, res: Response) => {
       total,
       totalPages: Math.max(1, Math.ceil(total / pageSize)),
     },
-    filters: { status: status ?? null },
+    filters: { 
+      status: status ?? null,
+      priority: priority ?? null,
+      category: category ?? null,
+      requesterEmail: requesterEmail ?? null,
+    },
   });
 });
 

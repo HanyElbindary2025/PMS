@@ -334,7 +334,7 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
     );
   }
 
-  Future<DateTime?> _showDatePicker() async {
+  Future<DateTime?> _showDateTimePicker() async {
     DateTime? selectedDate = await showDatePicker(
       context: context,
       initialDate: DateTime.now().add(Duration(days: 1)),
@@ -435,8 +435,9 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
               },
               style: FilledButton.styleFrom(backgroundColor: Colors.orange),
               child: const Text('Put On Hold'),
-          ),
-        ],
+            ),
+          ],
+        ),
       ),
     );
   }
