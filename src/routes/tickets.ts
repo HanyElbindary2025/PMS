@@ -80,7 +80,35 @@ ticketsRouter.get('/:id', async (req: Request, res: Response) => {
     },
   });
   if (!ticket) return res.status(404).json({ error: 'Not found' });
-  return res.json(ticket);
+
+  // Calculate SLA status
+  let slaStatus = 'NO_SLA_SET';
+  if (ticket.totalSlaHours) {
+    const confirmDueStage = ticket.stages.find(stage => stage.key === 'CONFIRM_DUE');
+    if (confirmDueStage && confirmDueStage.startedAt) {
+      const now = new Date();
+      const slaEndTime = new Date(confirmDueStage.startedAt.getTime() + (ticket.totalSlaHours * 60 * 60 * 1000));
+      const timeRemaining = slaEndTime.getTime() - now.getTime();
+
+      if (timeRemaining > 0) {
+        const hoursRemaining = timeRemaining / (1000 * 60 * 60);
+        if (hoursRemaining > 1) {
+          slaStatus = `WITHIN_SLA_${hoursRemaining.toFixed(1)}H_REMAINING`;
+        } else {
+          const minutesRemaining = timeRemaining / (1000 * 60);
+          slaStatus = `WITHIN_SLA_${minutesRemaining.toFixed(0)}M_REMAINING`;
+        }
+      } else {
+        const breachTime = Math.abs(timeRemaining) / (1000 * 60 * 60);
+        slaStatus = `SLA_BREACH_${breachTime.toFixed(1)}H_OVERDUE`;
+      }
+    }
+  }
+
+  return res.json({
+    ...ticket,
+    slaStatus
+  });
 });
 
 // POST /tickets/:id/transition
