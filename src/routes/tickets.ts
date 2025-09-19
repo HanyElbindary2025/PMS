@@ -344,5 +344,3 @@ ticketsRouter.get('/:id/mttr', async (req: Request, res: Response) => {
     return res.status(404).json({ error: 'Ticket not found or MTTR calculation failed' });
   }
 });
-
-export { ticketsRouter };
