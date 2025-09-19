@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import '../pages/home_page.dart';
 
 class LoginPage extends StatefulWidget {
@@ -24,70 +26,37 @@ class _LoginPageState extends State<LoginPage> {
 			return;
 		}
 		final sp = await SharedPreferences.getInstance();
-		// Role mapping for demo accounts
 		final email = _email.text.trim().toLowerCase();
 		String role = 'CREATOR'; // Default role
 		
-		// Map specific demo accounts to their roles
-		switch (email) {
-			// New PMS accounts
-			case 'admin@pms.com':
-				role = 'ADMIN';
-				break;
-			case 'service.manager@pms.com':
-				role = 'SERVICE_MANAGER';
-				break;
-			case 'technical.analyst@pms.com':
-				role = 'TECHNICAL_ANALYST';
-				break;
-			case 'solution.architect@pms.com':
-				role = 'SOLUTION_ARCHITECT';
-				break;
-			case 'developer@pms.com':
-				role = 'DEVELOPER';
-				break;
-			case 'qa.engineer@pms.com':
-				role = 'QA_ENGINEER';
-				break;
-			case 'devops@pms.com':
-				role = 'DEVOPS_ENGINEER';
-				break;
-			case 'customer@pms.com':
-				role = 'CREATOR';
-				break;
-			// Legacy test accounts
-			case 'admin@test.com':
-				role = 'ADMIN';
-				break;
-			case 'manager@test.com':
-				role = 'SERVICE_MANAGER';
-				break;
-			case 'servicedesk@test.com':
-				role = 'SERVICE_DESK';
-				break;
-			case 'analyst@test.com':
-				role = 'TECHNICAL_ANALYST';
-				break;
-			case 'developer@test.com':
-				role = 'DEVELOPER';
-				break;
-			case 'qa@test.com':
-				role = 'QA_ENGINEER';
-				break;
-			case 'architect@test.com':
-				role = 'SOLUTION_ARCHITECT';
-				break;
-			case 'devops@test.com':
-				role = 'DEVOPS_ENGINEER';
-				break;
-			case 'creator@test.com':
-				role = 'CREATOR';
-				break;
-			case 'hany@admin.com':
-				role = 'ADMIN';
-				break;
-			default:
-				role = 'CREATOR'; // Default for any other email
+		// Try to fetch role from backend first
+		try {
+			final response = await http.get(
+				Uri.parse('http://localhost:3000/users'),
+				headers: {'Content-Type': 'application/json'},
+			);
+			
+			if (response.statusCode == 200) {
+				final users = json.decode(response.body) as List;
+				final user = users.firstWhere(
+					(u) => (u['email'] as String).toLowerCase() == email,
+					orElse: () => null,
+				);
+				
+				if (user != null) {
+					role = user['role'] as String;
+					print('✅ Role fetched from backend: $role for $email');
+				} else {
+					print('⚠️ User not found in backend, using fallback role mapping');
+					role = _getFallbackRole(email);
+				}
+			} else {
+				print('⚠️ Backend not available, using fallback role mapping');
+				role = _getFallbackRole(email);
+			}
+		} catch (e) {
+			print('⚠️ Error fetching role from backend: $e, using fallback role mapping');
+			role = _getFallbackRole(email);
 		}
 		
 		await sp.setString('authToken', 'demo-token');
@@ -95,6 +64,52 @@ class _LoginPageState extends State<LoginPage> {
 		await sp.setString('userEmail', email);
 		if (!mounted) return;
 		Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const HomePage()));
+	}
+
+	String _getFallbackRole(String email) {
+		// Fallback role mapping for demo accounts
+		switch (email) {
+			// New PMS accounts
+			case 'admin@pms.com':
+				return 'ADMIN';
+			case 'service.manager@pms.com':
+				return 'SERVICE_MANAGER';
+			case 'technical.analyst@pms.com':
+				return 'TECHNICAL_ANALYST';
+			case 'solution.architect@pms.com':
+				return 'SOLUTION_ARCHITECT';
+			case 'developer@pms.com':
+				return 'DEVELOPER';
+			case 'qa.engineer@pms.com':
+				return 'QA_ENGINEER';
+			case 'devops@pms.com':
+				return 'DEVOPS_ENGINEER';
+			case 'customer@pms.com':
+				return 'CREATOR';
+			// Legacy test accounts
+			case 'admin@test.com':
+				return 'ADMIN';
+			case 'manager@test.com':
+				return 'SERVICE_MANAGER';
+			case 'servicedesk@test.com':
+				return 'SERVICE_DESK';
+			case 'analyst@test.com':
+				return 'TECHNICAL_ANALYST';
+			case 'developer@test.com':
+				return 'DEVELOPER';
+			case 'qa@test.com':
+				return 'QA_ENGINEER';
+			case 'architect@test.com':
+				return 'SOLUTION_ARCHITECT';
+			case 'devops@test.com':
+				return 'DEVOPS_ENGINEER';
+			case 'creator@test.com':
+				return 'CREATOR';
+			case 'hany@admin.com':
+				return 'ADMIN';
+			default:
+				return 'CREATOR'; // Default for any other email
+		}
 	}
 
 	@override
