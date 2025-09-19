@@ -124,6 +124,7 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
 
     if (decision != null) body['decision'] = decision;
     if (comment != null && comment.isNotEmpty) body['comment'] = comment;
+    body['userRole'] = _role; // Add user role for permission checking
 
     setState(() => _transitioning = true);
 
@@ -580,9 +581,22 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
     }
   }
 
-  // Get action buttons with proper labels and icons
+  // Get action buttons with proper labels and icons based on role and status
   List<Map<String, dynamic>> _getActionButtons(String status) {
-    if (_role != 'ADMIN' && _role != 'SERVICE_MANAGER' && _role != 'SERVICE_DESK') return [];
+    // Role-based access control
+    final rolePermissions = {
+      'ADMIN': ['SUBMITTED', 'ANALYSIS', 'DESIGN', 'APPROVAL', 'DEVELOPMENT', 'TESTING', 'UAT', 'DEPLOYMENT', 'VERIFICATION', 'CLOSED', 'ON_HOLD', 'REJECTED', 'CANCELLED'],
+      'SERVICE_MANAGER': ['ANALYSIS', 'DESIGN', 'APPROVAL', 'DEVELOPMENT', 'TESTING', 'UAT', 'DEPLOYMENT', 'VERIFICATION', 'ON_HOLD'],
+      'TECHNICAL_ANALYST': ['ANALYSIS', 'DESIGN', 'ON_HOLD'],
+      'SOLUTION_ARCHITECT': ['DESIGN', 'APPROVAL', 'ON_HOLD'],
+      'DEVELOPER': ['DEVELOPMENT', 'TESTING', 'ON_HOLD'],
+      'QA_ENGINEER': ['TESTING', 'UAT', 'ON_HOLD'],
+      'DEVOPS_ENGINEER': ['DEPLOYMENT', 'VERIFICATION', 'ON_HOLD'],
+      'CREATOR': ['SUBMITTED', 'UAT', 'VERIFICATION'], // Requester can only approve UAT and final verification
+    };
+    
+    final userPermissions = rolePermissions[_role] ?? [];
+    if (!userPermissions.contains(status)) return [];
     
     switch (status) {
       case 'SUBMITTED':
@@ -590,20 +604,23 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
           {'action': 'ANALYSIS', 'label': 'Accept & Start Analysis', 'icon': Icons.check_circle, 'color': Colors.green},
           {'action': 'REJECTED', 'label': 'Reject Request', 'icon': Icons.cancel, 'color': Colors.red},
         ];
-      case 'CATEGORIZED':
-        return [
-          {'action': 'PRIORITIZED', 'label': 'Set Priority', 'icon': Icons.priority_high, 'color': Colors.orange},
-          {'action': 'REJECTED', 'label': 'Reject', 'icon': Icons.cancel, 'color': Colors.red},
-        ];
-      case 'PRIORITIZED':
-        return [
-          {'action': 'ANALYSIS', 'label': 'Start Analysis', 'icon': Icons.analytics, 'color': Colors.blue},
-          {'action': 'REJECTED', 'label': 'Reject', 'icon': Icons.cancel, 'color': Colors.red},
-        ];
       case 'ANALYSIS':
         return [
+          {'action': 'CONFIRM_DUE', 'label': 'Confirm Due Date', 'icon': Icons.schedule, 'color': Colors.blue},
+          {'action': 'MEETING_REQUESTED', 'label': 'Request Meeting', 'icon': Icons.meeting_room, 'color': Colors.orange},
+          {'action': 'ON_HOLD', 'label': 'Put on Hold', 'icon': Icons.pause_circle, 'color': Colors.amber},
+          {'action': 'REJECTED', 'label': 'Reject', 'icon': Icons.cancel, 'color': Colors.red},
+        ];
+      case 'CONFIRM_DUE':
+        return [
           {'action': 'DESIGN', 'label': 'Move to Design', 'icon': Icons.design_services, 'color': Colors.purple},
-          {'action': 'ON_HOLD', 'label': 'Put on Hold', 'icon': Icons.pause_circle, 'color': Colors.orange},
+          {'action': 'ON_HOLD', 'label': 'Put on Hold', 'icon': Icons.pause_circle, 'color': Colors.amber},
+          {'action': 'REJECTED', 'label': 'Reject', 'icon': Icons.cancel, 'color': Colors.red},
+        ];
+      case 'MEETING_REQUESTED':
+        return [
+          {'action': 'CONFIRM_DUE', 'label': 'Confirm After Meeting', 'icon': Icons.check_circle, 'color': Colors.green},
+          {'action': 'ON_HOLD', 'label': 'Put on Hold', 'icon': Icons.pause_circle, 'color': Colors.amber},
           {'action': 'REJECTED', 'label': 'Reject', 'icon': Icons.cancel, 'color': Colors.red},
         ];
       case 'DESIGN':
@@ -810,6 +827,50 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
                       DateFormat('MMM dd, yyyy').format(DateTime.parse(ticket['createdAt']).toLocal()),
                       Icons.schedule,
                       Colors.orange,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildInfoCard(
+                      'Project Title',
+                      ticket['projectTitle'] ?? 'Not Set',
+                      Icons.work,
+                      Colors.blue,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildInfoCard(
+                      'Service',
+                      ticket['service'] ?? 'Not Set',
+                      Icons.build,
+                      Colors.green,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildInfoCard(
+                      'Business Value',
+                      ticket['businessValue'] ?? 'Not Set',
+                      Icons.trending_up,
+                      Colors.amber,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildInfoCard(
+                      'SLA Hours',
+                      ticket['totalSlaHours']?.toString() ?? 'Not Set',
+                      Icons.timer,
+                      Colors.red,
                     ),
                   ),
                 ],

@@ -79,7 +79,7 @@ class _TeamAssignmentWidgetState extends State<TeamAssignmentWidget> {
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'assignedToId': _selectedAssigneeId,
-          'teamMembers': _selectedTeamMembers.isNotEmpty ? _selectedTeamMembers : null,
+          'teamMembers': _selectedTeamMembers,
           'comment': 'Ticket assigned via team assignment widget',
         }),
       );
@@ -290,19 +290,27 @@ class _TeamAssignmentWidgetState extends State<TeamAssignmentWidget> {
                         ),
                       ),
                       const SizedBox(width: 8),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(user['name']),
-                          Text(
-                            user['role'].replaceAll('_', ' '),
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey[600],
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              user['name'],
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
                             ),
-                          ),
-                        ],
+                            Text(
+                              user['role'].replaceAll('_', ' '),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey[600],
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),

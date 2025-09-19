@@ -89,7 +89,8 @@ const transitionSchema = z.object({
   to: z.enum([
     'SUBMITTED', 'CATEGORIZED', 'PRIORITIZED', 'ANALYSIS', 'DESIGN', 'APPROVAL',
     'DEVELOPMENT', 'TESTING', 'UAT', 'DEPLOYMENT', 'VERIFICATION', 'CLOSED',
-    'ON_HOLD', 'REJECTED', 'CANCELLED'
+    'ON_HOLD', 'REJECTED', 'CANCELLED', 'CONFIRM_DUE', 'MEETING_REQUESTED',
+    'DIGITAL_APPROVAL', 'CUSTOMER_APPROVAL'
   ]),
   dueAt: z.string().datetime().optional(),
   slaHours: z.number().int().positive().optional(),
@@ -99,38 +100,61 @@ const transitionSchema = z.object({
   teamMembers: z.array(z.string()).optional(), // Multiple team members
   priority: z.string().optional(), // Priority from confirmation dialog
   category: z.string().optional(), // Category from confirmation dialog
+  userRole: z.string().optional(), // User role for permission checking
 });
 
+// Role-based workflow permissions
+const rolePermissions: Record<string, string[]> = {
+  ADMIN: ['SUBMITTED', 'ANALYSIS', 'DESIGN', 'APPROVAL', 'DEVELOPMENT', 'TESTING', 'UAT', 'DEPLOYMENT', 'VERIFICATION', 'CLOSED', 'ON_HOLD', 'REJECTED', 'CANCELLED'],
+  SERVICE_MANAGER: ['ANALYSIS', 'DESIGN', 'APPROVAL', 'DEVELOPMENT', 'TESTING', 'UAT', 'DEPLOYMENT', 'VERIFICATION', 'ON_HOLD'],
+  TECHNICAL_ANALYST: ['ANALYSIS', 'DESIGN', 'ON_HOLD'],
+  SOLUTION_ARCHITECT: ['DESIGN', 'APPROVAL', 'ON_HOLD'],
+  DEVELOPER: ['DEVELOPMENT', 'TESTING', 'ON_HOLD'],
+  QA_ENGINEER: ['TESTING', 'UAT', 'ON_HOLD'],
+  DEVOPS_ENGINEER: ['DEPLOYMENT', 'VERIFICATION', 'ON_HOLD'],
+  CREATOR: ['SUBMITTED', 'UAT', 'VERIFICATION'], // Requester can only approve UAT and final verification
+};
+
 const allowedNext: Record<string, string[]> = {
-  // Professional 15-phase workflow - CATEGORIZED and PRIORITIZED are automatic
-  SUBMITTED: ['ANALYSIS', 'REJECTED'], // Skip CATEGORIZED and PRIORITIZED
-  CATEGORIZED: ['PRIORITIZED'], // Automatic transition
-  PRIORITIZED: ['ANALYSIS'], // Automatic transition
-  ANALYSIS: ['DESIGN', 'ON_HOLD', 'REJECTED'],
-  DESIGN: ['APPROVAL', 'ON_HOLD', 'REJECTED'],
-  APPROVAL: ['DEVELOPMENT', 'ON_HOLD', 'REJECTED'],
+  // Updated workflow based on requirements
+  SUBMITTED: ['ANALYSIS', 'REJECTED'], // Admin accepts for analysis
+  ANALYSIS: ['CONFIRM_DUE', 'MEETING_REQUESTED', 'ON_HOLD', 'REJECTED'], // 2-day countdown, then confirm or meeting
+  CONFIRM_DUE: ['DESIGN', 'ON_HOLD', 'REJECTED'], // After confirmation, go to design
+  MEETING_REQUESTED: ['CONFIRM_DUE', 'ON_HOLD', 'REJECTED'], // After meeting, confirm due date
+  DESIGN: ['DIGITAL_APPROVAL', 'ON_HOLD', 'REJECTED'], // Digital Manager approval before development
+  DIGITAL_APPROVAL: ['DEVELOPMENT', 'ON_HOLD', 'REJECTED'], // Digital Manager approves development
   DEVELOPMENT: ['TESTING', 'ON_HOLD', 'CANCELLED'],
   TESTING: ['UAT', 'DEVELOPMENT', 'ON_HOLD'],
-  UAT: ['DEPLOYMENT', 'TESTING', 'ON_HOLD'],
+  UAT: ['CUSTOMER_APPROVAL', 'TESTING', 'ON_HOLD'], // Customer approval before deployment
+  CUSTOMER_APPROVAL: ['DEPLOYMENT', 'TESTING', 'ON_HOLD'], // Customer approves deployment
   DEPLOYMENT: ['VERIFICATION', 'ON_HOLD'],
   VERIFICATION: ['CLOSED', 'DEPLOYMENT', 'ON_HOLD'],
   CLOSED: [],
-  ON_HOLD: ['ANALYSIS', 'DESIGN', 'DEVELOPMENT', 'TESTING', 'UAT', 'DEPLOYMENT', 'CANCELLED'],
+  ON_HOLD: ['ANALYSIS', 'CONFIRM_DUE', 'DESIGN', 'DIGITAL_APPROVAL', 'DEVELOPMENT', 'TESTING', 'UAT', 'CUSTOMER_APPROVAL', 'DEPLOYMENT', 'CANCELLED'],
   REJECTED: [],
   CANCELLED: [],
   
   // Legacy support
   PENDING_REVIEW: ['CATEGORIZED', 'REJECTED'],
+  CATEGORIZED: ['PRIORITIZED'],
+  PRIORITIZED: ['ANALYSIS'],
+  APPROVAL: ['DEVELOPMENT', 'ON_HOLD', 'REJECTED'],
 };
 
 ticketsRouter.post('/:id/transition', async (req: Request, res: Response) => {
   const { id } = req.params;
   const parse = transitionSchema.safeParse(req.body ?? {});
   if (!parse.success) return res.status(400).json({ error: 'Invalid payload', details: parse.error.flatten() });
-  const { to, dueAt, slaHours, decision, comment, priority, category } = parse.data;
+  const { to, dueAt, slaHours, decision, comment, priority, category, userRole } = parse.data;
 
   const existing = await prisma.ticket.findUnique({ where: { id }, include: { stages: { orderBy: { order: 'asc' } } } });
   if (!existing) return res.status(404).json({ error: 'Not found' });
+
+  // Check role-based permissions
+  const userPermissions = rolePermissions[userRole || 'CREATOR'] || [];
+  if (!userPermissions.includes(existing.status)) {
+    return res.status(403).json({ error: `User role ${userRole} cannot perform actions on ${existing.status} phase` });
+  }
 
   const nexts = allowedNext[existing.status] ?? [];
   if (!nexts.includes(to)) return res.status(400).json({ error: `Invalid transition from ${existing.status} to ${to}` });
