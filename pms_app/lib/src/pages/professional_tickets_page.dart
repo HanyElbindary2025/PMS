@@ -703,28 +703,154 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Enhanced Header
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.blue.shade50, Colors.blue.shade100],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.shade600,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.assignment,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            ticket['title'] ?? 'Ticket Details',
+                            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.blue.shade800,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Ticket #${ticket['ticketNumber'] ?? 'N/A'}',
+                            style: TextStyle(
+                              color: Colors.blue.shade600,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      icon: Icon(Icons.close, color: Colors.blue.shade600),
+                      style: IconButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        shape: const CircleBorder(),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+              
+              // Enhanced Ticket Info Cards
               Row(
                 children: [
                   Expanded(
-                    child: Text(
-                      ticket['title'] ?? 'Ticket Details',
-                      style: Theme.of(context).textTheme.headlineSmall,
+                    child: _buildInfoCard(
+                      'Status',
+                      ticket['status'],
+                      Icons.flag,
+                      _getStatusColor(ticket['status']),
                     ),
                   ),
-                  IconButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.close),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildInfoCard(
+                      'Priority',
+                      ticket['priority'] ?? 'Not Set',
+                      Icons.priority_high,
+                      _getPriorityColor(ticket['priority']),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildInfoCard(
+                      'Category',
+                      ticket['category'] ?? 'Not Set',
+                      Icons.category,
+                      Colors.purple,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildInfoCard(
+                      'Created',
+                      DateFormat('MMM dd, yyyy').format(DateTime.parse(ticket['createdAt']).toLocal()),
+                      Icons.schedule,
+                      Colors.orange,
+                    ),
                   ),
                 ],
               ),
               const SizedBox(height: 16),
               
-              // Ticket Info
-              _buildInfoRow('Status', ticket['status'], _getStatusColor(ticket['status'])),
-              _buildInfoRow('Priority', ticket['priority'], _getPriorityColor(ticket['priority'])),
-              _buildInfoRow('Category', ticket['category'], null),
-              _buildInfoRow('Requester', '${ticket['requesterEmail']}${ticket['requesterName'] != null ? ' (${ticket['requesterName']})' : ''}', null),
-              _buildInfoRow('Created', DateFormat('yyyy-MM-dd HH:mm').format(DateTime.parse(ticket['createdAt']).toLocal()), null),
+              // Requester Info
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade50,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey.shade200),
+                ),
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      backgroundColor: Colors.blue.shade100,
+                      child: Icon(Icons.person, color: Colors.blue.shade600),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Requester',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w500,
+                              color: Colors.grey.shade700,
+                            ),
+                          ),
+                          Text(
+                            ticket['requesterEmail'] ?? '',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          if (ticket['requesterName'] != null)
+                            Text(
+                              ticket['requesterName'],
+                              style: TextStyle(color: Colors.grey.shade600),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
               
               // Assignment Information
               if (ticket['assignedTo'] != null) ...[
@@ -758,81 +884,204 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
               
               const SizedBox(height: 16),
               
-              // Workflow Timeline
-              Text('Workflow Timeline', style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: 8),
-              Expanded(
-                child: ListView.builder(
-                  itemCount: stages.length,
-                  itemBuilder: (context, index) {
-                    final stage = stages[index];
-                    final isLast = index == stages.length - 1;
-                    final phaseInfo = _workflowPhases[stage['key']] ?? {'name': stage['name'], 'color': Colors.grey, 'icon': '📋'};
-                    
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Column(
-                            children: [
-                              Container(
-                                width: 40,
-                                height: 40,
-                                decoration: BoxDecoration(
-                                  color: phaseInfo['color'],
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    phaseInfo['icon'],
-                                    style: const TextStyle(fontSize: 16),
-                                  ),
-                                ),
-                              ),
-                              if (!isLast)
-                                Container(
-                                  width: 2,
-                                  height: 40,
-                                  color: Colors.grey.shade300,
-                                ),
-                            ],
+              // Enhanced Workflow Timeline
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade50,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey.shade200),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.timeline, color: Colors.blue.shade600),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Workflow Timeline',
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.blue.shade700,
                           ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Expanded(
+                      child: ListView.builder(
+                        itemCount: stages.length,
+                        itemBuilder: (context, index) {
+                          final stage = stages[index];
+                          final isLast = index == stages.length - 1;
+                          final isCompleted = stage['completedAt'] != null;
+                          final phaseInfo = _workflowPhases[stage['key']] ?? {'name': stage['name'], 'color': Colors.grey, 'icon': '📋'};
+                          
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 16),
+                            child: Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                  phaseInfo['name'],
-                                  style: const TextStyle(fontWeight: FontWeight.bold),
+                                // Timeline indicator
+                                Column(
+                                  children: [
+                                    Container(
+                                      width: 48,
+                                      height: 48,
+                                      decoration: BoxDecoration(
+                                        color: isCompleted ? phaseInfo['color'] : Colors.grey.shade300,
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                          color: isCompleted ? phaseInfo['color'] : Colors.grey.shade400,
+                                          width: 2,
+                                        ),
+                                        boxShadow: isCompleted ? [
+                                          BoxShadow(
+                                            color: (phaseInfo['color'] as Color).withOpacity(0.3),
+                                            blurRadius: 8,
+                                            offset: const Offset(0, 2),
+                                          ),
+                                        ] : null,
+                                      ),
+                                      child: Center(
+                                        child: isCompleted 
+                                          ? Icon(
+                                              Icons.check,
+                                              color: Colors.white,
+                                              size: 20,
+                                            )
+                                          : Text(
+                                              phaseInfo['icon'],
+                                              style: const TextStyle(fontSize: 18),
+                                            ),
+                                      ),
+                                    ),
+                                    if (!isLast)
+                                      Container(
+                                        width: 2,
+                                        height: 40,
+                                        margin: const EdgeInsets.only(top: 8),
+                                        decoration: BoxDecoration(
+                                          color: Colors.grey.shade300,
+                                          borderRadius: BorderRadius.circular(1),
+                                        ),
+                                      ),
+                                  ],
                                 ),
-                                Text(
-                                  'Started: ${DateFormat('yyyy-MM-dd HH:mm').format(DateTime.parse(stage['startedAt']).toLocal())}',
-                                  style: TextStyle(color: Colors.grey.shade600),
+                                const SizedBox(width: 16),
+                                // Timeline content
+                                Expanded(
+                                  child: Container(
+                                    padding: const EdgeInsets.all(16),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                        color: isCompleted ? phaseInfo['color'].withOpacity(0.3) : Colors.grey.shade200,
+                                        width: 1,
+                                      ),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.05),
+                                          blurRadius: 8,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        // Phase name and status
+                                        Row(
+                                          children: [
+                                            Expanded(
+                                              child: Text(
+                                                phaseInfo['name'],
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 16,
+                                                  color: isCompleted ? phaseInfo['color'] : Colors.grey.shade700,
+                                                ),
+                                              ),
+                                            ),
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                              decoration: BoxDecoration(
+                                                color: isCompleted ? Colors.green.shade100 : Colors.orange.shade100,
+                                                borderRadius: BorderRadius.circular(12),
+                                              ),
+                                              child: Text(
+                                                isCompleted ? 'Completed' : 'In Progress',
+                                                style: TextStyle(
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w500,
+                                                  color: isCompleted ? Colors.green.shade700 : Colors.orange.shade700,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 8),
+                                        
+                                        // Timeline details
+                                        _buildTimelineDetail(
+                                          Icons.schedule,
+                                          'Started',
+                                          DateFormat('MMM dd, yyyy • HH:mm').format(DateTime.parse(stage['startedAt']).toLocal()),
+                                        ),
+                                        
+                                        if (stage['completedAt'] != null)
+                                          _buildTimelineDetail(
+                                            Icons.check_circle,
+                                            'Completed',
+                                            DateFormat('MMM dd, yyyy • HH:mm').format(DateTime.parse(stage['completedAt']).toLocal()),
+                                          ),
+                                        
+                                        if (stage['decision'] != null)
+                                          _buildTimelineDetail(
+                                            Icons.gavel,
+                                            'Decision',
+                                            stage['decision'],
+                                          ),
+                                        
+                                        if (stage['comment'] != null && stage['comment'].toString().isNotEmpty)
+                                          Container(
+                                            margin: const EdgeInsets.only(top: 8),
+                                            padding: const EdgeInsets.all(12),
+                                            decoration: BoxDecoration(
+                                              color: Colors.blue.shade50,
+                                              borderRadius: BorderRadius.circular(8),
+                                              border: Border.all(color: Colors.blue.shade200),
+                                            ),
+                                            child: Row(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                Icon(Icons.comment, size: 16, color: Colors.blue.shade600),
+                                                const SizedBox(width: 8),
+                                                Expanded(
+                                                  child: Text(
+                                                    stage['comment'],
+                                                    style: TextStyle(
+                                                      color: Colors.blue.shade800,
+                                                      fontStyle: FontStyle.italic,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                  ),
                                 ),
-                                if (stage['completedAt'] != null)
-                                  Text(
-                                    'Completed: ${DateFormat('yyyy-MM-dd HH:mm').format(DateTime.parse(stage['completedAt']).toLocal())}',
-                                    style: TextStyle(color: Colors.grey.shade600),
-                                  ),
-                                if (stage['decision'] != null)
-                                  Text(
-                                    'Decision: ${stage['decision']}',
-                                    style: const TextStyle(fontWeight: FontWeight.w500),
-                                  ),
-                                if (stage['comment'] != null)
-                                  Text(
-                                    'Comment: ${stage['comment']}',
-                                    style: const TextStyle(fontStyle: FontStyle.italic),
-                                  ),
                               ],
                             ),
-                          ),
-                        ],
+                          );
+                        },
                       ),
-                    );
-                  },
+                    ),
+                  ],
                 ),
               ),
               
@@ -1343,6 +1592,81 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
       label: Text(priorityInfo['name']),
       backgroundColor: (priorityInfo['color'] as Color).withOpacity(0.12),
       labelStyle: TextStyle(color: priorityInfo['color'] as Color),
+    );
+  }
+
+  Widget _buildTimelineDetail(IconData icon, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Row(
+        children: [
+          Icon(icon, size: 14, color: Colors.grey.shade600),
+          const SizedBox(width: 8),
+          Text(
+            '$label: ',
+            style: TextStyle(
+              fontWeight: FontWeight.w500,
+              color: Colors.grey.shade700,
+              fontSize: 13,
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: TextStyle(
+                color: Colors.grey.shade600,
+                fontSize: 13,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoCard(String label, String value, IconData icon, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withOpacity(0.3)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 16, color: color),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: TextStyle(
+                  fontWeight: FontWeight.w500,
+                  color: Colors.grey.shade700,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: color,
+              fontSize: 14,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
