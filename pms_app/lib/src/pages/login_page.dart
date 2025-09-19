@@ -30,6 +30,32 @@ class _LoginPageState extends State<LoginPage> {
 		
 		// Map specific demo accounts to their roles
 		switch (email) {
+			// New PMS accounts
+			case 'admin@pms.com':
+				role = 'ADMIN';
+				break;
+			case 'service.manager@pms.com':
+				role = 'SERVICE_MANAGER';
+				break;
+			case 'technical.analyst@pms.com':
+				role = 'TECHNICAL_ANALYST';
+				break;
+			case 'solution.architect@pms.com':
+				role = 'SOLUTION_ARCHITECT';
+				break;
+			case 'developer@pms.com':
+				role = 'DEVELOPER';
+				break;
+			case 'qa.engineer@pms.com':
+				role = 'QA_ENGINEER';
+				break;
+			case 'devops@pms.com':
+				role = 'DEVOPS_ENGINEER';
+				break;
+			case 'customer@pms.com':
+				role = 'CREATOR';
+				break;
+			// Legacy test accounts
 			case 'admin@test.com':
 				role = 'ADMIN';
 				break;
@@ -56,6 +82,9 @@ class _LoginPageState extends State<LoginPage> {
 				break;
 			case 'creator@test.com':
 				role = 'CREATOR';
+				break;
+			case 'hany@admin.com':
+				role = 'ADMIN';
 				break;
 			default:
 				role = 'CREATOR'; // Default for any other email
