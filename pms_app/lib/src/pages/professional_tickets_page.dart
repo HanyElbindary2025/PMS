@@ -698,9 +698,13 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
       builder: (context) => Dialog(
         child: Container(
           width: 800,
-          height: MediaQuery.of(context).size.height * 0.9, // Use 90% of screen height
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.9,
+            maxWidth: MediaQuery.of(context).size.width * 0.9,
+          ),
           padding: const EdgeInsets.all(24),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Enhanced Header
@@ -765,7 +769,7 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
               const SizedBox(height: 20),
               
               // Scrollable content
-              Expanded(
+              Flexible(
                 child: SingleChildScrollView(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
