@@ -1,0 +1,13 @@
+{
+  "testRun": {
+    "startTime": "2025-09-19T23:03:26.293Z",
+    "endTime": "2025-09-19T23:03:32.541Z",
+    "duration": 6.248,
+    "logFile": "logs/test-2025-09-19T23-03-26-293Z.log"
+  },
+  "summary": {
+    "totalTests": 0,
+    "passed": 0,
+    "failed": 0
+  }
+}
