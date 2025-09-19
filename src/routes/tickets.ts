@@ -84,10 +84,15 @@ ticketsRouter.get('/:id', async (req: Request, res: Response) => {
   // Calculate SLA status
   let slaStatus = 'NO_SLA_SET';
   if (ticket.totalSlaHours) {
-    const confirmDueStage = ticket.stages.find(stage => stage.key === 'CONFIRM_DUE');
-    if (confirmDueStage && confirmDueStage.startedAt) {
+    // Find the stage where SLA starts (CONFIRM_DUE or first stage with SLA)
+    const slaStartStage = ticket.stages.find(stage => 
+      stage.key === 'CONFIRM_DUE' || 
+      (stage.slaHours && stage.slaHours > 0)
+    );
+    
+    if (slaStartStage && slaStartStage.startedAt) {
       const now = new Date();
-      const slaEndTime = new Date(confirmDueStage.startedAt.getTime() + (ticket.totalSlaHours * 60 * 60 * 1000));
+      const slaEndTime = new Date(slaStartStage.startedAt.getTime() + (ticket.totalSlaHours * 60 * 60 * 1000));
       const timeRemaining = slaEndTime.getTime() - now.getTime();
 
       if (timeRemaining > 0) {
@@ -102,7 +107,13 @@ ticketsRouter.get('/:id', async (req: Request, res: Response) => {
         const breachTime = Math.abs(timeRemaining) / (1000 * 60 * 60);
         slaStatus = `SLA_BREACH_${breachTime.toFixed(1)}H_OVERDUE`;
       }
+    } else if (ticket.status === 'CLOSED') {
+      // For closed tickets, show completion status
+      slaStatus = 'COMPLETED';
     }
+  } else if (ticket.status === 'CLOSED') {
+    // For closed tickets without SLA, show completion status
+    slaStatus = 'COMPLETED';
   }
 
   return res.json({
@@ -254,17 +265,29 @@ ticketsRouter.post('/:id/transition', async (req: Request, res: Response) => {
     });
   }
 
+  // Mark previous stages as completed
+  const currentStage = existing.stages.find(stage => stage.key === existing.status);
+  const stagesToUpdate = [];
+  if (currentStage && !currentStage.completedAt) {
+    stagesToUpdate.push({
+      where: { id: currentStage.id },
+      data: { completedAt: now }
+    });
+  }
+
   const updated = await prisma.ticket.update({
     where: { id },
     data: {
       status: to,
       stages: {
         create: stagesToCreate,
+        update: stagesToUpdate,
       },
       // Update priority and category if provided
       ...(priority ? { priority } : {}),
       ...(category ? { category } : {}),
-      ...(to === 'CONFIRM_DUE' && ((computedSla ?? null) || typeof slaHours === 'number')
+      // Set SLA hours for any stage that provides it
+      ...((computedSla ?? null) || typeof slaHours === 'number'
         ? { totalSlaHours: (computedSla ?? (slaHours as number)) }
         : {}),
     },
