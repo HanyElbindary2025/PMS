@@ -70,6 +70,6 @@ project-summary.json
 *.xlsx
 *.xls
 
-# Batch files
-*.bat
-*.ps1
+# Batch files (keep essential ones)
+# *.bat
+# *.ps1
