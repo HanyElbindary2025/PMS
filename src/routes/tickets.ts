@@ -70,7 +70,11 @@ ticketsRouter.get('/:id', async (req: Request, res: Response) => {
 // POST /tickets/:id/transition
 // Body: { to: 'ANALYSIS' | 'RAT_MEETING' | 'CONFIRM_DUE' | 'DEVELOPMENT' | 'TESTING' | 'SYSTEM_IMPLEMENTATION' | 'DELIVERED' | 'REJECTED', dueAt?: string, slaHours?: number, decision?: string, comment?: string }
 const transitionSchema = z.object({
-  to: z.enum(['ANALYSIS','RAT_MEETING','CONFIRM_DUE','DEVELOPMENT','TESTING','SYSTEM_IMPLEMENTATION','DELIVERED','REJECTED']),
+  to: z.enum([
+    'SUBMITTED', 'CATEGORIZED', 'PRIORITIZED', 'ANALYSIS', 'DESIGN', 'APPROVAL',
+    'DEVELOPMENT', 'TESTING', 'UAT', 'DEPLOYMENT', 'VERIFICATION', 'CLOSED',
+    'ON_HOLD', 'REJECTED', 'CANCELLED'
+  ]),
   dueAt: z.string().datetime().optional(),
   slaHours: z.number().int().positive().optional(),
   decision: z.string().optional(),
@@ -80,15 +84,25 @@ const transitionSchema = z.object({
 });
 
 const allowedNext: Record<string, string[]> = {
-  PENDING_REVIEW: ['ANALYSIS','REJECTED'],
+  // Professional 15-phase workflow
+  SUBMITTED: ['CATEGORIZED', 'REJECTED'],
+  CATEGORIZED: ['PRIORITIZED', 'REJECTED'],
+  PRIORITIZED: ['ANALYSIS', 'REJECTED'],
+  ANALYSIS: ['DESIGN', 'ON_HOLD', 'REJECTED'],
+  DESIGN: ['APPROVAL', 'ON_HOLD', 'REJECTED'],
+  APPROVAL: ['DEVELOPMENT', 'ON_HOLD', 'REJECTED'],
+  DEVELOPMENT: ['TESTING', 'ON_HOLD', 'CANCELLED'],
+  TESTING: ['UAT', 'DEVELOPMENT', 'ON_HOLD'],
+  UAT: ['DEPLOYMENT', 'TESTING', 'ON_HOLD'],
+  DEPLOYMENT: ['VERIFICATION', 'ON_HOLD'],
+  VERIFICATION: ['CLOSED', 'DEPLOYMENT', 'ON_HOLD'],
+  CLOSED: [],
+  ON_HOLD: ['ANALYSIS', 'DESIGN', 'DEVELOPMENT', 'TESTING', 'UAT', 'DEPLOYMENT', 'CANCELLED'],
   REJECTED: [],
-  ANALYSIS: ['RAT_MEETING','CONFIRM_DUE'],
-  RAT_MEETING: ['CONFIRM_DUE'],
-  CONFIRM_DUE: ['DEVELOPMENT'],
-  DEVELOPMENT: ['TESTING'],
-  TESTING: ['SYSTEM_IMPLEMENTATION'],
-  SYSTEM_IMPLEMENTATION: ['DELIVERED'],
-  DELIVERED: [],
+  CANCELLED: [],
+  
+  // Legacy support
+  PENDING_REVIEW: ['CATEGORIZED', 'REJECTED'],
 };
 
 ticketsRouter.post('/:id/transition', async (req: Request, res: Response) => {

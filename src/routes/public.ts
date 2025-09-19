@@ -30,14 +30,14 @@ publicRouter.post('/requests', async (req: Request, res: Response) => {
       description,
       requesterEmail,
       requesterName: requesterName ?? null,
-      status: 'PENDING_REVIEW',
+      status: 'SUBMITTED',
       totalSlaHours: targetSlaHours ?? null,
       details: details ? JSON.stringify(details) : null,
       stages: {
         create: [
           {
-            name: 'Pending Review',
-            key: 'PENDING_REVIEW',
+            name: 'Submitted',
+            key: 'SUBMITTED',
             order: 1,
             startedAt: now,
             dueAt: null,
