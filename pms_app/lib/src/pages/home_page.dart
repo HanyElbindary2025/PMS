@@ -6,6 +6,7 @@ import 'user_management_page.dart';
 import 'create_request_page.dart';
 import 'professional_tickets_page.dart';
 import 'professional_dashboard_page.dart';
+import 'admin_settings_page.dart';
 import 'login_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -21,12 +22,12 @@ class _HomePageState extends State<HomePage> {
 	String _role = 'CREATOR';
 	
 	List<Widget> get _pages => _useProfessionalUI 
-		? [ProfessionalDashboardPage(), CreateRequestPage(), ProfessionalTicketsPage(), UserManagementPage()]
-		: [DashboardPage(), CreateRequestPage(), TicketsPage(), UserManagementPage()];
+		? [ProfessionalDashboardPage(), CreateRequestPage(), ProfessionalTicketsPage(), UserManagementPage(), AdminSettingsPage()]
+		: [DashboardPage(), CreateRequestPage(), TicketsPage(), UserManagementPage(), AdminSettingsPage()];
 	
 	List<String> get _titles => _useProfessionalUI
-		? ['Professional Dashboard', 'Create Request', 'Professional Tickets', 'Users']
-		: ['Dashboard', 'Create Request', 'My Tickets', 'Users'];
+		? ['Professional Dashboard', 'Create Request', 'Professional Tickets', 'Users', 'Admin Settings']
+		: ['Dashboard', 'Create Request', 'My Tickets', 'Users', 'Admin Settings'];
 
 	@override
 	void initState() {
@@ -108,13 +109,20 @@ class _HomePageState extends State<HomePage> {
 								title: Text(_useProfessionalUI ? 'Professional Tickets' : 'My Tickets'),
 								onTap: () => setState(() => _selected = 2),
 							),
-							if (_role == 'ADMIN')
+							if (_role == 'ADMIN') ...[
 								ListTile(
 									selected: _selected == 3,
 									leading: const Icon(Icons.group),
 									title: const Text('User Management'),
 									onTap: () => setState(() => _selected = 3),
 								),
+								ListTile(
+									selected: _selected == 4,
+									leading: const Icon(Icons.settings),
+									title: const Text('Admin Settings'),
+									onTap: () => setState(() => _selected = 4),
+								),
+							],
 							const Divider(),
 							ListTile(
 								leading: const Icon(Icons.logout),
