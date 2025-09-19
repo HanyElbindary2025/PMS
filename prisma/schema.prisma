@@ -48,6 +48,8 @@ model Stage {
   dueAt      DateTime?
   completedAt DateTime?
   slaHours   Int?
+  decision   String?   // APPROVE or REJECT where applicable
+  comment    String?
 
   @@index([ticketId, order])
 }

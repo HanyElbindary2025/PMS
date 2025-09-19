@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class TicketsPage extends StatefulWidget {
 	const TicketsPage({super.key});
@@ -21,20 +22,104 @@ class _TicketsPageState extends State<TicketsPage> {
 	int? _sortColumnIndex;
 	bool _sortAscending = false; // newest first by default
 	final Set<String> _selectedIds = <String>{};
-	Timer? _debounce;
+  Timer? _debounce;
+  bool _transitioning = false;
+  String _role = 'CREATOR';
+  String _userEmail = '';
 
-	Color _statusColor(String s) {
+	Future<void> _transition(String id, String to) async {
+		Map<String, dynamic> body = { 'to': to };
+		String? decision;
+		String? comment;
+		if (to == 'ANALYSIS' || to == 'REJECTED') {
+			final ctl = TextEditingController();
+			final ok = await showDialog<bool>(context: context, builder: (_) {
+				return AlertDialog(
+					title: Text(to == 'ANALYSIS' ? 'Approve & Move to Analysis' : 'Reject Request'),
+					content: TextField(controller: ctl, maxLines: 3, decoration: const InputDecoration(labelText: 'Comment (optional)')),
+					actions: [
+						TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancel')),
+						FilledButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Continue')),
+					],
+				);
+			});
+			if (ok != true) return;
+			decision = to == 'ANALYSIS' ? 'APPROVE' : 'REJECT';
+			comment = ctl.text.trim().isEmpty ? null : ctl.text.trim();
+		}
+		if (to == 'CONFIRM_DUE') {
+			final dueCtl = TextEditingController();
+			final slaCtl = TextEditingController();
+			final ok = await showDialog<bool>(context: context, builder: (_) {
+				return AlertDialog(
+					title: const Text('Confirm Due'),
+					content: SizedBox(
+						width: 420,
+						child: Column(mainAxisSize: MainAxisSize.min, children: [
+							TextField(controller: dueCtl, decoration: const InputDecoration(labelText: 'Due ISO (e.g. 2025-09-22T10:00:00Z)')),
+							const SizedBox(height: 8),
+							TextField(controller: slaCtl, decoration: const InputDecoration(labelText: 'SLA Hours'), keyboardType: TextInputType.number),
+						]),
+					),
+					actions: [
+						TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancel')),
+						FilledButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Confirm')),
+					],
+				);
+			});
+			if (ok != true) return;
+			if (dueCtl.text.trim().isNotEmpty) body['dueAt'] = dueCtl.text.trim();
+			if (slaCtl.text.trim().isNotEmpty) body['slaHours'] = int.tryParse(slaCtl.text.trim());
+		}
+		if (decision != null) body['decision'] = decision;
+		if (comment != null) body['comment'] = comment;
+		setState(() { _transitioning = true; });
+		final res = await http.post(
+			Uri.parse('http://localhost:3000/tickets/$id/transition'),
+			headers: { 'Content-Type': 'application/json' },
+			body: json.encode(body),
+		);
+		if (!mounted) return;
+		if (res.statusCode == 200) {
+			Navigator.of(context).pop();
+			await _load();
+			ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Status updated')));
+		} else {
+			ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: ${res.statusCode}')));
+		}
+		if (mounted) setState(() { _transitioning = false; });
+	}
+
+  List<String> _nextStates(String status) {
+		switch (status) {
+      case 'PENDING_REVIEW': return ['ANALYSIS','REJECTED'];
+			case 'ANALYSIS': return ['RAT_MEETING','CONFIRM_DUE'];
+			case 'RAT_MEETING': return ['CONFIRM_DUE'];
+			case 'CONFIRM_DUE': return ['DEVELOPMENT'];
+			case 'DEVELOPMENT': return ['TESTING'];
+			case 'TESTING': return ['SYSTEM_IMPLEMENTATION'];
+			case 'SYSTEM_IMPLEMENTATION': return ['DELIVERED'];
+      case 'REJECTED': return [];
+			default: return [];
+		}
+	}
+
+  Color _statusColor(String s) {
 		switch (s) {
-			case 'CREATED':
-				return Colors.blue.shade600;
+      case 'PENDING_REVIEW':
+        return Colors.blueGrey.shade700;
 			case 'ANALYSIS':
 				return Colors.orange.shade700;
+      case 'RAT_MEETING':
+        return Colors.teal.shade700;
 			case 'CONFIRM_DUE':
-				return Colors.teal.shade700;
+        return Colors.cyan.shade700;
+      case 'DEVELOPMENT':
+        return Colors.indigo.shade700;
 			case 'TESTING':
 				return Colors.purple.shade700;
-			case 'READY_DELIVERY':
-				return Colors.indigo.shade700;
+      case 'SYSTEM_IMPLEMENTATION':
+        return Colors.brown.shade700;
 			case 'DELIVERED':
 				return Colors.green.shade700;
 			default:
@@ -42,7 +127,7 @@ class _TicketsPageState extends State<TicketsPage> {
 		}
 	}
 
-	Future<void> _openDetails(String id) async {
+  Future<void> _openDetails(String id) async {
 		showDialog(context: context, barrierDismissible: false, builder: (_) => const Center(child: CircularProgressIndicator()));
 		try {
 			final res = await http.get(Uri.parse('http://localhost:3000/tickets/$id'));
@@ -81,21 +166,45 @@ class _TicketsPageState extends State<TicketsPage> {
 									Text('Stages', style: Theme.of(context).textTheme.titleSmall),
 									const SizedBox(height: 6),
 									SizedBox(
-										height: 160,
-										child: ListView.separated(
+										height: 200,
+										child: ListView.builder(
+											itemCount: stages.length,
 											itemBuilder: (_, i) {
 												final s = stages[i];
-												return Row(
-													children: [
-														Chip(label: Text(s['key'] ?? s['name'] ?? '')), const SizedBox(width: 8),
-														Expanded(child: Text('From ${s['startedAt'] ?? ''}${s['completedAt'] != null ? ' to ${s['completedAt']}' : ''}')),
-													],
+												final bool isLast = i == stages.length - 1;
+												final Color dot = _statusColor((s['key'] ?? s['name'] ?? '') as String);
+												return Padding(
+													padding: const EdgeInsets.symmetric(vertical: 6),
+													child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+														SizedBox(
+															width: 20,
+															child: Column(children: [
+																Container(width: 10, height: 10, decoration: BoxDecoration(color: dot, shape: BoxShape.circle)),
+																if (!isLast) Container(width: 2, height: 28, color: Colors.grey.shade300),
+														])),
+													const SizedBox(width: 8),
+													Expanded(
+														child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+															Text((s['key'] ?? s['name'] ?? '').toString(), style: const TextStyle(fontWeight: FontWeight.w600)),
+															Text('From ${s['startedAt'] ?? ''}${s['completedAt'] != null ? ' to ${s['completedAt']}' : ''}', style: const TextStyle(color: Colors.black54)),
+														]),
+													),
+												]),
 												);
 											},
-											separatorBuilder: (_, __) => const Divider(height: 12),
-											itemCount: stages.length,
 										),
 									),
+                                  const SizedBox(height: 12),
+                                  if (_role == 'ADMIN' && _nextStates((t['status'] ?? '') as String).isNotEmpty) ...[
+										Text('Next actions', style: Theme.of(context).textTheme.titleSmall),
+										const SizedBox(height: 6),
+									Wrap(spacing: 8, runSpacing: 8, children: _nextStates((t['status'] ?? '') as String).map((ns) {
+										return FilledButton.tonal(
+											onPressed: _transitioning ? null : () { _transition((t['id'] as String), ns); },
+											child: _transitioning ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : Text(ns.replaceAll('_', ' ')),
+										);
+										}).toList()),
+									],
 								],
 							),
 						),
@@ -111,14 +220,14 @@ class _TicketsPageState extends State<TicketsPage> {
 		}
 	}
 
-	Future<void> _load() async {
+  Future<void> _load() async {
 		setState(() => _loading = true);
 		final uri = Uri.parse('http://localhost:3000/tickets').replace(queryParameters: {
 			'page': '$_page', 'pageSize': '$_pageSize', if (_status != null && _status!.isNotEmpty) 'status': _status!,
 		});
 		final res = await http.get(uri);
 		final body = json.decode(res.body);
-		List<dynamic> all = List<dynamic>.from(body['data'] ?? []);
+    List<dynamic> all = List<dynamic>.from(body['data'] ?? []);
 		// client-side sorting (server sort can be added later)
 		all.sort((a, b) {
 			final ma = a as Map<String, dynamic>;
@@ -133,10 +242,14 @@ class _TicketsPageState extends State<TicketsPage> {
 			}
 			return _sortAscending ? cmp : -cmp;
 		});
-		setState(() {
-			_rows = _search.isEmpty
-				? all
-				: all.where((t) {
+    final mineOnly = (_role == 'CREATOR' && _userEmail.isNotEmpty)
+      ? all.where((e) => (e as Map<String, dynamic>)['requesterEmail'] == _userEmail).toList()
+      : all;
+
+    setState(() {
+      _rows = _search.isEmpty
+        ? mineOnly
+        : mineOnly.where((t) {
 					final m = t as Map<String, dynamic>;
 					final hay = '${m['title'] ?? ''} ${m['requesterEmail'] ?? ''} ${m['status'] ?? ''}'.toLowerCase();
 					return hay.contains(_search.toLowerCase());
@@ -146,11 +259,16 @@ class _TicketsPageState extends State<TicketsPage> {
 		});
 	}
 
-	@override
-	void initState() {
-		super.initState();
-		_load();
-	}
+  @override
+  void initState() {
+    super.initState();
+    SharedPreferences.getInstance().then((sp) {
+      _role = sp.getString('userRole') ?? 'CREATOR';
+      _userEmail = sp.getString('userEmail') ?? '';
+      setState(() {});
+      _load();
+    });
+  }
 
 	Widget _filters() {
 		return Row(children: [

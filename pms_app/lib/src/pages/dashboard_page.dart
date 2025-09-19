@@ -11,9 +11,14 @@ class DashboardPage extends StatefulWidget {
 
 class _DashboardPageState extends State<DashboardPage> {
 	int total = 0;
-	int created = 0;
+	int pending = 0;
 	int analysis = 0;
+	int rat = 0;
+	int confirmDue = 0;
+	int development = 0;
 	int testing = 0;
+	int sysImpl = 0;
+	int delivered = 0;
 	bool loading = true;
 
 	Future<void> _load() async {
@@ -27,9 +32,14 @@ class _DashboardPageState extends State<DashboardPage> {
 			return (body['pagination']?['total'] ?? 0) as int;
 		}
 		total = await count();
-		created = await count('CREATED');
+		pending = await count('PENDING_REVIEW');
 		analysis = await count('ANALYSIS');
+		rat = await count('RAT_MEETING');
+		confirmDue = await count('CONFIRM_DUE');
+		development = await count('DEVELOPMENT');
 		testing = await count('TESTING');
+		sysImpl = await count('SYSTEM_IMPLEMENTATION');
+		delivered = await count('DELIVERED');
 		setState(() => loading = false);
 	}
 
@@ -66,14 +76,16 @@ class _DashboardPageState extends State<DashboardPage> {
 			padding: const EdgeInsets.all(16),
 			child: Column(
 				children: [
-					Row(children: [
+					Wrap(spacing: 12, runSpacing: 12, children: [
 						_card('Total', total, Colors.indigo),
-						const SizedBox(width: 12),
-						_card('Created', created, Colors.blue),
-						const SizedBox(width: 12),
+						_card('Pending Review', pending, Colors.blueGrey),
 						_card('Analysis', analysis, Colors.orange),
-						const SizedBox(width: 12),
+						_card('RAT Meeting', rat, Colors.teal),
+						_card('Confirm Due', confirmDue, Colors.cyan),
+						_card('Development', development, Colors.deepPurple),
 						_card('Testing', testing, Colors.green),
+						_card('System Impl.', sysImpl, Colors.brown),
+						_card('Delivered', delivered, Colors.green.shade800),
 					]),
 				],
 			),

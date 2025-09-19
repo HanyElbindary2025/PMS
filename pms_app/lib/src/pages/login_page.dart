@@ -24,8 +24,13 @@ class _LoginPageState extends State<LoginPage> {
 			return;
 		}
 		final sp = await SharedPreferences.getInstance();
+		// Simple role mapping for testing: emails containing 'sys' => ADMIN (system user)
+		// otherwise CREATOR (normal requester)
+		final email = _email.text.trim().toLowerCase();
+		final role = email.contains('sys') ? 'ADMIN' : 'CREATOR';
 		await sp.setString('authToken', 'demo-token');
-		await sp.setString('userRole', 'ADMIN');
+		await sp.setString('userRole', role);
+		await sp.setString('userEmail', email);
 		if (!mounted) return;
 		Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const HomePage()));
 	}
