@@ -81,6 +81,7 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
       _role = sp.getString('userRole') ?? 'CREATOR';
       _userEmail = sp.getString('userEmail') ?? '';
     });
+    print('🔍 DEBUG: Loaded role: $_role, email: $_userEmail');
   }
 
   Future<void> _transition(String id, String to) async {
@@ -574,8 +575,8 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
       case 'ANALYSIS': 
         return ['DESIGN', 'ON_HOLD', 'REJECTED'];
       case 'DESIGN': 
-        return ['APPROVAL', 'ON_HOLD', 'REJECTED'];
-      case 'APPROVAL': 
+        return ['DIGITAL_APPROVAL', 'ON_HOLD', 'REJECTED'];
+      case 'DIGITAL_APPROVAL': 
         return ['DEVELOPMENT', 'ON_HOLD', 'REJECTED'];
       case 'DEVELOPMENT': 
         return ['TESTING', 'ON_HOLD', 'CANCELLED'];
@@ -609,7 +610,11 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
         };
     
     final userPermissions = rolePermissions[_role] ?? [];
-    if (!userPermissions.contains(status)) return [];
+    print('🔍 DEBUG: Role: $_role, Status: $status, Permissions: $userPermissions');
+    if (!userPermissions.contains(status)) {
+      print('❌ DEBUG: Role $_role does not have permission for status $status');
+      return [];
+    }
     
     switch (status) {
       case 'SUBMITTED':
@@ -638,11 +643,11 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
         ];
       case 'DESIGN':
         return [
-          {'action': 'APPROVAL', 'label': 'Send for Approval', 'icon': Icons.approval, 'color': Colors.indigo},
+          {'action': 'DIGITAL_APPROVAL', 'label': 'Send for Digital Approval', 'icon': Icons.approval, 'color': Colors.indigo},
           {'action': 'ON_HOLD', 'label': 'Put on Hold', 'icon': Icons.pause_circle, 'color': Colors.orange},
           {'action': 'REJECTED', 'label': 'Reject', 'icon': Icons.cancel, 'color': Colors.red},
         ];
-      case 'APPROVAL':
+      case 'DIGITAL_APPROVAL':
         return [
           {'action': 'DEVELOPMENT', 'label': 'Approve & Start Development', 'icon': Icons.code, 'color': Colors.green},
           {'action': 'ON_HOLD', 'label': 'Put on Hold', 'icon': Icons.pause_circle, 'color': Colors.orange},
