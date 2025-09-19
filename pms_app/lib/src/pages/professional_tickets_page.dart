@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
+import '../widgets/team_assignment_widget.dart';
 
 class ProfessionalTicketsPage extends StatefulWidget {
   const ProfessionalTicketsPage({super.key});
@@ -621,6 +622,19 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
               _buildInfoRow('Requester', '${ticket['requesterEmail']}${ticket['requesterName'] != null ? ' (${ticket['requesterName']})' : ''}', null),
               _buildInfoRow('Created', DateFormat('yyyy-MM-dd HH:mm').format(DateTime.parse(ticket['createdAt']).toLocal()), null),
               
+              // Assignment Information
+              if (ticket['assignedTo'] != null) ...[
+                const SizedBox(height: 8),
+                _buildInfoRow('Assigned To', ticket['assignedTo']['name'], Colors.blue),
+                _buildInfoRow('Assignee Role', ticket['assignedTo']['role']?.replaceAll('_', ' '), null),
+                _buildInfoRow('Assignee Email', ticket['assignedTo']['email'], null),
+              ],
+              
+              if (ticket['teamMembers'] != null) ...[
+                const SizedBox(height: 8),
+                _buildInfoRow('Team Members', '${json.decode(ticket['teamMembers'] as String).length} members', Colors.green),
+              ],
+              
               const SizedBox(height: 16),
               const Divider(),
               const SizedBox(height: 16),
@@ -719,7 +733,7 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
               ),
               
               // Action Buttons
-              if (_getActionButtons((ticket['status'] ?? '') as String).isNotEmpty) ...[
+              if (_getActionButtons((ticket['status'] ?? '') as String).isNotEmpty || _canAssignTeam()) ...[
                 const SizedBox(height: 16),
                 const Divider(),
                 const SizedBox(height: 16),
@@ -734,20 +748,35 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
-                  children: _getActionButtons((ticket['status'] ?? '') as String).map((action) {
-                    return FilledButton.icon(
-                      onPressed: _transitioning ? null : () => _transition((ticket['id'] as String), action['action']),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: (action['color'] as Color).withOpacity(0.1),
-                        foregroundColor: action['color'] as Color,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  children: [
+                    // Team Assignment Button
+                    if (_canAssignTeam())
+                      FilledButton.icon(
+                        onPressed: _transitioning ? null : () => _showTeamAssignmentDialog(ticket),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: Colors.indigo.withOpacity(0.1),
+                          foregroundColor: Colors.indigo,
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        ),
+                        icon: Icon(Icons.group_add, size: 18),
+                        label: Text('Assign Team'),
                       ),
-                      icon: _transitioning 
-                        ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                        : Icon(action['icon'] as IconData, size: 18),
-                      label: Text(action['label'] as String),
-                    );
-                  }).toList(),
+                    // Workflow Action Buttons
+                    ..._getActionButtons((ticket['status'] ?? '') as String).map((action) {
+                      return FilledButton.icon(
+                        onPressed: _transitioning ? null : () => _transition((ticket['id'] as String), action['action']),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: (action['color'] as Color).withOpacity(0.1),
+                          foregroundColor: action['color'] as Color,
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        ),
+                        icon: _transitioning 
+                          ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                          : Icon(action['icon'] as IconData, size: 18),
+                        label: Text(action['label'] as String),
+                      );
+                    }).toList(),
+                  ],
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -758,6 +787,28 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  // Check if current user can assign teams
+  bool _canAssignTeam() {
+    return _role == 'ADMIN' || _role == 'SERVICE_MANAGER' || _role == 'SERVICE_DESK';
+  }
+
+  // Show team assignment dialog
+  void _showTeamAssignmentDialog(Map<String, dynamic> ticket) {
+    showDialog(
+      context: context,
+      builder: (context) => TeamAssignmentWidget(
+        ticketId: ticket['id'] as String,
+        currentAssigneeId: ticket['assignedToId'] as String?,
+        currentTeamMembers: ticket['teamMembers'] != null 
+          ? List<String>.from(json.decode(ticket['teamMembers'] as String))
+          : null,
+        onAssignmentChanged: () {
+          _load(); // Reload tickets to show updated assignment
+        },
       ),
     );
   }

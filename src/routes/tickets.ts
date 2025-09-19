@@ -30,6 +30,11 @@ ticketsRouter.get('/', async (req: Request, res: Response) => {
         updatedAt: true,
         requesterEmail: true,
         requesterName: true,
+        assignedToId: true,
+        teamMembers: true,
+        assignedTo: {
+          select: { id: true, name: true, email: true, role: true }
+        }
       },
     }),
   ]);
@@ -51,7 +56,12 @@ ticketsRouter.get('/:id', async (req: Request, res: Response) => {
   const { id } = req.params;
   const ticket = await prisma.ticket.findUnique({
     where: { id },
-    include: { stages: { orderBy: { order: 'asc' } } },
+    include: { 
+      stages: { orderBy: { order: 'asc' } },
+      assignedTo: {
+        select: { id: true, name: true, email: true, role: true }
+      }
+    },
   });
   if (!ticket) return res.status(404).json({ error: 'Not found' });
   return res.json(ticket);
@@ -65,6 +75,8 @@ const transitionSchema = z.object({
   slaHours: z.number().int().positive().optional(),
   decision: z.string().optional(),
   comment: z.string().max(2000).optional(),
+  assignedToId: z.string().optional(), // Team assignment
+  teamMembers: z.array(z.string()).optional(), // Multiple team members
 });
 
 const allowedNext: Record<string, string[]> = {
@@ -125,6 +137,122 @@ ticketsRouter.post('/:id/transition', async (req: Request, res: Response) => {
   });
 
   return res.json(updated);
+});
+
+// POST /tickets/:id/assign - Assign ticket to user/team
+const assignSchema = z.object({
+  assignedToId: z.string().optional(),
+  teamMembers: z.array(z.string()).optional(),
+  comment: z.string().max(2000).optional(),
+});
+
+ticketsRouter.post('/:id/assign', async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const parse = assignSchema.safeParse(req.body ?? {});
+  
+  if (!parse.success) {
+    return res.status(400).json({ error: 'Invalid payload', details: parse.error.flatten() });
+  }
+
+  const { assignedToId, teamMembers, comment } = parse.data;
+
+  try {
+    // Verify assigned user exists if provided
+    if (assignedToId) {
+      const user = await prisma.user.findUnique({ where: { id: assignedToId } });
+      if (!user) {
+        return res.status(404).json({ error: 'Assigned user not found' });
+      }
+    }
+
+    // Verify team members exist if provided
+    if (teamMembers && teamMembers.length > 0) {
+      const users = await prisma.user.findMany({ where: { id: { in: teamMembers } } });
+      if (users.length !== teamMembers.length) {
+        return res.status(404).json({ error: 'One or more team members not found' });
+      }
+    }
+
+    const updated = await prisma.ticket.update({
+      where: { id },
+      data: {
+        assignedToId: assignedToId || null,
+        teamMembers: teamMembers ? JSON.stringify(teamMembers) : null,
+        stages: {
+          create: {
+            name: 'Assignment',
+            key: 'ASSIGNMENT',
+            order: 999, // High order to appear at end
+            startedAt: new Date(),
+            comment: comment || null,
+            assignee: assignedToId || null,
+          }
+        }
+      },
+      include: { 
+        stages: { orderBy: { order: 'asc' } },
+        assignedTo: {
+          select: { id: true, name: true, email: true, role: true }
+        }
+      }
+    });
+
+    res.json(updated);
+  } catch (error) {
+    console.error('Error assigning ticket:', error);
+    res.status(500).json({ error: 'Failed to assign ticket' });
+  }
+});
+
+// GET /tickets/assigned/:userId - Get tickets assigned to specific user
+ticketsRouter.get('/assigned/:userId', async (req: Request, res: Response) => {
+  const { userId } = req.params;
+  const { status, page = '1', limit = '10' } = req.query;
+
+  try {
+    const pageNum = parseInt(page as string);
+    const limitNum = parseInt(limit as string);
+    const skip = (pageNum - 1) * limitNum;
+
+    const where: any = {
+      OR: [
+        { assignedToId: userId },
+        { teamMembers: { contains: userId } }
+      ]
+    };
+
+    if (status) {
+      where.status = status;
+    }
+
+    const [tickets, total] = await Promise.all([
+      prisma.ticket.findMany({
+        where,
+        skip,
+        take: limitNum,
+        orderBy: { updatedAt: 'desc' },
+        include: {
+          assignedTo: {
+            select: { id: true, name: true, email: true, role: true }
+          }
+        }
+      }),
+      prisma.ticket.count({ where })
+    ]);
+
+    res.json({
+      tickets,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        total,
+        pages: Math.ceil(total / limitNum)
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching assigned tickets:', error);
+    res.status(500).json({ error: 'Failed to fetch assigned tickets' });
+  }
 });
 
 
