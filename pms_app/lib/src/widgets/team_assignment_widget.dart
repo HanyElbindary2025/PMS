@@ -45,7 +45,14 @@ class _TeamAssignmentWidgetState extends State<TeamAssignmentWidget> {
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         setState(() {
-          _users = List<Map<String, dynamic>>.from(data['data'] ?? []);
+          // Handle both array response and object with data property
+          if (data is List) {
+            _users = List<Map<String, dynamic>>.from(data);
+          } else if (data is Map && data['data'] != null) {
+            _users = List<Map<String, dynamic>>.from(data['data']);
+          } else {
+            _users = [];
+          }
           _loadingUsers = false;
         });
       } else {
@@ -54,7 +61,7 @@ class _TeamAssignmentWidgetState extends State<TeamAssignmentWidget> {
       }
     } catch (e) {
       setState(() => _loadingUsers = false);
-      _showError('Error loading users: $e');
+      _showError('Error loading users: ${e.toString()}');
     }
   }
 
