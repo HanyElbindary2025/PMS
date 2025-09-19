@@ -244,7 +244,7 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
             ListTile(
               title: Text('Expected Resolution Date'),
               subtitle: Text(expectedDate != null 
-                ? DateFormat('yyyy-MM-dd').format(expectedDate)
+                ? DateFormat('yyyy-MM-dd').format(expectedDate!)
                 : 'Select date'),
               trailing: Icon(Icons.calendar_today),
               onTap: () async {
@@ -885,7 +885,6 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
                     ),
                   ),
                 ),
-          ),
         ],
       ),
     );
