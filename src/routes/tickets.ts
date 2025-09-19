@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { PrismaClient } from '@prisma/client';
+import { calculateMTTR, getSLAPerformance } from '../sla.js';
 
 export const ticketsRouter = Router();
 const prisma = new PrismaClient();
@@ -99,10 +100,10 @@ const transitionSchema = z.object({
 });
 
 const allowedNext: Record<string, string[]> = {
-  // Professional 15-phase workflow
-  SUBMITTED: ['CATEGORIZED', 'REJECTED'],
-  CATEGORIZED: ['PRIORITIZED', 'REJECTED'],
-  PRIORITIZED: ['ANALYSIS', 'REJECTED'],
+  // Professional 15-phase workflow - CATEGORIZED and PRIORITIZED are automatic
+  SUBMITTED: ['ANALYSIS', 'REJECTED'], // Skip CATEGORIZED and PRIORITIZED
+  CATEGORIZED: ['PRIORITIZED'], // Automatic transition
+  PRIORITIZED: ['ANALYSIS'], // Automatic transition
   ANALYSIS: ['DESIGN', 'ON_HOLD', 'REJECTED'],
   DESIGN: ['APPROVAL', 'ON_HOLD', 'REJECTED'],
   APPROVAL: ['DEVELOPMENT', 'ON_HOLD', 'REJECTED'],
@@ -142,21 +143,59 @@ ticketsRouter.post('/:id/transition', async (req: Request, res: Response) => {
     if (deltaMs > 0) computedSla = Math.ceil(deltaMs / (60 * 60 * 1000));
   }
 
+  // Auto-transition through CATEGORIZED and PRIORITIZED if going to ANALYSIS
+  const stagesToCreate = [];
+  
+  if (to === 'ANALYSIS' && existing.status === 'SUBMITTED') {
+    // Create CATEGORIZED stage (automatic)
+    stagesToCreate.push({
+      name: 'Categorized',
+      key: 'CATEGORIZED',
+      order: nextOrder,
+      startedAt: now,
+      comment: 'Automatically categorized based on request content',
+    });
+    
+    // Create PRIORITIZED stage (automatic)
+    stagesToCreate.push({
+      name: 'Prioritized',
+      key: 'PRIORITIZED',
+      order: nextOrder + 1,
+      startedAt: now,
+      comment: 'Priority confirmed with requester during acceptance',
+    });
+    
+    // Create ANALYSIS stage (main transition)
+    stagesToCreate.push({
+      name: 'Analysis',
+      key: 'ANALYSIS',
+      order: nextOrder + 2,
+      startedAt: now,
+      dueAt: dueAt ? new Date(dueAt) : null,
+      slaHours: typeof slaHours === 'number' ? slaHours : (computedSla ?? null),
+      decision: decision ?? null,
+      comment: comment ?? null,
+    });
+  } else {
+    // Normal single stage creation
+    stagesToCreate.push({
+      name: to.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase()),
+      key: to,
+      order: nextOrder,
+      startedAt: now,
+      dueAt: dueAt ? new Date(dueAt) : null,
+      slaHours: typeof slaHours === 'number' ? slaHours : (computedSla ?? null),
+      decision: decision ?? null,
+      comment: comment ?? null,
+    });
+  }
+
   const updated = await prisma.ticket.update({
     where: { id },
     data: {
       status: to,
       stages: {
-        create: {
-          name: to.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase()),
-          key: to,
-          order: nextOrder,
-          startedAt: now,
-          dueAt: dueAt ? new Date(dueAt) : null,
-          slaHours: typeof slaHours === 'number' ? slaHours : (computedSla ?? null),
-          decision: decision ?? null,
-          comment: comment ?? null,
-        },
+        create: stagesToCreate,
       },
       ...(to === 'CONFIRM_DUE' && ((computedSla ?? null) || typeof slaHours === 'number')
         ? { totalSlaHours: (computedSla ?? (slaHours as number)) }
@@ -284,4 +323,26 @@ ticketsRouter.get('/assigned/:userId', async (req: Request, res: Response) => {
   }
 });
 
+// GET /tickets/sla-performance - Get SLA performance metrics
+ticketsRouter.get('/sla-performance', async (_req: Request, res: Response) => {
+  try {
+    const performance = await getSLAPerformance();
+    return res.json(performance);
+  } catch (error) {
+    return res.status(500).json({ error: 'Failed to get SLA performance metrics' });
+  }
+});
 
+// GET /tickets/:id/mttr - Get MTTR for specific ticket
+ticketsRouter.get('/:id/mttr', async (req: Request, res: Response) => {
+  const { id } = req.params;
+  
+  try {
+    const mttr = await calculateMTTR(id);
+    return res.json(mttr);
+  } catch (error) {
+    return res.status(404).json({ error: 'Ticket not found or MTTR calculation failed' });
+  }
+});
+
+export { ticketsRouter };

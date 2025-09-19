@@ -85,7 +85,15 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
     String? comment;
 
     // Show appropriate dialog based on action
-    if (to == 'REJECTED' || to == 'CANCELLED') {
+    if (to == 'ANALYSIS') {
+      // Special handling for ANALYSIS - show priority confirmation
+      final result = await _showPriorityConfirmationDialog();
+      if (result == null) return;
+      comment = result['comment'];
+      // Update ticket with priority and category
+      body['priority'] = result['priority'];
+      body['category'] = result['category'];
+    } else if (to == 'REJECTED' || to == 'CANCELLED') {
       final result = await _showRejectionDialog(to);
       if (result == null) return;
       decision = 'REJECT';
@@ -157,6 +165,101 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
     } finally {
       if (mounted) setState(() => _transitioning = false);
     }
+  }
+
+  // Dialog for priority confirmation when accepting requirements
+  Future<Map<String, dynamic>?> _showPriorityConfirmationDialog() async {
+    String selectedPriority = 'MEDIUM';
+    String selectedCategory = 'REQUEST';
+    final commentController = TextEditingController();
+    
+    return await showDialog<Map<String, dynamic>>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.check_circle, color: Colors.green),
+            const SizedBox(width: 8),
+            const Text('Accept & Confirm Priority'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Please confirm the priority and category for this request:',
+              style: TextStyle(fontWeight: FontWeight.w500),
+            ),
+            const SizedBox(height: 16),
+            
+            // Priority Selection
+            DropdownButtonFormField<String>(
+              value: selectedPriority,
+              decoration: const InputDecoration(
+                labelText: 'Priority',
+                border: OutlineInputBorder(),
+              ),
+              items: const [
+                DropdownMenuItem(value: 'LOW', child: Text('Low')),
+                DropdownMenuItem(value: 'MEDIUM', child: Text('Medium')),
+                DropdownMenuItem(value: 'HIGH', child: Text('High')),
+                DropdownMenuItem(value: 'CRITICAL', child: Text('Critical')),
+              ],
+              onChanged: (value) => selectedPriority = value!,
+            ),
+            
+            const SizedBox(height: 16),
+            
+            // Category Selection
+            DropdownButtonFormField<String>(
+              value: selectedCategory,
+              decoration: const InputDecoration(
+                labelText: 'Category',
+                border: OutlineInputBorder(),
+              ),
+              items: const [
+                DropdownMenuItem(value: 'INCIDENT', child: Text('Incident')),
+                DropdownMenuItem(value: 'REQUEST', child: Text('Request')),
+                DropdownMenuItem(value: 'CHANGE', child: Text('Change')),
+                DropdownMenuItem(value: 'PROBLEM', child: Text('Problem')),
+              ],
+              onChanged: (value) => selectedCategory = value!,
+            ),
+            
+            const SizedBox(height: 16),
+            
+            // Comment
+            TextField(
+              controller: commentController,
+              maxLines: 3,
+              decoration: const InputDecoration(
+                labelText: 'Acceptance Comment (Optional)',
+                hintText: 'Add any notes about the acceptance...',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.of(context).pop({
+                'priority': selectedPriority,
+                'category': selectedCategory,
+                'comment': commentController.text.trim(),
+              });
+            },
+            style: FilledButton.styleFrom(backgroundColor: Colors.green),
+            child: const Text('Accept & Start Analysis'),
+          ),
+        ],
+      ),
+    );
   }
 
   // Dialog for rejection/cancellation
