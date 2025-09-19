@@ -1,0 +1,1056 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PMS Workflow Phases Guide</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 30px;
+            background: #f8f9fa;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .stat-label {
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+        
+        .phases-container {
+            padding: 30px;
+        }
+        
+        .phase {
+            margin-bottom: 30px;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .phase:hover {
+            transform: translateY(-5px);
+        }
+        
+        .phase-header {
+            padding: 20px;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .phase-icon {
+            font-size: 2em;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255,255,255,0.2);
+        }
+        
+        .phase-info h3 {
+            font-size: 1.5em;
+            margin-bottom: 5px;
+        }
+        
+        .phase-info p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+        
+        .phase-content {
+            padding: 25px;
+            background: white;
+        }
+        
+        .phase-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .detail-section {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .detail-section h4 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+        
+        .detail-section ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .detail-section li {
+            padding: 5px 0;
+            color: #555;
+            position: relative;
+            padding-left: 20px;
+        }
+        
+        .detail-section li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #27ae60;
+            font-weight: bold;
+        }
+        
+        .workflow-flow {
+            background: #ecf0f1;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        
+        .workflow-flow h4 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .flow-arrow {
+            text-align: center;
+            font-size: 1.5em;
+            color: #3498db;
+            margin: 10px 0;
+        }
+        
+        .role-permissions {
+            background: #e8f5e8;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+        
+        .role-permissions h4 {
+            color: #27ae60;
+            margin-bottom: 10px;
+        }
+        
+        .roles-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .role-tag {
+            background: #27ae60;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.9em;
+        }
+        
+        /* Phase-specific colors */
+        .phase-1 { background: linear-gradient(135deg, #9E9E9E, #757575); }
+        .phase-2 { background: linear-gradient(135deg, #FF9800, #F57C00); }
+        .phase-3 { background: linear-gradient(135deg, #FF5722, #D84315); }
+        .phase-4 { background: linear-gradient(135deg, #FFC107, #FF8F00); }
+        .phase-5 { background: linear-gradient(135deg, #00BCD4, #0097A7); }
+        .phase-6 { background: linear-gradient(135deg, #E91E63, #C2185B); }
+        .phase-7 { background: linear-gradient(135deg, #2196F3, #1976D2); }
+        .phase-8 { background: linear-gradient(135deg, #673AB7, #512DA8); }
+        .phase-9 { background: linear-gradient(135deg, #009688, #00695C); }
+        .phase-10 { background: linear-gradient(135deg, #4CAF50, #388E3C); }
+        .phase-11 { background: linear-gradient(135deg, #FF9800, #F57C00); }
+        .phase-12 { background: linear-gradient(135deg, #795548, #5D4037); }
+        .phase-13 { background: linear-gradient(135deg, #607D8B, #455A64); }
+        .phase-14 { background: linear-gradient(135deg, #3F51B5, #303F9F); }
+        .phase-15 { background: linear-gradient(135deg, #4CAF50, #388E3C); }
+        
+        .footer {
+            background: #2c3e50;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        @media (max-width: 768px) {
+            .phases-container {
+                padding: 15px;
+            }
+            
+            .phase-details {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 PMS Workflow Phases Guide</h1>
+            <p>Complete Project Management System Workflow Documentation</p>
+        </div>
+        
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number">15</div>
+                <div class="stat-label">Total Phases</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">8</div>
+                <div class="stat-label">User Roles</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">4</div>
+                <div class="stat-label">Priority Levels</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">5</div>
+                <div class="stat-label">Categories</div>
+            </div>
+        </div>
+        
+        <div class="phases-container">
+            <!-- Phase 1: SUBMITTED -->
+            <div class="phase">
+                <div class="phase-header phase-1">
+                    <div class="phase-icon">📝</div>
+                    <div class="phase-info">
+                        <h3>1. SUBMITTED</h3>
+                        <p>Initial request submission by user</p>
+                    </div>
+                </div>
+                <div class="phase-content">
+                    <div class="phase-details">
+                        <div class="detail-section">
+                            <h4>What's Included:</h4>
+                            <ul>
+                                <li>Project Data Sheet (PDS) form</li>
+                                <li>Requester information</li>
+                                <li>Project details and requirements</li>
+                                <li>Business justification</li>
+                                <li>File attachments</li>
+                            </ul>
+                        </div>
+                        <div class="detail-section">
+                            <h4>Actions Available:</h4>
+                            <ul>
+                                <li>Accept for Analysis</li>
+                                <li>Reject Request</li>
+                            </ul>
+                        </div>
+                        <div class="detail-section">
+                            <h4>Next Phases:</h4>
+                            <ul>
+                                <li>ANALYSIS (if accepted)</li>
+                                <li>REJECTED (if rejected)</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="role-permissions">
+                        <h4>👥 Who Can Access:</h4>
+                        <div class="roles-list">
+                            <span class="role-tag">ADMIN</span>
+                            <span class="role-tag">CREATOR</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Phase 2: CATEGORIZED -->
+            <div class="phase">
+                <div class="phase-header phase-2">
+                    <div class="phase-icon">🏷️</div>
+                    <div class="phase-info">
+                        <h3>2. CATEGORIZED</h3>
+                        <p>Automatic categorization of request</p>
+                    </div>
+                </div>
+                <div class="phase-content">
+                    <div class="phase-details">
+                        <div class="detail-section">
+                            <h4>What's Included:</h4>
+                            <ul>
+                                <li>Automatic category assignment</li>
+                                <li>Service classification</li>
+                                <li>Impact assessment</li>
+                                <li>Urgency determination</li>
+                            </ul>
+                        </div>
+                        <div class="detail-section">
+                            <h4>Actions Available:</h4>
+                            <ul>
+                                <li>Automatic transition</li>
+                                <li>Manual override (if needed)</li>
+                            </ul>
+                        </div>
+                        <div class="detail-section">
+                            <h4>Next Phases:</h4>
+                            <ul>
+                                <li>PRIORITIZED (automatic)</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="role-permissions">
+                        <h4>👥 Who Can Access:</h4>
+                        <div class="roles-list">
+                            <span class="role-tag">ADMIN</span>
+                            <span class="role-tag">SERVICE_MANAGER</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Phase 3: PRIORITIZED -->
+            <div class="phase">
+                <div class="phase-header phase-3">
+                    <div class="phase-icon">⚡</div>
+                    <div class="phase-info">
+                        <h3>3. PRIORITIZED</h3>
+                        <p>Priority assignment based on business impact</p>
+                    </div>
+                </div>
+                <div class="phase-content">
+                    <div class="phase-details">
+                        <div class="detail-section">
+                            <h4>What's Included:</h4>
+                            <ul>
+                                <li>Priority level assignment</li>
+                                <li>Business value assessment</li>
+                                <li>Risk evaluation</li>
+                                <li>SLA calculation basis</li>
+                            </ul>
+                        </div>
+                        <div class="detail-section">
+                            <h4>Actions Available:</h4>
+                            <ul>
+                                <li>Automatic transition</li>
+                                <li>Priority confirmation</li>
+                            </ul>
+                        </div>
+                        <div class="detail-section">
+                            <h4>Next Phases:</h4>
+                            <ul>
+                                <li>ANALYSIS (automatic)</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="role-permissions">
+                        <h4>👥 Who Can Access:</h4>
+                        <div class="roles-list">
+                            <span class="role-tag">ADMIN</span>
+                            <span class="role-tag">SERVICE_MANAGER</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Phase 4: ANALYSIS -->
+            <div class="phase">
+                <div class="phase-header phase-4">
+                    <div class="phase-icon">🔍</div>
+                    <div class="phase-info">
+                        <h3>4. ANALYSIS</h3>
+                        <p>Technical and business analysis phase</p>
+                    </div>
+                </div>
+                <div class="phase-content">
+                    <div class="phase-details">
+                        <div class="detail-section">
+                            <h4>What's Included:</h4>
+                            <ul>
+                                <li>Technical analysis</li>
+                                <li>Business requirements review</li>
+                                <li>Effort estimation</li>
+                                <li>Dependencies identification</li>
+                                <li>2-day analysis period</li>
+                            </ul>
+                        </div>
+                        <div class="detail-section">
+                            <h4>Actions Available:</h4>
+                            <ul>
+                                <li>Confirm Due Date</li>
+                                <li>Request Meeting</li>
+                                <li>Put on Hold</li>
+                                <li>Reject</li>
+                            </ul>
+                        </div>
+                        <div class="detail-section">
+                            <h4>Next Phases:</h4>
+                            <ul>
+                                <li>CONFIRM_DUE</li>
+                                <li>MEETING_REQUESTED</li>
+                                <li>ON_HOLD</li>
+                                <li>REJECTED</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="role-permissions">
+                        <h4>👥 Who Can Access:</h4>
+                        <div class="roles-list">
+                            <span class="role-tag">ADMIN</span>
+                            <span class="role-tag">SERVICE_MANAGER</span>
+                            <span class="role-tag">TECHNICAL_ANALYST</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Phase 5: CONFIRM_DUE -->
+            <div class="phase">
+                <div class="phase-header phase-5">
+                    <div class="phase-icon">📅</div>
+                    <div class="phase-info">
+                        <h3>5. CONFIRM_DUE</h3>
+                        <p>Due date confirmation and SLA calculation</p>
+                    </div>
+                </div>
+                <div class="phase-content">
+                    <div class="phase-details">
+                        <div class="detail-section">
+                            <h4>What's Included:</h4>
+                            <ul>
+                                <li>Due date selection</li>
+                                <li>SLA hours calculation</li>
+                                <li>Workload approval</li>
+                                <li>Timeline confirmation</li>
+                                <li>SLA timer starts</li>
+                            </ul>
+                        </div>
+                        <div class="detail-section">
+                            <h4>Actions Available:</h4>
+                            <ul>
+                                <li>Move to Design</li>
+                                <li>Put on Hold</li>
+                                <li>Reject</li>
+                            </ul>
+                        </div>
+                        <div class="detail-section">
+                            <h4>Next Phases:</h4>
+                            <ul>
+                                <li>DESIGN</li>
+                                <li>ON_HOLD</li>
+                                <li>REJECTED</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="role-permissions">
+                        <h4>👥 Who Can Access:</h4>
+                        <div class="roles-list">
+                            <span class="role-tag">ADMIN</span>
+                            <span class="role-tag">SERVICE_MANAGER</span>
+                            <span class="role-tag">TECHNICAL_ANALYST</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Phase 6: MEETING_REQUESTED -->
+            <div class="phase">
+                <div class="phase-header phase-6">
+                    <div class="phase-icon">🤝</div>
+                    <div class="phase-info">
+                        <h3>6. MEETING_REQUESTED</h3>
+                        <p>Meeting requested for clarification</p>
+                    </div>
+                </div>
+                <div class="phase-content">
+                    <div class="phase-details">
+                        <div class="detail-section">
+                            <h4>What's Included:</h4>
+                            <ul>
+                                <li>Meeting scheduling</li>
+                                <li>Stakeholder notification</li>
+                                <li>Agenda preparation</li>
+                                <li>Clarification points</li>
+                            </ul>
+                        </div>
+                        <div class="detail-section">
+                            <h4>Actions Available:</h4>
+                            <ul>
+                                <li>Confirm After Meeting</li>
+                                <li>Put on Hold</li>
+                                <li>Reject</li>
+                            </ul>
+                        </div>
+                        <div class="detail-section">
+                            <h4>Next Phases:</h4>
+                            <ul>
+                                <li>CONFIRM_DUE</li>
+                                <li>ON_HOLD</li>
+                                <li>REJECTED</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="role-permissions">
+                        <h4>👥 Who Can Access:</h4>
+                        <div class="roles-list">
+                            <span class="role-tag">ADMIN</span>
+                            <span class="role-tag">SERVICE_MANAGER</span>
+                            <span class="role-tag">TECHNICAL_ANALYST</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Phase 7: DESIGN -->
+            <div class="phase">
+                <div class="phase-header phase-7">
+                    <div class="phase-icon">🎨</div>
+                    <div class="phase-info">
+                        <h3>7. DESIGN</h3>
+                        <p>Solution design and architecture</p>
+                    </div>
+                </div>
+                <div class="phase-content">
+                    <div class="phase-details">
+                        <div class="detail-section">
+                            <h4>What's Included:</h4>
+                            <ul>
+                                <li>Solution architecture</li>
+                                <li>Technical design</li>
+                                <li>System specifications</li>
+                                <li>Implementation plan</li>
+                                <li>Resource requirements</li>
+                            </ul>
+                        </div>
+                        <div class="detail-section">
+                            <h4>Actions Available:</h4>
+                            <ul>
+                                <li>Send for Digital Approval</li>
+                                <li>Put on Hold</li>
+                                <li>Reject</li>
+                            </ul>
+                        </div>
+                        <div class="detail-section">
+                            <h4>Next Phases:</h4>
+                            <ul>
+                                <li>DIGITAL_APPROVAL</li>
+                                <li>ON_HOLD</li>
+                                <li>REJECTED</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="role-permissions">
+                        <h4>👥 Who Can Access:</h4>
+                        <div class="roles-list">
+                            <span class="role-tag">ADMIN</span>
+                            <span class="role-tag">SERVICE_MANAGER</span>
+                            <span class="role-tag">TECHNICAL_ANALYST</span>
+                            <span class="role-tag">SOLUTION_ARCHITECT</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Phase 8: DIGITAL_APPROVAL -->
+            <div class="phase">
+                <div class="phase-header phase-8">
+                    <div class="phase-icon">👨‍💼</div>
+                    <div class="phase-info">
+                        <h3>8. DIGITAL_APPROVAL</h3>
+                        <p>Digital Manager approval before development</p>
+                    </div>
+                </div>
+                <div class="phase-content">
+                    <div class="phase-details">
+                        <div class="detail-section">
+                            <h4>What's Included:</h4>
+                            <ul>
+                                <li>Design review</li>
+                                <li>Resource allocation approval</li>
+                                <li>Budget confirmation</li>
+                                <li>Timeline validation</li>
+                                <li>Risk assessment</li>
+                            </ul>
+                        </div>
+                        <div class="detail-section">
+                            <h4>Actions Available:</h4>
+                            <ul>
+                                <li>Approve & Start Development</li>
+                                <li>Put on Hold</li>
+                                <li>Reject</li>
+                            </ul>
+                        </div>
+                        <div class="detail-section">
+                            <h4>Next Phases:</h4>
+                            <ul>
+                                <li>DEVELOPMENT</li>
+                                <li>ON_HOLD</li>
+                                <li>REJECTED</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="role-permissions">
+                        <h4>👥 Who Can Access:</h4>
+                        <div class="roles-list">
+                            <span class="role-tag">ADMIN</span>
+                            <span class="role-tag">SERVICE_MANAGER</span>
+                            <span class="role-tag">SOLUTION_ARCHITECT</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Phase 9: CUSTOMER_APPROVAL -->
+            <div class="phase">
+                <div class="phase-header phase-9">
+                    <div class="phase-icon">👤</div>
+                    <div class="phase-info">
+                        <h3>9. CUSTOMER_APPROVAL</h3>
+                        <p>Customer/Requester approval before deployment</p>
+                    </div>
+                </div>
+                <div class="phase-content">
+                    <div class="phase-details">
+                        <div class="detail-section">
+                            <h4>What's Included:</h4>
+                            <ul>
+                                <li>UAT results review</li>
+                                <li>Solution validation</li>
+                                <li>Acceptance criteria check</li>
+                                <li>Final approval</li>
+                                <li>Deployment authorization</li>
+                            </ul>
+                        </div>
+                        <div class="detail-section">
+                            <h4>Actions Available:</h4>
+                            <ul>
+                                <li>Approve & Deploy</li>
+                                <li>Back to Testing</li>
+                                <li>Put on Hold</li>
+                            </ul>
+                        </div>
+                        <div class="detail-section">
+                            <h4>Next Phases:</h4>
+                            <ul>
+                                <li>DEPLOYMENT</li>
+                                <li>TESTING</li>
+                                <li>ON_HOLD</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="role-permissions">
+                        <h4>👥 Who Can Access:</h4>
+                        <div class="roles-list">
+                            <span class="role-tag">ADMIN</span>
+                            <span class="role-tag">SERVICE_MANAGER</span>
+                            <span class="role-tag">CREATOR</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Phase 10: DEVELOPMENT -->
+            <div class="phase">
+                <div class="phase-header phase-10">
+                    <div class="phase-icon">💻</div>
+                    <div class="phase-info">
+                        <h3>10. DEVELOPMENT</h3>
+                        <p>Implementation and coding phase</p>
+                    </div>
+                </div>
+                <div class="phase-content">
+                    <div class="phase-details">
+                        <div class="detail-section">
+                            <h4>What's Included:</h4>
+                            <ul>
+                                <li>Code implementation</li>
+                                <li>Unit testing</li>
+                                <li>Code review</li>
+                                <li>Documentation</li>
+                                <li>Version control</li>
+                            </ul>
+                        </div>
+                        <div class="detail-section">
+                            <h4>Actions Available:</h4>
+                            <ul>
+                                <li>Move to Testing</li>
+                                <li>Put on Hold</li>
+                                <li>Cancel Development</li>
+                            </ul>
+                        </div>
+                        <div class="detail-section">
+                            <h4>Next Phases:</h4>
+                            <ul>
+                                <li>TESTING</li>
+                                <li>ON_HOLD</li>
+                                <li>CANCELLED</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="role-permissions">
+                        <h4>👥 Who Can Access:</h4>
+                        <div class="roles-list">
+                            <span class="role-tag">ADMIN</span>
+                            <span class="role-tag">SERVICE_MANAGER</span>
+                            <span class="role-tag">DEVELOPER</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Phase 11: TESTING -->
+            <div class="phase">
+                <div class="phase-header phase-11">
+                    <div class="phase-icon">🧪</div>
+                    <div class="phase-info">
+                        <h3>11. TESTING</h3>
+                        <p>Quality assurance and testing</p>
+                    </div>
+                </div>
+                <div class="phase-content">
+                    <div class="phase-details">
+                        <div class="detail-section">
+                            <h4>What's Included:</h4>
+                            <ul>
+                                <li>Functional testing</li>
+                                <li>Integration testing</li>
+                                <li>Performance testing</li>
+                                <li>Bug tracking</li>
+                                <li>Test reports</li>
+                            </ul>
+                        </div>
+                        <div class="detail-section">
+                            <h4>Actions Available:</h4>
+                            <ul>
+                                <li>Send for Customer Approval</li>
+                                <li>Back to Development</li>
+                                <li>Put on Hold</li>
+                            </ul>
+                        </div>
+                        <div class="detail-section">
+                            <h4>Next Phases:</h4>
+                            <ul>
+                                <li>CUSTOMER_APPROVAL</li>
+                                <li>DEVELOPMENT</li>
+                                <li>ON_HOLD</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="role-permissions">
+                        <h4>👥 Who Can Access:</h4>
+                        <div class="roles-list">
+                            <span class="role-tag">ADMIN</span>
+                            <span class="role-tag">SERVICE_MANAGER</span>
+                            <span class="role-tag">DEVELOPER</span>
+                            <span class="role-tag">QA_ENGINEER</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Phase 12: CUSTOMER_APPROVAL -->
+            <div class="phase">
+                <div class="phase-header phase-12">
+                    <div class="phase-icon">👤</div>
+                    <div class="phase-info">
+                        <h3>12. CUSTOMER_APPROVAL</h3>
+                        <p>Customer/Requester approval before deployment</p>
+                    </div>
+                </div>
+                <div class="phase-content">
+                    <div class="phase-details">
+                        <div class="detail-section">
+                            <h4>What's Included:</h4>
+                            <ul>
+                                <li>Testing results review</li>
+                                <li>Solution validation</li>
+                                <li>Acceptance criteria check</li>
+                                <li>Final approval</li>
+                                <li>Deployment authorization</li>
+                            </ul>
+                        </div>
+                        <div class="detail-section">
+                            <h4>Actions Available:</h4>
+                            <ul>
+                                <li>Approve & Deploy</li>
+                                <li>Back to Testing</li>
+                                <li>Put on Hold</li>
+                            </ul>
+                        </div>
+                        <div class="detail-section">
+                            <h4>Next Phases:</h4>
+                            <ul>
+                                <li>DEPLOYMENT</li>
+                                <li>TESTING</li>
+                                <li>ON_HOLD</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="role-permissions">
+                        <h4>👥 Who Can Access:</h4>
+                        <div class="roles-list">
+                            <span class="role-tag">ADMIN</span>
+                            <span class="role-tag">SERVICE_MANAGER</span>
+                            <span class="role-tag">CREATOR</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Phase 13: DEPLOYMENT -->
+            <div class="phase">
+                <div class="phase-header phase-13">
+                    <div class="phase-icon">🚀</div>
+                    <div class="phase-info">
+                        <h3>13. DEPLOYMENT</h3>
+                        <p>Production deployment</p>
+                    </div>
+                </div>
+                <div class="phase-content">
+                    <div class="phase-details">
+                        <div class="detail-section">
+                            <h4>What's Included:</h4>
+                            <ul>
+                                <li>Production deployment</li>
+                                <li>Environment setup</li>
+                                <li>Configuration management</li>
+                                <li>Deployment monitoring</li>
+                                <li>Rollback procedures</li>
+                            </ul>
+                        </div>
+                        <div class="detail-section">
+                            <h4>Actions Available:</h4>
+                            <ul>
+                                <li>Move to UAT</li>
+                                <li>Put on Hold</li>
+                            </ul>
+                        </div>
+                        <div class="detail-section">
+                            <h4>Next Phases:</h4>
+                            <ul>
+                                <li>UAT</li>
+                                <li>ON_HOLD</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="role-permissions">
+                        <h4>👥 Who Can Access:</h4>
+                        <div class="roles-list">
+                            <span class="role-tag">ADMIN</span>
+                            <span class="role-tag">SERVICE_MANAGER</span>
+                            <span class="role-tag">DEVOPS_ENGINEER</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Phase 14: UAT -->
+            <div class="phase">
+                <div class="phase-header phase-14">
+                    <div class="phase-icon">👥</div>
+                    <div class="phase-info">
+                        <h3>14. UAT</h3>
+                        <p>User Acceptance Testing</p>
+                    </div>
+                </div>
+                <div class="phase-content">
+                    <div class="phase-details">
+                        <div class="detail-section">
+                            <h4>What's Included:</h4>
+                            <ul>
+                                <li>User acceptance testing</li>
+                                <li>Business validation</li>
+                                <li>End-user feedback</li>
+                                <li>Acceptance criteria verification</li>
+                                <li>Sign-off process</li>
+                            </ul>
+                        </div>
+                        <div class="detail-section">
+                            <h4>Actions Available:</h4>
+                            <ul>
+                                <li>Move to Verification</li>
+                                <li>Back to Deployment</li>
+                                <li>Put on Hold</li>
+                            </ul>
+                        </div>
+                        <div class="detail-section">
+                            <h4>Next Phases:</h4>
+                            <ul>
+                                <li>VERIFICATION</li>
+                                <li>DEPLOYMENT</li>
+                                <li>ON_HOLD</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="role-permissions">
+                        <h4>👥 Who Can Access:</h4>
+                        <div class="roles-list">
+                            <span class="role-tag">ADMIN</span>
+                            <span class="role-tag">SERVICE_MANAGER</span>
+                            <span class="role-tag">DEVOPS_ENGINEER</span>
+                            <span class="role-tag">CREATOR</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Phase 15: VERIFICATION -->
+            <div class="phase">
+                <div class="phase-header phase-15">
+                    <div class="phase-icon">🔍</div>
+                    <div class="phase-info">
+                        <h3>15. VERIFICATION</h3>
+                        <p>Final verification and validation</p>
+                    </div>
+                </div>
+                <div class="phase-content">
+                    <div class="phase-details">
+                        <div class="detail-section">
+                            <h4>What's Included:</h4>
+                            <ul>
+                                <li>Deployment verification</li>
+                                <li>Functionality check</li>
+                                <li>Performance validation</li>
+                                <li>User confirmation</li>
+                                <li>Documentation update</li>
+                            </ul>
+                        </div>
+                        <div class="detail-section">
+                            <h4>Actions Available:</h4>
+                            <ul>
+                                <li>Close Ticket</li>
+                                <li>Back to UAT</li>
+                                <li>Put on Hold</li>
+                            </ul>
+                        </div>
+                        <div class="detail-section">
+                            <h4>Next Phases:</h4>
+                            <ul>
+                                <li>CLOSED</li>
+                                <li>UAT</li>
+                                <li>ON_HOLD</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="role-permissions">
+                        <h4>👥 Who Can Access:</h4>
+                        <div class="roles-list">
+                            <span class="role-tag">ADMIN</span>
+                            <span class="role-tag">SERVICE_MANAGER</span>
+                            <span class="role-tag">DEVOPS_ENGINEER</span>
+                            <span class="role-tag">CREATOR</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Phase 16: CLOSED -->
+            <div class="phase">
+                <div class="phase-header phase-15">
+                    <div class="phase-icon">✅</div>
+                    <div class="phase-info">
+                        <h3>16. CLOSED</h3>
+                        <p>Ticket completion and closure</p>
+                    </div>
+                </div>
+                <div class="phase-content">
+                    <div class="phase-details">
+                        <div class="detail-section">
+                            <h4>What's Included:</h4>
+                            <ul>
+                                <li>Final documentation</li>
+                                <li>Lessons learned</li>
+                                <li>Customer satisfaction survey</li>
+                                <li>MTTR calculation</li>
+                                <li>Archive process</li>
+                            </ul>
+                        </div>
+                        <div class="detail-section">
+                            <h4>Actions Available:</h4>
+                            <ul>
+                                <li>No further actions</li>
+                                <li>Reopen (if needed)</li>
+                            </ul>
+                        </div>
+                        <div class="detail-section">
+                            <h4>Next Phases:</h4>
+                            <ul>
+                                <li>End of workflow</li>
+                                <li>Archive</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="role-permissions">
+                        <h4>👥 Who Can Access:</h4>
+                        <div class="roles-list">
+                            <span class="role-tag">ADMIN</span>
+                            <span class="role-tag">SERVICE_MANAGER</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <h3>🎯 Workflow Summary</h3>
+            <p>This system includes 15 comprehensive phases covering the complete project lifecycle from initial request to final closure, with role-based access control and SLA tracking throughout the process.</p>
+            <br>
+            <p><strong>Total Phases:</strong> 15 | <strong>User Roles:</strong> 8 | <strong>Priority Levels:</strong> 4 | <strong>Categories:</strong> 5</p>
+        </div>
+    </div>
+</body>
+</html>

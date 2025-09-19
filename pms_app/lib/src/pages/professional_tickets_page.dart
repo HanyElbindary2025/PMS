@@ -596,17 +596,17 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
 
   // Get action buttons with proper labels and icons based on role and status
   List<Map<String, dynamic>> _getActionButtons(String status) {
-    // Role-based access control
-    final rolePermissions = {
-      'ADMIN': ['SUBMITTED', 'ANALYSIS', 'DESIGN', 'APPROVAL', 'DEVELOPMENT', 'TESTING', 'UAT', 'DEPLOYMENT', 'VERIFICATION', 'CLOSED', 'ON_HOLD', 'REJECTED', 'CANCELLED'],
-      'SERVICE_MANAGER': ['ANALYSIS', 'DESIGN', 'APPROVAL', 'DEVELOPMENT', 'TESTING', 'UAT', 'DEPLOYMENT', 'VERIFICATION', 'ON_HOLD'],
-      'TECHNICAL_ANALYST': ['ANALYSIS', 'DESIGN', 'ON_HOLD'],
-      'SOLUTION_ARCHITECT': ['DESIGN', 'APPROVAL', 'ON_HOLD'],
-      'DEVELOPER': ['DEVELOPMENT', 'TESTING', 'ON_HOLD'],
-      'QA_ENGINEER': ['TESTING', 'UAT', 'ON_HOLD'],
-      'DEVOPS_ENGINEER': ['DEPLOYMENT', 'VERIFICATION', 'ON_HOLD'],
-      'CREATOR': ['SUBMITTED', 'UAT', 'VERIFICATION'], // Requester can only approve UAT and final verification
-    };
+        // Role-based access control
+        final rolePermissions = {
+          'ADMIN': ['SUBMITTED', 'ANALYSIS', 'CONFIRM_DUE', 'MEETING_REQUESTED', 'DESIGN', 'DIGITAL_APPROVAL', 'DEVELOPMENT', 'TESTING', 'CUSTOMER_APPROVAL', 'DEPLOYMENT', 'UAT', 'VERIFICATION', 'CLOSED', 'ON_HOLD', 'REJECTED', 'CANCELLED'],
+          'SERVICE_MANAGER': ['ANALYSIS', 'CONFIRM_DUE', 'MEETING_REQUESTED', 'DESIGN', 'DIGITAL_APPROVAL', 'DEVELOPMENT', 'TESTING', 'CUSTOMER_APPROVAL', 'DEPLOYMENT', 'UAT', 'VERIFICATION', 'ON_HOLD'],
+          'TECHNICAL_ANALYST': ['ANALYSIS', 'CONFIRM_DUE', 'MEETING_REQUESTED', 'DESIGN', 'ON_HOLD'],
+          'SOLUTION_ARCHITECT': ['DESIGN', 'DIGITAL_APPROVAL', 'ON_HOLD'],
+          'DEVELOPER': ['DEVELOPMENT', 'TESTING', 'ON_HOLD'],
+          'QA_ENGINEER': ['TESTING', 'ON_HOLD'],
+          'DEVOPS_ENGINEER': ['DEPLOYMENT', 'UAT', 'VERIFICATION', 'ON_HOLD'],
+          'CREATOR': ['SUBMITTED', 'CUSTOMER_APPROVAL', 'UAT', 'VERIFICATION'], // Customer/Requester can approve customer approval, UAT, and final verification
+        };
     
     final userPermissions = rolePermissions[_role] ?? [];
     if (!userPermissions.contains(status)) return [];
@@ -656,35 +656,45 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
         ];
       case 'TESTING':
         return [
-          {'action': 'UAT', 'label': 'Move to UAT', 'icon': Icons.verified_user, 'color': Colors.cyan},
+          {'action': 'CUSTOMER_APPROVAL', 'label': 'Send for Customer Approval', 'icon': Icons.verified_user, 'color': Colors.indigo},
           {'action': 'DEVELOPMENT', 'label': 'Back to Development', 'icon': Icons.arrow_back, 'color': Colors.blue},
           {'action': 'ON_HOLD', 'label': 'Put on Hold', 'icon': Icons.pause_circle, 'color': Colors.orange},
         ];
-      case 'UAT':
+      case 'CUSTOMER_APPROVAL':
         return [
-          {'action': 'DEPLOYMENT', 'label': 'Deploy', 'icon': Icons.rocket_launch, 'color': Colors.deepOrange},
+          {'action': 'DEPLOYMENT', 'label': 'Approve & Deploy', 'icon': Icons.rocket_launch, 'color': Colors.green},
           {'action': 'TESTING', 'label': 'Back to Testing', 'icon': Icons.arrow_back, 'color': Colors.teal},
           {'action': 'ON_HOLD', 'label': 'Put on Hold', 'icon': Icons.pause_circle, 'color': Colors.orange},
         ];
       case 'DEPLOYMENT':
         return [
-          {'action': 'VERIFICATION', 'label': 'Verify Deployment', 'icon': Icons.verified, 'color': Colors.green},
+          {'action': 'UAT', 'label': 'Move to UAT', 'icon': Icons.people, 'color': Colors.cyan},
+          {'action': 'ON_HOLD', 'label': 'Put on Hold', 'icon': Icons.pause_circle, 'color': Colors.orange},
+        ];
+      case 'UAT':
+        return [
+          {'action': 'VERIFICATION', 'label': 'Move to Verification', 'icon': Icons.check_circle_outline, 'color': Colors.green},
+          {'action': 'DEPLOYMENT', 'label': 'Back to Deployment', 'icon': Icons.arrow_back, 'color': Colors.deepOrange},
           {'action': 'ON_HOLD', 'label': 'Put on Hold', 'icon': Icons.pause_circle, 'color': Colors.orange},
         ];
       case 'VERIFICATION':
         return [
-          {'action': 'CLOSED', 'label': 'Close Ticket', 'icon': Icons.check_circle_outline, 'color': Colors.green},
-          {'action': 'DEPLOYMENT', 'label': 'Back to Deployment', 'icon': Icons.arrow_back, 'color': Colors.deepOrange},
+          {'action': 'CLOSED', 'label': 'Close Ticket', 'icon': Icons.lock, 'color': Colors.green},
+          {'action': 'UAT', 'label': 'Back to UAT', 'icon': Icons.arrow_back, 'color': Colors.cyan},
           {'action': 'ON_HOLD', 'label': 'Put on Hold', 'icon': Icons.pause_circle, 'color': Colors.orange},
         ];
       case 'ON_HOLD':
         return [
           {'action': 'ANALYSIS', 'label': 'Resume Analysis', 'icon': Icons.play_arrow, 'color': Colors.blue},
+          {'action': 'CONFIRM_DUE', 'label': 'Resume Confirmation', 'icon': Icons.play_arrow, 'color': Colors.blue},
+          {'action': 'MEETING_REQUESTED', 'label': 'Resume Meeting', 'icon': Icons.play_arrow, 'color': Colors.orange},
           {'action': 'DESIGN', 'label': 'Resume Design', 'icon': Icons.play_arrow, 'color': Colors.purple},
+          {'action': 'DIGITAL_APPROVAL', 'label': 'Resume Digital Approval', 'icon': Icons.play_arrow, 'color': Colors.indigo},
           {'action': 'DEVELOPMENT', 'label': 'Resume Development', 'icon': Icons.play_arrow, 'color': Colors.green},
           {'action': 'TESTING', 'label': 'Resume Testing', 'icon': Icons.play_arrow, 'color': Colors.teal},
-          {'action': 'UAT', 'label': 'Resume UAT', 'icon': Icons.play_arrow, 'color': Colors.cyan},
+          {'action': 'CUSTOMER_APPROVAL', 'label': 'Resume Customer Approval', 'icon': Icons.play_arrow, 'color': Colors.indigo},
           {'action': 'DEPLOYMENT', 'label': 'Resume Deployment', 'icon': Icons.play_arrow, 'color': Colors.deepOrange},
+          {'action': 'UAT', 'label': 'Resume UAT', 'icon': Icons.play_arrow, 'color': Colors.cyan},
           {'action': 'CANCELLED', 'label': 'Cancel', 'icon': Icons.cancel, 'color': Colors.red},
         ];
       default:
