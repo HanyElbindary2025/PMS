@@ -125,14 +125,15 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
       final slaHours = dueDate.difference(now).inHours;
       body['slaHours'] = slaHours;
     } else if (to == 'DEPLOYMENT') {
-      // Show customer approval dialog with email attachment and deployment time
+      // Show customer approval dialog with document upload and approval time
       final result = await _showCustomerApprovalDialog();
       if (result == null) return;
-      if (result['emailAttachment'] != null) {
-        body['emailAttachment'] = result['emailAttachment'];
+      if (result['approvalDocument'] != null) {
+        body['approvalDocument'] = result['approvalDocument'];
+        body['approvalFileName'] = result['approvalFileName'];
       }
-      if (result['deploymentTime'] != null) {
-        body['deploymentTime'] = result['deploymentTime'];
+      if (result['approvalTime'] != null) {
+        body['approvalTime'] = result['approvalTime'];
       }
       if (result['comment'] != null) {
         body['comment'] = result['comment'];
@@ -1873,16 +1874,17 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
   }
 
   Future<Map<String, dynamic>?> _showCustomerApprovalDialog() async {
-    final emailController = TextEditingController();
     final commentController = TextEditingController();
-    DateTime? deploymentTime;
+    DateTime? approvalTime;
+    String? selectedFilePath;
+    String? selectedFileName;
 
     return showDialog<Map<String, dynamic>>(
       context: context,
       builder: (context) => AlertDialog(
         title: Row(
           children: [
-            Icon(Icons.email, color: Colors.blue),
+            Icon(Icons.approval, color: Colors.green),
             const SizedBox(width: 8),
             const Text('Customer Approval'),
           ],
@@ -1892,26 +1894,45 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Attach customer approval email:'),
+              const Text('Upload customer approval document:'),
               const SizedBox(height: 8),
-              TextField(
-                controller: emailController,
-                decoration: const InputDecoration(
-                  hintText: 'Paste customer approval email here...',
-                  border: OutlineInputBorder(),
+              InkWell(
+                onTap: () async {
+                  // File picker for customer approval document
+                  // For now, simulate file selection
+                  selectedFileName = 'customer_approval_${DateTime.now().millisecondsSinceEpoch}.pdf';
+                  selectedFilePath = '/uploads/$selectedFileName';
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.blue),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.upload_file, color: Colors.blue),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          selectedFileName ?? 'Click to upload approval document',
+                          style: TextStyle(color: selectedFileName != null ? Colors.green : Colors.grey[600]),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                maxLines: 3,
               ),
               const SizedBox(height: 16),
-              const Text('Select deployment time:'),
+              const Text('Select approval date & time:'),
               const SizedBox(height: 8),
               InkWell(
                 onTap: () async {
                   final date = await showDatePicker(
                     context: context,
-                    initialDate: DateTime.now().add(const Duration(days: 1)),
-                    firstDate: DateTime.now(),
-                    lastDate: DateTime.now().add(const Duration(days: 30)),
+                    initialDate: DateTime.now(),
+                    firstDate: DateTime.now().subtract(const Duration(days: 30)),
+                    lastDate: DateTime.now().add(const Duration(days: 7)),
                   );
                   if (date != null) {
                     final time = await showTimePicker(
@@ -1919,7 +1940,7 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
                       initialTime: TimeOfDay.now(),
                     );
                     if (time != null) {
-                      deploymentTime = DateTime(
+                      approvalTime = DateTime(
                         date.year,
                         date.month,
                         date.day,
@@ -1940,9 +1961,9 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
                       Icon(Icons.schedule, color: Colors.grey[600]),
                       const SizedBox(width: 8),
                       Text(
-                        deploymentTime != null
-                            ? '${deploymentTime!.day}/${deploymentTime!.month}/${deploymentTime!.year} ${deploymentTime!.hour}:${deploymentTime!.minute.toString().padLeft(2, '0')}'
-                            : 'Select deployment time',
+                        approvalTime != null
+                            ? '${approvalTime!.day}/${approvalTime!.month}/${approvalTime!.year} ${approvalTime!.hour}:${approvalTime!.minute.toString().padLeft(2, '0')}'
+                            : 'Select approval date & time',
                         style: TextStyle(color: Colors.grey[600]),
                       ),
                     ],
@@ -1971,12 +1992,13 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
           ElevatedButton(
             onPressed: () {
               Navigator.of(context).pop({
-                'emailAttachment': emailController.text.trim().isNotEmpty ? emailController.text.trim() : null,
-                'deploymentTime': deploymentTime?.toIso8601String(),
+                'approvalDocument': selectedFilePath,
+                'approvalFileName': selectedFileName,
+                'approvalTime': approvalTime?.toIso8601String(),
                 'comment': commentController.text.trim().isNotEmpty ? commentController.text.trim() : null,
               });
             },
-            child: const Text('Approve & Deploy'),
+            child: const Text('Approve'),
           ),
         ],
       ),
