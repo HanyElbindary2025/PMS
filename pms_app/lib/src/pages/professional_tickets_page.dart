@@ -40,7 +40,6 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
     'CONFIRM_DUE': {'name': 'Confirm Due Date', 'color': Color(0xFF00BCD4), 'icon': '📅'},
     'MEETING_REQUESTED': {'name': 'Meeting Requested', 'color': Color(0xFFE91E63), 'icon': '🤝'},
     'DESIGN': {'name': 'Design', 'color': Color(0xFF2196F3), 'icon': '🎨'},
-    'DIGITAL_APPROVAL': {'name': 'Digital Approval', 'color': Color(0xFF673AB7), 'icon': '👨‍💼'},
     'CUSTOMER_APPROVAL': {'name': 'Customer Approval', 'color': Color(0xFF009688), 'icon': '👤'},
     'APPROVAL': {'name': 'Approval', 'color': Color(0xFF9C27B0), 'icon': '✅'},
     'DEVELOPMENT': {'name': 'Development', 'color': Color(0xFF4CAF50), 'icon': '💻'},
@@ -610,10 +609,10 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
   List<Map<String, dynamic>> _getActionButtons(String status) {
         // Role-based access control
         final rolePermissions = {
-          'ADMIN': ['SUBMITTED', 'ANALYSIS', 'CONFIRM_DUE', 'MEETING_REQUESTED', 'DESIGN', 'DIGITAL_APPROVAL', 'DEVELOPMENT', 'TESTING', 'CUSTOMER_APPROVAL', 'DEPLOYMENT', 'UAT', 'VERIFICATION', 'CLOSED', 'ON_HOLD', 'REJECTED', 'CANCELLED'],
-          'SERVICE_MANAGER': ['ANALYSIS', 'CONFIRM_DUE', 'MEETING_REQUESTED', 'DESIGN', 'DIGITAL_APPROVAL', 'DEVELOPMENT', 'TESTING', 'CUSTOMER_APPROVAL', 'DEPLOYMENT', 'UAT', 'VERIFICATION', 'ON_HOLD'],
+          'ADMIN': ['SUBMITTED', 'ANALYSIS', 'CONFIRM_DUE', 'MEETING_REQUESTED', 'DESIGN', 'DEVELOPMENT', 'TESTING', 'CUSTOMER_APPROVAL', 'DEPLOYMENT', 'VERIFICATION', 'CLOSED', 'ON_HOLD', 'REJECTED', 'CANCELLED'],
+          'SERVICE_MANAGER': ['ANALYSIS', 'CONFIRM_DUE', 'MEETING_REQUESTED', 'DESIGN', 'DEVELOPMENT', 'TESTING', 'CUSTOMER_APPROVAL', 'DEPLOYMENT', 'VERIFICATION', 'ON_HOLD'],
           'TECHNICAL_ANALYST': ['ANALYSIS', 'CONFIRM_DUE', 'MEETING_REQUESTED', 'DESIGN', 'ON_HOLD'],
-          'SOLUTION_ARCHITECT': ['DESIGN', 'DIGITAL_APPROVAL', 'ON_HOLD'],
+          'SOLUTION_ARCHITECT': ['DESIGN', 'ON_HOLD'],
           'DEVELOPER': ['DEVELOPMENT', 'TESTING', 'ON_HOLD'],
           'QA_ENGINEER': ['TESTING', 'ON_HOLD'],
           'DEVOPS_ENGINEER': ['DEPLOYMENT', 'UAT', 'VERIFICATION', 'ON_HOLD'],
@@ -699,7 +698,6 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
           {'action': 'CONFIRM_DUE', 'label': 'Resume Confirmation', 'icon': Icons.play_arrow, 'color': Colors.blue},
           {'action': 'MEETING_REQUESTED', 'label': 'Resume Meeting', 'icon': Icons.play_arrow, 'color': Colors.orange},
           {'action': 'DESIGN', 'label': 'Resume Design', 'icon': Icons.play_arrow, 'color': Colors.purple},
-          {'action': 'DIGITAL_APPROVAL', 'label': 'Resume Digital Approval', 'icon': Icons.play_arrow, 'color': Colors.indigo},
           {'action': 'DEVELOPMENT', 'label': 'Resume Development', 'icon': Icons.play_arrow, 'color': Colors.green},
           {'action': 'TESTING', 'label': 'Resume Testing', 'icon': Icons.play_arrow, 'color': Colors.teal},
           {'action': 'CUSTOMER_APPROVAL', 'label': 'Resume Customer Approval', 'icon': Icons.play_arrow, 'color': Colors.indigo},
@@ -1840,7 +1838,6 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
       case 'CONFIRM_DUE': return 'Confirm Due Date';
       case 'MEETING_REQUESTED': return 'Meeting Requested';
       case 'DESIGN': return 'Design';
-      case 'DIGITAL_APPROVAL': return 'Digital Approval';
       case 'DEVELOPMENT': return 'Development';
       case 'TESTING': return 'Testing';
       case 'CUSTOMER_APPROVAL': return 'Customer Approval';

@@ -135,11 +135,10 @@ CREATE TABLE Attachment (
 
 ## 🔄 Workflow Phases
 
-### **Current Workflow Sequence:**
+### **Current Workflow Sequence (Simplified):**
 ```
-SUBMITTED → ANALYSIS → CONFIRM_DUE → DESIGN → DIGITAL_APPROVAL → 
-DEVELOPMENT → TESTING → CUSTOMER_APPROVAL → DEPLOYMENT → UAT → 
-VERIFICATION → CLOSED
+SUBMITTED → ANALYSIS → CONFIRM_DUE → DESIGN → DEVELOPMENT → 
+TESTING → CUSTOMER_APPROVAL → DEPLOYMENT → VERIFICATION → CLOSED
 ```
 
 ### **Phase Details:**
@@ -150,7 +149,6 @@ VERIFICATION → CLOSED
 | **ANALYSIS** | Analysis | Technical analysis and feasibility | 24 | TECHNICAL_ANALYST | #FFC107 | 🔍 |
 | **CONFIRM_DUE** | Confirm Due Date | Set SLA and confirm timeline | 0 | ADMIN | #2196F3 | ⏰ |
 | **DESIGN** | Design | Solution design and architecture | 48 | SOLUTION_ARCHITECT | #2196F3 | 🎨 |
-| **DIGITAL_APPROVAL** | Digital Approval | Digital manager approval | 24 | MANAGER | #9C27B0 | ✅ |
 | **DEVELOPMENT** | Development | Implementation and coding | 168 | DEVELOPER | #4CAF50 | 💻 |
 | **TESTING** | Testing | Quality assurance and testing | 24 | QA_ENGINEER | #FF9800 | 🧪 |
 | **CUSTOMER_APPROVAL** | Customer Approval | Customer approval for deployment | 48 | CREATOR | #795548 | 👥 |
