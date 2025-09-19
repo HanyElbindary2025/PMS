@@ -698,13 +698,9 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
       builder: (context) => Dialog(
         child: Container(
           width: 800,
-          constraints: BoxConstraints(
-            maxHeight: MediaQuery.of(context).size.height * 0.9,
-            maxWidth: MediaQuery.of(context).size.width * 0.9,
-          ),
+          height: MediaQuery.of(context).size.height * 0.8,
           padding: const EdgeInsets.all(24),
           child: Column(
-            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Enhanced Header
@@ -769,7 +765,7 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
               const SizedBox(height: 20),
               
               // Scrollable content
-              Flexible(
+              Expanded(
                 child: SingleChildScrollView(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -920,7 +916,7 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
                     ),
                     const SizedBox(height: 16),
                     SizedBox(
-                      height: 250, // Reduced height for timeline in scrollable container
+                      height: 200, // Fixed height for timeline
                       child: ListView.builder(
                         itemCount: stages.length,
                         itemBuilder: (context, index) {
