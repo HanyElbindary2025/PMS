@@ -336,13 +336,16 @@ class _TeamAssignmentWidgetState extends State<TeamAssignmentWidget> {
             const SizedBox(height: 12),
             
             // Users Grid
-            Expanded(
+            SizedBox(
+              height: 200, // Fixed height instead of Expanded
               child: _loadingUsers
                   ? const Center(child: CircularProgressIndicator())
-                  : Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: _users.map((user) => _buildUserChip(user)).toList(),
+                  : SingleChildScrollView(
+                      child: Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: _users.map((user) => _buildUserChip(user)).toList(),
+                      ),
                     ),
             ),
             
