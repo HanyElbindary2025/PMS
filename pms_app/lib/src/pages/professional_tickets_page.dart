@@ -125,6 +125,19 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
       final now = DateTime.now();
       final slaHours = dueDate.difference(now).inHours;
       body['slaHours'] = slaHours;
+    } else if (to == 'DEPLOYMENT' && existing.status == 'CUSTOMER_APPROVAL') {
+      // Show customer approval dialog with email attachment and deployment time
+      final result = await _showCustomerApprovalDialog();
+      if (result == null) return;
+      if (result['emailAttachment'] != null) {
+        body['emailAttachment'] = result['emailAttachment'];
+      }
+      if (result['deploymentTime'] != null) {
+        body['deploymentTime'] = result['deploymentTime'];
+      }
+      if (result['comment'] != null) {
+        body['comment'] = result['comment'];
+      }
     } else if (to == 'DEPLOYMENT' || to == 'VERIFICATION') {
       final dueDate = await _showDatePicker('Set deployment date');
       if (dueDate == null) return;
@@ -575,14 +588,12 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
       case 'ANALYSIS': 
         return ['DESIGN', 'ON_HOLD', 'REJECTED'];
       case 'DESIGN': 
-        return ['DIGITAL_APPROVAL', 'ON_HOLD', 'REJECTED'];
-      case 'DIGITAL_APPROVAL': 
         return ['DEVELOPMENT', 'ON_HOLD', 'REJECTED'];
       case 'DEVELOPMENT': 
         return ['TESTING', 'ON_HOLD', 'CANCELLED'];
       case 'TESTING': 
-        return ['UAT', 'DEVELOPMENT', 'ON_HOLD'];
-      case 'UAT': 
+        return ['CUSTOMER_APPROVAL', 'DEVELOPMENT', 'ON_HOLD'];
+      case 'CUSTOMER_APPROVAL': 
         return ['DEPLOYMENT', 'TESTING', 'ON_HOLD'];
       case 'DEPLOYMENT': 
         return ['VERIFICATION', 'ON_HOLD'];
@@ -643,13 +654,7 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
         ];
       case 'DESIGN':
         return [
-          {'action': 'DIGITAL_APPROVAL', 'label': 'Send for Digital Approval', 'icon': Icons.approval, 'color': Colors.indigo},
-          {'action': 'ON_HOLD', 'label': 'Put on Hold', 'icon': Icons.pause_circle, 'color': Colors.orange},
-          {'action': 'REJECTED', 'label': 'Reject', 'icon': Icons.cancel, 'color': Colors.red},
-        ];
-      case 'DIGITAL_APPROVAL':
-        return [
-          {'action': 'DEVELOPMENT', 'label': 'Approve & Start Development', 'icon': Icons.code, 'color': Colors.green},
+          {'action': 'DEVELOPMENT', 'label': 'Start Development', 'icon': Icons.code, 'color': Colors.green},
           {'action': 'ON_HOLD', 'label': 'Put on Hold', 'icon': Icons.pause_circle, 'color': Colors.orange},
           {'action': 'REJECTED', 'label': 'Reject', 'icon': Icons.cancel, 'color': Colors.red},
         ];
@@ -667,13 +672,13 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
         ];
       case 'CUSTOMER_APPROVAL':
         return [
-          {'action': 'DEPLOYMENT', 'label': 'Approve & Deploy', 'icon': Icons.rocket_launch, 'color': Colors.green},
+          {'action': 'DEPLOYMENT', 'label': 'Approve with Email & Deploy', 'icon': Icons.rocket_launch, 'color': Colors.green},
           {'action': 'TESTING', 'label': 'Back to Testing', 'icon': Icons.arrow_back, 'color': Colors.teal},
           {'action': 'ON_HOLD', 'label': 'Put on Hold', 'icon': Icons.pause_circle, 'color': Colors.orange},
         ];
       case 'DEPLOYMENT':
         return [
-          {'action': 'UAT', 'label': 'Move to UAT', 'icon': Icons.people, 'color': Colors.cyan},
+          {'action': 'VERIFICATION', 'label': 'Complete Deployment & UAT', 'icon': Icons.check_circle, 'color': Colors.green},
           {'action': 'ON_HOLD', 'label': 'Put on Hold', 'icon': Icons.pause_circle, 'color': Colors.orange},
         ];
       case 'UAT':
@@ -1857,12 +1862,10 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
       case 'CONFIRM_DUE': return Colors.blue;
       case 'MEETING_REQUESTED': return Colors.orange;
       case 'DESIGN': return Colors.blue;
-      case 'DIGITAL_APPROVAL': return Colors.purple;
       case 'DEVELOPMENT': return Colors.green;
       case 'TESTING': return Colors.orange;
       case 'CUSTOMER_APPROVAL': return Colors.brown;
       case 'DEPLOYMENT': return Colors.blueGrey;
-      case 'UAT': return Colors.brown;
       case 'VERIFICATION': return Colors.indigo;
       case 'CLOSED': return Colors.green;
       case 'ON_HOLD': return Colors.amber;
@@ -1870,5 +1873,116 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
       case 'CANCELLED': return Colors.grey;
       default: return Colors.grey;
     }
+  }
+
+  Future<Map<String, dynamic>?> _showCustomerApprovalDialog() async {
+    final emailController = TextEditingController();
+    final commentController = TextEditingController();
+    DateTime? deploymentTime;
+
+    return showDialog<Map<String, dynamic>>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.email, color: Colors.blue),
+            const SizedBox(width: 8),
+            const Text('Customer Approval'),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Attach customer approval email:'),
+              const SizedBox(height: 8),
+              TextField(
+                controller: emailController,
+                decoration: const InputDecoration(
+                  hintText: 'Paste customer approval email here...',
+                  border: OutlineInputBorder(),
+                ),
+                maxLines: 3,
+              ),
+              const SizedBox(height: 16),
+              const Text('Select deployment time:'),
+              const SizedBox(height: 8),
+              InkWell(
+                onTap: () async {
+                  final date = await showDatePicker(
+                    context: context,
+                    initialDate: DateTime.now().add(const Duration(days: 1)),
+                    firstDate: DateTime.now(),
+                    lastDate: DateTime.now().add(const Duration(days: 30)),
+                  );
+                  if (date != null) {
+                    final time = await showTimePicker(
+                      context: context,
+                      initialTime: TimeOfDay.now(),
+                    );
+                    if (time != null) {
+                      deploymentTime = DateTime(
+                        date.year,
+                        date.month,
+                        date.day,
+                        time.hour,
+                        time.minute,
+                      );
+                    }
+                  }
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.schedule, color: Colors.grey[600]),
+                      const SizedBox(width: 8),
+                      Text(
+                        deploymentTime != null
+                            ? '${deploymentTime!.day}/${deploymentTime!.month}/${deploymentTime!.year} ${deploymentTime!.hour}:${deploymentTime!.minute.toString().padLeft(2, '0')}'
+                            : 'Select deployment time',
+                        style: TextStyle(color: Colors.grey[600]),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text('Additional comments:'),
+              const SizedBox(height: 8),
+              TextField(
+                controller: commentController,
+                decoration: const InputDecoration(
+                  hintText: 'Optional comments...',
+                  border: OutlineInputBorder(),
+                ),
+                maxLines: 2,
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop({
+                'emailAttachment': emailController.text.trim().isNotEmpty ? emailController.text.trim() : null,
+                'deploymentTime': deploymentTime?.toIso8601String(),
+                'comment': commentController.text.trim().isNotEmpty ? commentController.text.trim() : null,
+              });
+            },
+            child: const Text('Approve & Deploy'),
+          ),
+        ],
+      ),
+    );
   }
 }

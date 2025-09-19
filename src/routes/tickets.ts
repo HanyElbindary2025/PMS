@@ -131,34 +131,32 @@ const transitionSchema = z.object({
   userRole: z.string().optional(), // User role for permission checking
 });
 
-// Role-based workflow permissions
+// Role-based workflow permissions (simplified)
 const rolePermissions: Record<string, string[]> = {
-  ADMIN: ['SUBMITTED', 'ANALYSIS', 'CONFIRM_DUE', 'MEETING_REQUESTED', 'DESIGN', 'DIGITAL_APPROVAL', 'DEVELOPMENT', 'TESTING', 'CUSTOMER_APPROVAL', 'DEPLOYMENT', 'UAT', 'VERIFICATION', 'CLOSED', 'ON_HOLD', 'REJECTED', 'CANCELLED', 'APPROVAL'], // Added APPROVAL for legacy support
-  SERVICE_MANAGER: ['ANALYSIS', 'CONFIRM_DUE', 'MEETING_REQUESTED', 'DESIGN', 'DIGITAL_APPROVAL', 'DEVELOPMENT', 'TESTING', 'CUSTOMER_APPROVAL', 'DEPLOYMENT', 'UAT', 'VERIFICATION', 'ON_HOLD', 'APPROVAL'],
+  ADMIN: ['SUBMITTED', 'ANALYSIS', 'CONFIRM_DUE', 'MEETING_REQUESTED', 'DESIGN', 'DEVELOPMENT', 'TESTING', 'CUSTOMER_APPROVAL', 'DEPLOYMENT', 'VERIFICATION', 'CLOSED', 'ON_HOLD', 'REJECTED', 'CANCELLED'],
+  SERVICE_MANAGER: ['ANALYSIS', 'CONFIRM_DUE', 'MEETING_REQUESTED', 'DESIGN', 'DEVELOPMENT', 'TESTING', 'CUSTOMER_APPROVAL', 'DEPLOYMENT', 'VERIFICATION', 'ON_HOLD'],
   TECHNICAL_ANALYST: ['ANALYSIS', 'CONFIRM_DUE', 'MEETING_REQUESTED', 'DESIGN', 'ON_HOLD'],
-  SOLUTION_ARCHITECT: ['DESIGN', 'DIGITAL_APPROVAL', 'ON_HOLD', 'APPROVAL'],
+  SOLUTION_ARCHITECT: ['DESIGN', 'DEVELOPMENT', 'ON_HOLD'],
   DEVELOPER: ['DEVELOPMENT', 'TESTING', 'ON_HOLD'],
   QA_ENGINEER: ['TESTING', 'ON_HOLD'],
-  DEVOPS_ENGINEER: ['DEPLOYMENT', 'UAT', 'VERIFICATION', 'ON_HOLD'],
-  CREATOR: ['SUBMITTED', 'CUSTOMER_APPROVAL', 'UAT', 'VERIFICATION'], // Customer/Requester can approve customer approval, UAT, and final verification
+  DEVOPS_ENGINEER: ['DEPLOYMENT', 'VERIFICATION', 'ON_HOLD'],
+  CREATOR: ['SUBMITTED', 'CUSTOMER_APPROVAL', 'VERIFICATION'], // Customer/Requester can approve customer approval and final verification
 };
 
 const allowedNext: Record<string, string[]> = {
-  // Updated workflow based on requirements
+  // Simplified workflow based on user requirements
   SUBMITTED: ['ANALYSIS', 'REJECTED'], // Admin accepts for analysis
   ANALYSIS: ['CONFIRM_DUE', 'MEETING_REQUESTED', 'ON_HOLD', 'REJECTED'], // 2-day countdown, then confirm or meeting
   CONFIRM_DUE: ['DESIGN', 'ON_HOLD', 'REJECTED'], // After confirmation, go to design
   MEETING_REQUESTED: ['CONFIRM_DUE', 'ON_HOLD', 'REJECTED'], // After meeting, confirm due date
-  DESIGN: ['DIGITAL_APPROVAL', 'ON_HOLD', 'REJECTED'], // Digital Manager approval before development
-  DIGITAL_APPROVAL: ['DEVELOPMENT', 'ON_HOLD', 'REJECTED'], // Digital Manager approves development
+  DESIGN: ['DEVELOPMENT', 'ON_HOLD', 'REJECTED'], // Direct to development (removed DIGITAL_APPROVAL)
   DEVELOPMENT: ['TESTING', 'ON_HOLD', 'CANCELLED'], // Development complete, go to testing
   TESTING: ['CUSTOMER_APPROVAL', 'DEVELOPMENT', 'ON_HOLD'], // Testing complete, go to customer approval
-  CUSTOMER_APPROVAL: ['DEPLOYMENT', 'TESTING', 'ON_HOLD'], // Customer approves deployment
-  DEPLOYMENT: ['UAT', 'ON_HOLD'], // Deployment complete, go to UAT
-  UAT: ['VERIFICATION', 'DEPLOYMENT', 'ON_HOLD'], // UAT complete, go to verification
-  VERIFICATION: ['CLOSED', 'UAT', 'ON_HOLD'], // Verification complete, close ticket
+  CUSTOMER_APPROVAL: ['DEPLOYMENT', 'TESTING', 'ON_HOLD'], // Customer approves with email attachment
+  DEPLOYMENT: ['VERIFICATION', 'ON_HOLD'], // Deployment includes UAT, go directly to verification
+  VERIFICATION: ['CLOSED', 'DEPLOYMENT', 'ON_HOLD'], // Verification complete, close ticket
   CLOSED: [],
-  ON_HOLD: ['ANALYSIS', 'CONFIRM_DUE', 'DESIGN', 'DIGITAL_APPROVAL', 'DEVELOPMENT', 'TESTING', 'CUSTOMER_APPROVAL', 'DEPLOYMENT', 'UAT', 'CANCELLED'],
+  ON_HOLD: ['ANALYSIS', 'CONFIRM_DUE', 'DESIGN', 'DEVELOPMENT', 'TESTING', 'CUSTOMER_APPROVAL', 'DEPLOYMENT', 'CANCELLED'],
   REJECTED: [],
   CANCELLED: [],
   
