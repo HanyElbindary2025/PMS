@@ -1746,6 +1746,9 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
     if (slaStatus == 'COMPLETED') {
       color = Colors.green;
       displayText = 'Completed';
+    } else if (slaStatus == 'SLA_SET') {
+      color = Colors.blue;
+      displayText = 'SLA Set';
     } else if (slaStatus.startsWith('WITHIN_SLA_')) {
       color = Colors.green;
       displayText = 'On Track';
@@ -1848,6 +1851,10 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
       return 'Completed';
     }
     
+    if (slaStatus == 'SLA_SET') {
+      return 'SLA Set';
+    }
+    
     if (slaStatus.startsWith('WITHIN_SLA_')) {
       final timeStr = slaStatus.replaceAll('WITHIN_SLA_', '').replaceAll('_REMAINING', '');
       return 'Within SLA ($timeStr)';
@@ -1868,6 +1875,10 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
     
     if (slaStatus == 'COMPLETED') {
       return Colors.green;
+    }
+    
+    if (slaStatus == 'SLA_SET') {
+      return Colors.blue;
     }
     
     if (slaStatus.startsWith('WITHIN_SLA_')) {

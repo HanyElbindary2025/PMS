@@ -50,8 +50,30 @@ ticketsRouter.get('/', async (req: Request, res: Response) => {
     }),
   ]);
 
+  // Calculate SLA status for each ticket
+  const ticketsWithSLA = rows.map(ticket => {
+    let slaStatus = 'NO_SLA_SET';
+    if (ticket.totalSlaHours) {
+      // For tickets list, we'll do a simplified SLA calculation
+      // Full calculation requires stages which we don't include in list view
+      if (ticket.status === 'CLOSED') {
+        slaStatus = 'COMPLETED';
+      } else {
+        // For list view, just indicate SLA is set
+        slaStatus = 'SLA_SET';
+      }
+    } else if (ticket.status === 'CLOSED') {
+      slaStatus = 'COMPLETED';
+    }
+    
+    return {
+      ...ticket,
+      slaStatus
+    };
+  });
+
   return res.json({
-    data: rows,
+    data: ticketsWithSLA,
     pagination: {
       page,
       pageSize,
