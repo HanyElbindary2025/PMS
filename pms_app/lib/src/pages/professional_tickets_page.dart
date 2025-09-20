@@ -2273,7 +2273,8 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
 
     return showDialog<Map<String, dynamic>>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
         title: Row(
           children: [
             Icon(Icons.approval, color: Colors.green),
@@ -2292,8 +2293,10 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
                 onTap: () async {
                   // File picker for customer approval document
                   // For now, simulate file selection
-                  selectedFileName = 'customer_approval_${DateTime.now().millisecondsSinceEpoch}.pdf';
-                  selectedFilePath = '/uploads/$selectedFileName';
+                  setState(() {
+                    selectedFileName = 'customer_approval_${DateTime.now().millisecondsSinceEpoch}.pdf';
+                    selectedFilePath = '/uploads/$selectedFileName';
+                  });
                 },
                 child: Container(
                   padding: const EdgeInsets.all(12),
@@ -2332,13 +2335,15 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
                       initialTime: TimeOfDay.now(),
                     );
                     if (time != null) {
-                      approvalTime = DateTime(
-                        date.year,
-                        date.month,
-                        date.day,
-                        time.hour,
-                        time.minute,
-                      );
+                      setState(() {
+                        approvalTime = DateTime(
+                          date.year,
+                          date.month,
+                          date.day,
+                          time.hour,
+                          time.minute,
+                        );
+                      });
                     }
                   }
                 },
@@ -2394,6 +2399,7 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
           ),
         ],
       ),
+    ),
     );
   }
 }
