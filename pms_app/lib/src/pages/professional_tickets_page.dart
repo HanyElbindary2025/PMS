@@ -1,9 +1,13 @@
 import 'dart:convert';
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
+import 'package:excel/excel.dart';
+import 'package:path_provider/path_provider.dart';
 import '../widgets/team_assignment_widget.dart';
 
 class ProfessionalTicketsPage extends StatefulWidget {
@@ -1850,6 +1854,18 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
                     }
                   },
                 ),
+                const SizedBox(width: 16),
+                // Export Button
+                ElevatedButton.icon(
+                  onPressed: _rows.isEmpty ? null : _exportToExcel,
+                  icon: const Icon(Icons.file_download, size: 18),
+                  label: const Text('Export to Excel'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  ),
+                ),
                 const Spacer(),
                 IconButton(
                   onPressed: _page > 1 ? () {
@@ -2262,6 +2278,151 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
       case 'REJECTED': return Colors.red;
       case 'CANCELLED': return Colors.grey;
       default: return Colors.grey;
+    }
+  }
+
+  // Export tickets to Excel
+  Future<void> _exportToExcel() async {
+    try {
+      // Show loading dialog
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+
+      // Create Excel file
+      var excel = Excel.createExcel();
+      Sheet sheetObject = excel['Tickets'];
+      
+      // Define headers
+      List<String> headers = [
+        'Ticket #',
+        'Title',
+        'Status',
+        'Priority',
+        'Category',
+        'Requester Email',
+        'Requester Name',
+        'Assignee',
+        'SLA Status',
+        'SLA Hours',
+        'Created At',
+        'Updated At',
+        'Project Title',
+        'Service',
+        'Business Value',
+        'Description'
+      ];
+
+      // Add headers to Excel
+      for (int i = 0; i < headers.length; i++) {
+        var cell = sheetObject.cell(CellIndex.indexByColumnRow(columnIndex: i, rowIndex: 0));
+        cell.value = TextCellValue(headers[i]);
+        cell.cellStyle = CellStyle(
+          bold: true,
+          backgroundColorHex: ExcelColor.blue50,
+          fontColorHex: ExcelColor.blue900,
+        );
+      }
+
+      // Add ticket data
+      for (int i = 0; i < _rows.length; i++) {
+        final ticket = _rows[i] as Map<String, dynamic>;
+        int rowIndex = i + 1;
+
+        // Ticket data
+        List<String> rowData = [
+          ticket['ticketNumber'] ?? 'N/A',
+          ticket['title'] ?? '',
+          _getPhaseDisplayName(ticket['status'] ?? ''),
+          ticket['priority'] ?? 'Not Set',
+          _categories[ticket['category']] ?? ticket['category'] ?? '',
+          ticket['requesterEmail'] ?? '',
+          ticket['requesterName'] ?? '',
+          ticket['assignedTo']?['name'] ?? 'Unassigned',
+          _formatSLAStatus(ticket['slaStatus']),
+          ticket['totalSlaHours']?.toString() ?? 'Not Set',
+          DateFormat('yyyy-MM-dd HH:mm').format(DateTime.parse(ticket['createdAt']).toLocal()),
+          ticket['updatedAt'] != null 
+            ? DateFormat('yyyy-MM-dd HH:mm').format(DateTime.parse(ticket['updatedAt']).toLocal())
+            : '',
+          ticket['projectTitle'] ?? '',
+          ticket['service'] ?? '',
+          ticket['businessValue'] ?? '',
+          ticket['description'] ?? '',
+        ];
+
+        // Add data to Excel
+        for (int j = 0; j < rowData.length; j++) {
+          var cell = sheetObject.cell(CellIndex.indexByColumnRow(columnIndex: j, rowIndex: rowIndex));
+          cell.value = TextCellValue(rowData[j]);
+        }
+      }
+
+      // Auto-size columns
+      for (int i = 0; i < headers.length; i++) {
+        sheetObject.setColumnWidth(i, 15);
+      }
+
+      // Generate filename with timestamp
+      final timestamp = DateFormat('yyyy-MM-dd_HH-mm-ss').format(DateTime.now());
+      final filename = 'PMS_Tickets_Export_$timestamp.xlsx';
+
+      // Get downloads directory
+      Directory? downloadsDir;
+      if (Platform.isWindows) {
+        downloadsDir = Directory('${Platform.environment['USERPROFILE']}\\Downloads');
+      } else if (Platform.isMacOS) {
+        downloadsDir = Directory('${Platform.environment['HOME']}/Downloads');
+      } else if (Platform.isLinux) {
+        downloadsDir = Directory('${Platform.environment['HOME']}/Downloads');
+      }
+
+      if (downloadsDir == null || !downloadsDir.existsSync()) {
+        downloadsDir = await getApplicationDocumentsDirectory();
+      }
+
+      final filePath = '${downloadsDir.path}/$filename';
+      final file = File(filePath);
+      
+      // Save Excel file
+      await file.writeAsBytes(excel.encode()!);
+
+      // Close loading dialog
+      Navigator.of(context).pop();
+
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('✅ Excel file exported successfully!\nLocation: $filePath'),
+          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 5),
+          action: SnackBarAction(
+            label: 'Open Folder',
+            textColor: Colors.white,
+            onPressed: () {
+              // Open file explorer to the downloads folder
+              Process.run('explorer', [downloadsDir!.path], runInShell: true);
+            },
+          ),
+        ),
+      );
+
+    } catch (e) {
+      // Close loading dialog if still open
+      if (Navigator.of(context).canPop()) {
+        Navigator.of(context).pop();
+      }
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('❌ Export failed: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
