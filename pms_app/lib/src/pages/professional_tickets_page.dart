@@ -6,7 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
-import 'package:excel/excel.dart';
+import 'package:excel/excel.dart' as excel;
 import 'package:path_provider/path_provider.dart';
 import '../widgets/team_assignment_widget.dart';
 
@@ -2294,8 +2294,8 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
       );
 
       // Create Excel file
-      var excel = Excel.createExcel();
-      Sheet sheetObject = excel['Tickets'];
+      var excelFile = excel.Excel.createExcel();
+      excel.Sheet sheetObject = excelFile['Tickets'];
       
       // Define headers
       List<String> headers = [
@@ -2319,12 +2319,12 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
 
       // Add headers to Excel
       for (int i = 0; i < headers.length; i++) {
-        var cell = sheetObject.cell(CellIndex.indexByColumnRow(columnIndex: i, rowIndex: 0));
-        cell.value = TextCellValue(headers[i]);
-        cell.cellStyle = CellStyle(
+        var cell = sheetObject.cell(excel.CellIndex.indexByColumnRow(columnIndex: i, rowIndex: 0));
+        cell.value = excel.TextCellValue(headers[i]);
+        cell.cellStyle = excel.CellStyle(
           bold: true,
-          backgroundColorHex: ExcelColor.blue50,
-          fontColorHex: ExcelColor.blue900,
+          backgroundColorHex: excel.ExcelColor.blue50,
+          fontColorHex: excel.ExcelColor.blue900,
         );
       }
 
@@ -2357,8 +2357,8 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
 
         // Add data to Excel
         for (int j = 0; j < rowData.length; j++) {
-          var cell = sheetObject.cell(CellIndex.indexByColumnRow(columnIndex: j, rowIndex: rowIndex));
-          cell.value = TextCellValue(rowData[j]);
+          var cell = sheetObject.cell(excel.CellIndex.indexByColumnRow(columnIndex: j, rowIndex: rowIndex));
+          cell.value = excel.TextCellValue(rowData[j]);
         }
       }
 
@@ -2389,7 +2389,7 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
       final file = File(filePath);
       
       // Save Excel file
-      await file.writeAsBytes(excel.encode()!);
+      await file.writeAsBytes(excelFile.encode()!);
 
       // Close loading dialog
       Navigator.of(context).pop();
