@@ -30,6 +30,7 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
   bool _transitioning = false;
   String _role = 'CREATOR';
   String _userEmail = '';
+  String? _userId;
 
   // Professional workflow phases
   final Map<String, Map<String, dynamic>> _workflowPhases = {
@@ -79,8 +80,9 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
     setState(() {
       _role = sp.getString('userRole') ?? 'CREATOR';
       _userEmail = sp.getString('userEmail') ?? '';
+      _userId = sp.getString('userId');
     });
-    print('🔍 DEBUG: Loaded role: $_role, email: $_userEmail');
+    print('🔍 DEBUG: Loaded role: $_role, email: $_userEmail, userId: $_userId');
   }
 
   Future<void> _transition(String id, String to) async {
@@ -152,6 +154,7 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
     if (decision != null) body['decision'] = decision;
     if (comment != null && comment.isNotEmpty) body['comment'] = comment;
     body['userRole'] = _role; // Add user role for permission checking
+    if (_userId != null) body['currentUserId'] = _userId; // Add current user ID for assignment checking
 
     setState(() => _transitioning = true);
 

@@ -28,6 +28,7 @@ class _LoginPageState extends State<LoginPage> {
 		final sp = await SharedPreferences.getInstance();
 		final email = _email.text.trim().toLowerCase();
 		String role = 'CREATOR'; // Default role
+		String? userId;
 		
 		// Try to fetch role from backend first
 		try {
@@ -36,32 +37,39 @@ class _LoginPageState extends State<LoginPage> {
 				headers: {'Content-Type': 'application/json'},
 			);
 			
-			if (response.statusCode == 200) {
-				final users = json.decode(response.body) as List;
-				final user = users.firstWhere(
-					(u) => (u['email'] as String).toLowerCase() == email,
-					orElse: () => null,
-				);
-				
-				if (user != null) {
-					role = user['role'] as String;
-					print('✅ Role fetched from backend: $role for $email');
-				} else {
-					print('⚠️ User not found in backend, using fallback role mapping');
-					role = _getFallbackRole(email);
-				}
-			} else {
-				print('⚠️ Backend not available, using fallback role mapping');
-				role = _getFallbackRole(email);
-			}
+        if (response.statusCode == 200) {
+          final users = json.decode(response.body) as List;
+          final user = users.firstWhere(
+            (u) => (u['email'] as String).toLowerCase() == email,
+            orElse: () => null,
+          );
+          
+          if (user != null) {
+            role = user['role'] as String;
+            userId = user['id'] as String;
+            print('✅ Role and ID fetched from backend: $role, $userId for $email');
+          } else {
+            print('⚠️ User not found in backend, using fallback role mapping');
+            role = _getFallbackRole(email);
+            userId = null;
+          }
+        } else {
+          print('⚠️ Backend not available, using fallback role mapping');
+          role = _getFallbackRole(email);
+          userId = null;
+        }
 		} catch (e) {
 			print('⚠️ Error fetching role from backend: $e, using fallback role mapping');
 			role = _getFallbackRole(email);
+			userId = null;
 		}
 		
 		await sp.setString('authToken', 'demo-token');
 		await sp.setString('userRole', role);
 		await sp.setString('userEmail', email);
+		if (userId != null) {
+			await sp.setString('userId', userId);
+		}
 		if (!mounted) return;
 		Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const HomePage()));
 	}

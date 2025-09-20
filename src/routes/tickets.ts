@@ -162,6 +162,7 @@ const transitionSchema = z.object({
   priority: z.string().optional(), // Priority from confirmation dialog
   category: z.string().optional(), // Category from confirmation dialog
   userRole: z.string().optional(), // User role for permission checking
+  currentUserId: z.string().optional(), // Current user ID for assignment checking
 });
 
 // Role-based workflow permissions (simplified)
@@ -204,7 +205,7 @@ ticketsRouter.post('/:id/transition', async (req: Request, res: Response) => {
   const { id } = req.params;
   const parse = transitionSchema.safeParse(req.body ?? {});
   if (!parse.success) return res.status(400).json({ error: 'Invalid payload', details: parse.error.flatten() });
-  const { to, dueAt, slaHours, decision, comment, priority, category, userRole } = parse.data;
+  const { to, dueAt, slaHours, decision, comment, priority, category, userRole, currentUserId } = parse.data;
 
   const existing = await prisma.ticket.findUnique({ where: { id }, include: { stages: { orderBy: { order: 'asc' } } } });
   if (!existing) return res.status(404).json({ error: 'Not found' });
@@ -213,6 +214,24 @@ ticketsRouter.post('/:id/transition', async (req: Request, res: Response) => {
   const userPermissions = rolePermissions[userRole || 'CREATOR'] || [];
   if (!userPermissions.includes(to)) {
     return res.status(403).json({ error: `User role ${userRole} cannot perform actions on ${to} phase` });
+  }
+
+  // Check user-specific assignment permissions
+  // If ticket is assigned to a specific user, only that user can take actions
+  if (existing.assignedToId && currentUserId) {
+    // Check if current user is the assigned user or a team member
+    const isAssignedUser = existing.assignedToId === currentUserId;
+    const isTeamMember = existing.teamMembers ? 
+      JSON.parse(existing.teamMembers).includes(currentUserId) : false;
+    
+    // Allow ADMIN to override assignment restrictions
+    const isAdmin = userRole === 'ADMIN';
+    
+    if (!isAssignedUser && !isTeamMember && !isAdmin) {
+      return res.status(403).json({ 
+        error: `Ticket is assigned to another user. Only the assigned user, team members, or admin can take actions.` 
+      });
+    }
   }
 
   const nexts = allowedNext[existing.status] ?? [];
