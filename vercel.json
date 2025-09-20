@@ -2,17 +2,17 @@
   "version": 2,
   "builds": [
     {
-      "src": "pms_app/build/web/**",
-      "use": "@vercel/static"
+      "src": "src/index.ts",
+      "use": "@vercel/node"
     }
   ],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "/pms_app/build/web/$1"
+      "dest": "src/index.ts"
     }
   ],
   "env": {
-    "BACKEND_URL": "@backend_url"
+    "NODE_ENV": "production"
   }
 }
