@@ -205,7 +205,7 @@ ticketsRouter.post('/:id/transition', async (req: Request, res: Response) => {
   const { id } = req.params;
   const parse = transitionSchema.safeParse(req.body ?? {});
   if (!parse.success) return res.status(400).json({ error: 'Invalid payload', details: parse.error.flatten() });
-  const { to, dueAt, slaHours, decision, comment, priority, category, userRole, currentUserId } = parse.data;
+  const { to, dueAt, slaHours, decision, comment, priority, category, userRole, currentUserId, assignedToId, teamMembers } = parse.data;
 
   const existing = await prisma.ticket.findUnique({ where: { id }, include: { stages: { orderBy: { order: 'asc' } } } });
   if (!existing) return res.status(404).json({ error: 'Not found' });
@@ -316,23 +316,52 @@ ticketsRouter.post('/:id/transition', async (req: Request, res: Response) => {
     });
   }
 
+  // Prepare update data
+  const updateData: any = {
+    status: to,
+    stages: {
+      create: stagesToCreate,
+      update: stagesToUpdate,
+    },
+    // Update priority and category if provided
+    ...(priority ? { priority } : {}),
+    ...(category ? { category } : {}),
+    // Set SLA hours for any stage that provides it
+    ...((computedSla ?? null) || typeof slaHours === 'number'
+      ? { totalSlaHours: (computedSla ?? (slaHours as number)) }
+      : {}),
+  };
+
+  // Handle assignment during transition
+  if (assignedToId || teamMembers) {
+    if (assignedToId) {
+      // Verify assigned user exists
+      const user = await prisma.user.findUnique({ where: { id: assignedToId } });
+      if (!user) {
+        return res.status(404).json({ error: 'Assigned user not found' });
+      }
+      updateData.assignedToId = assignedToId;
+    }
+    
+    if (teamMembers && teamMembers.length > 0) {
+      // Verify team members exist
+      const users = await prisma.user.findMany({ where: { id: { in: teamMembers } } });
+      if (users.length !== teamMembers.length) {
+        return res.status(404).json({ error: 'One or more team members not found' });
+      }
+      updateData.teamMembers = JSON.stringify(teamMembers);
+    }
+  }
+
   const updated = await prisma.ticket.update({
     where: { id },
-    data: {
-      status: to,
-      stages: {
-        create: stagesToCreate,
-        update: stagesToUpdate,
-      },
-      // Update priority and category if provided
-      ...(priority ? { priority } : {}),
-      ...(category ? { category } : {}),
-      // Set SLA hours for any stage that provides it
-      ...((computedSla ?? null) || typeof slaHours === 'number'
-        ? { totalSlaHours: (computedSla ?? (slaHours as number)) }
-        : {}),
+    data: updateData,
+    include: { 
+      stages: { orderBy: { order: 'asc' } },
+      assignedTo: {
+        select: { id: true, name: true, email: true, role: true }
+      }
     },
-    include: { stages: { orderBy: { order: 'asc' } } },
   });
 
   return res.json(updated);

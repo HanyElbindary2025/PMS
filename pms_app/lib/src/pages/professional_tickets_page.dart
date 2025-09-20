@@ -126,6 +126,19 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
       final now = DateTime.now();
       final slaHours = dueDate.difference(now).inHours;
       body['slaHours'] = slaHours;
+    } else if (to == 'DESIGN') {
+      // Show assignment dialog when moving to design
+      final assignmentResult = await _showDesignAssignmentDialog();
+      if (assignmentResult == null) return;
+      if (assignmentResult['assignedToId'] != null) {
+        body['assignedToId'] = assignmentResult['assignedToId'];
+      }
+      if (assignmentResult['teamMembers'] != null && assignmentResult['teamMembers'].isNotEmpty) {
+        body['teamMembers'] = assignmentResult['teamMembers'];
+      }
+      if (assignmentResult['comment'] != null) {
+        comment = assignmentResult['comment'];
+      }
     } else if (to == 'DEPLOYMENT') {
       // Show customer approval dialog with document upload and approval time
       final result = await _showCustomerApprovalDialog();
@@ -1297,6 +1310,143 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
     );
   }
 
+  // Show design assignment dialog
+  Future<Map<String, dynamic>?> _showDesignAssignmentDialog() async {
+    final commentController = TextEditingController();
+    String? selectedAssigneeId;
+    List<String> selectedTeamMembers = [];
+    List<Map<String, dynamic>> users = [];
+
+    // Load users
+    try {
+      final response = await http.get(
+        Uri.parse('http://localhost:3000/users'),
+        headers: {'Content-Type': 'application/json'},
+      );
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        users = List<Map<String, dynamic>>.from(data);
+      }
+    } catch (e) {
+      print('Error loading users: $e');
+    }
+
+    return showDialog<Map<String, dynamic>>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: Row(
+            children: [
+              Icon(Icons.design_services, color: Colors.purple),
+              const SizedBox(width: 8),
+              const Text('Assign to Design Team'),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Assign this ticket to a design team member:'),
+                const SizedBox(height: 16),
+                
+                // Primary Assignee
+                const Text('Primary Assignee:', style: TextStyle(fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                DropdownButtonFormField<String>(
+                  value: selectedAssigneeId,
+                  decoration: const InputDecoration(
+                    labelText: 'Select Designer',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: [
+                    const DropdownMenuItem<String>(
+                      value: null,
+                      child: Text('No Primary Assignee'),
+                    ),
+                    ...users.where((user) => 
+                      user['role'] == 'DEVELOPER' || 
+                      user['role'] == 'SOLUTION_ARCHITECT' ||
+                      user['role'] == 'TECHNICAL_ANALYST'
+                    ).map((user) => DropdownMenuItem<String>(
+                      value: user['id'],
+                      child: Text('${user['name']} (${user['role']})'),
+                    )),
+                  ],
+                  onChanged: (value) {
+                    setState(() {
+                      selectedAssigneeId = value;
+                    });
+                  },
+                ),
+                
+                const SizedBox(height: 16),
+                
+                // Team Members
+                const Text('Team Members:', style: TextStyle(fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: users.where((user) => 
+                    user['role'] == 'DEVELOPER' || 
+                    user['role'] == 'SOLUTION_ARCHITECT' ||
+                    user['role'] == 'TECHNICAL_ANALYST'
+                  ).map((user) {
+                    final isSelected = selectedTeamMembers.contains(user['id']);
+                    return FilterChip(
+                      label: Text('${user['name']} (${user['role']})'),
+                      selected: isSelected,
+                      onSelected: (selected) {
+                        setState(() {
+                          if (selected) {
+                            selectedTeamMembers.add(user['id']);
+                          } else {
+                            selectedTeamMembers.remove(user['id']);
+                          }
+                        });
+                      },
+                    );
+                  }).toList(),
+                ),
+                
+                const SizedBox(height: 16),
+                
+                // Comment
+                const Text('Comment:', style: TextStyle(fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: commentController,
+                  decoration: const InputDecoration(
+                    hintText: 'Optional comment about design assignment...',
+                    border: OutlineInputBorder(),
+                  ),
+                  maxLines: 2,
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop({
+                  'assignedToId': selectedAssigneeId,
+                  'teamMembers': selectedTeamMembers,
+                  'comment': commentController.text.trim().isNotEmpty ? commentController.text.trim() : null,
+                });
+              },
+              child: const Text('Assign & Move to Design'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildInfoRow(String label, String? value, Color? color) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
@@ -1379,9 +1529,40 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
       return _sortAscending ? cmp : -cmp;
     });
 
-    final mineOnly = (_role == 'CREATOR' && _userEmail.isNotEmpty)
-        ? all.where((e) => (e as Map<String, dynamic>)['requesterEmail'] == _userEmail).toList()
-        : all;
+    // Filter tickets based on user role and assignment
+    List<dynamic> mineOnly;
+    if (_role == 'CREATOR' && _userEmail.isNotEmpty) {
+      // Creators see only their own created tickets
+      mineOnly = all.where((e) => (e as Map<String, dynamic>)['requesterEmail'] == _userEmail).toList();
+    } else if (_userId != null) {
+      // Other users see only tickets assigned to them or their team
+      mineOnly = all.where((e) {
+        final ticket = e as Map<String, dynamic>;
+        final assignedToId = ticket['assignedToId'];
+        final teamMembers = ticket['teamMembers'];
+        
+        // Check if user is assigned to this ticket
+        if (assignedToId == _userId) return true;
+        
+        // Check if user is in team members
+        if (teamMembers != null) {
+          try {
+            final teamList = List<String>.from(json.decode(teamMembers));
+            if (teamList.contains(_userId)) return true;
+          } catch (e) {
+            // Handle JSON parsing error
+          }
+        }
+        
+        // Admins can see all tickets
+        if (_role == 'ADMIN') return true;
+        
+        return false;
+      }).toList();
+    } else {
+      // Fallback: show all tickets if no userId
+      mineOnly = all;
+    }
 
     setState(() {
       _rows = _search.isEmpty
