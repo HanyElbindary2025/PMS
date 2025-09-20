@@ -13,11 +13,7 @@
     }
   ],
   "env": {
-    "NODE_ENV": "production"
-  },
-  "functions": {
-    "src/index.ts": {
-      "maxDuration": 30
-    }
+    "NODE_ENV": "production",
+    "DATABASE_URL": "file:./dev.db"
   }
 }
