@@ -1,0 +1,5 @@
+# Flutter build configuration for Vercel
+flutter:
+  build: web
+  target: lib/main.dart
+  web-renderer: html

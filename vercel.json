@@ -1,0 +1,18 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "pms_app/build/web/**",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/pms_app/build/web/$1"
+    }
+  ],
+  "env": {
+    "BACKEND_URL": "@backend_url"
+  }
+}
