@@ -26,9 +26,26 @@ batch\test-system.bat
 ```
 This will test if the backend is running correctly.
 
+### **Database Management:**
+```bash
+batch\open-database.bat
+```
+Opens Prisma Studio in your browser to view/edit database data.
+
+```bash
+batch\database-status.bat
+```
+Checks database status and fixes common issues.
+
+```bash
+batch\reset-database.bat
+```
+Resets the database (WARNING: deletes all data).
+
 ## 🌐 **System URLs:**
 - **Backend**: http://localhost:3000
 - **Frontend**: http://localhost:8080
+- **Database Studio**: http://localhost:5555
 
 ## 👥 **Test Accounts:**
 - **admin@pms.com** (Admin - Full permissions)
