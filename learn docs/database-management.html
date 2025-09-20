@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PMS - Database Management</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .section {
+            margin-bottom: 40px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .section-header {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            padding: 20px;
+            font-size: 1.3em;
+            font-weight: bold;
+        }
+        
+        .section-content {
+            padding: 25px;
+            background: #f8f9fa;
+        }
+        
+        .step {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .step-number {
+            background: #3498db;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 20px;
+            flex-shrink: 0;
+        }
+        
+        .step-info {
+            flex: 1;
+        }
+        
+        .step-title {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        
+        .step-description {
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+        
+        .code-block {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            margin: 15px 0;
+            overflow-x: auto;
+        }
+        
+        .button {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 1em;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin: 5px;
+        }
+        
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        
+        .button.primary {
+            background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+        }
+        
+        .button.secondary {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+        }
+        
+        .table-info {
+            background: #ecf0f1;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        
+        .table-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #bdc3c7;
+        }
+        
+        .table-row:last-child {
+            border-bottom: none;
+        }
+        
+        .table-label {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .table-value {
+            color: #7f8c8d;
+        }
+        
+        .warning {
+            background: #f39c12;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        
+        .success {
+            background: #27ae60;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🗄️ PMS Database Management</h1>
+            <p>How to Access and Manage Tickets in Prisma Studio</p>
+        </div>
+        
+        <div class="content">
+            <!-- Prisma Studio Access -->
+            <div class="section">
+                <div class="section-header">
+                    🚀 Accessing Prisma Studio
+                </div>
+                <div class="section-content">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <div class="step-info">
+                            <div class="step-title">Start Prisma Studio</div>
+                            <div class="step-description">Run the command to open Prisma Studio in your browser</div>
+                        </div>
+                    </div>
+                    
+                    <div class="code-block">
+npx prisma studio
+                    </div>
+                    
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <div class="step-info">
+                            <div class="step-title">Open Browser</div>
+                            <div class="step-description">Prisma Studio will automatically open in your browser at http://localhost:5555</div>
+                        </div>
+                    </div>
+                    
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <div class="step-info">
+                            <div class="step-title">Navigate to Tickets</div>
+                            <div class="step-description">Click on the "Ticket" table to view all tickets</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Database Tables -->
+            <div class="section">
+                <div class="section-header">
+                    📊 Database Tables Overview
+                </div>
+                <div class="section-content">
+                    <div class="table-info">
+                        <div class="table-row">
+                            <div class="table-label">Ticket Table</div>
+                            <div class="table-value">Main table containing all ticket information</div>
+                        </div>
+                        <div class="table-row">
+                            <div class="table-label">Stage Table</div>
+                            <div class="table-value">Workflow stages for each ticket</div>
+                        </div>
+                        <div class="table-row">
+                            <div class="table-label">User Table</div>
+                            <div class="table-value">User accounts and roles</div>
+                        </div>
+                        <div class="table-row">
+                            <div class="table-label">Lookup Table</div>
+                            <div class="table-value">Dropdown options and configurations</div>
+                        </div>
+                        <div class="table-row">
+                            <div class="table-label">Attachment Table</div>
+                            <div class="table-value">File attachments for tickets</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ticket Management -->
+            <div class="section">
+                <div class="section-header">
+                    🎫 Ticket Management in Prisma Studio
+                </div>
+                <div class="section-content">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <div class="step-info">
+                            <div class="step-title">View All Tickets</div>
+                            <div class="step-description">Click on "Ticket" table to see all tickets with their details</div>
+                        </div>
+                    </div>
+                    
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <div class="step-info">
+                            <div class="step-title">Edit Ticket</div>
+                            <div class="step-description">Click on any ticket row to edit its details</div>
+                        </div>
+                    </div>
+                    
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <div class="step-info">
+                            <div class="step-title">Delete Ticket</div>
+                            <div class="step-description">Click the delete button (trash icon) to remove a ticket</div>
+                        </div>
+                    </div>
+                    
+                    <div class="step">
+                        <div class="step-number">4</div>
+                        <div class="step-info">
+                            <div class="step-title">Add New Ticket</div>
+                            <div class="step-description">Click "Add record" to create a new ticket manually</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="section">
+                <div class="section-header">
+                    ⚡ Quick Actions
+                </div>
+                <div class="section-content">
+                    <button class="button primary" onclick="openPrismaStudio()">
+                        🚀 Open Prisma Studio
+                    </button>
+                    
+                    <button class="button secondary" onclick="showTicketCount()">
+                        📊 Show Ticket Count
+                    </button>
+                    
+                    <button class="button" onclick="clearAllTickets()">
+                        🗑️ Clear All Tickets
+                    </button>
+                    
+                    <div id="results" style="margin-top: 20px; padding: 15px; background: #2c3e50; color: white; border-radius: 8px; font-family: monospace; display: none;">
+                        Results will appear here...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Important Notes -->
+            <div class="section">
+                <div class="section-header">
+                    ⚠️ Important Notes
+                </div>
+                <div class="section-content">
+                    <div class="warning">
+                        <strong>⚠️ Warning:</strong> Deleting tickets will also delete all related stages and attachments. This action cannot be undone!
+                    </div>
+                    
+                    <div class="success">
+                        <strong>✅ Safe Operations:</strong> You can safely view, edit, and add tickets through Prisma Studio without affecting the application.
+                    </div>
+                    
+                    <div class="table-info">
+                        <div class="table-row">
+                            <div class="table-label">Backup Recommendation</div>
+                            <div class="table-value">Always backup your database before bulk deletions</div>
+                        </div>
+                        <div class="table-row">
+                            <div class="table-label">Development Only</div>
+                            <div class="table-value">Prisma Studio is for development - don't use in production</div>
+                        </div>
+                        <div class="table-row">
+                            <div class="table-label">Port 5555</div>
+                            <div class="table-value">Prisma Studio runs on http://localhost:5555</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const BASE_URL = 'http://localhost:3000';
+        
+        async function makeRequest(url, options = {}) {
+            const response = await fetch(url, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...options.headers,
+                },
+                ...options,
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(`HTTP ${response.status}: ${errorData.error || response.statusText}`);
+            }
+            
+            return response.json();
+        }
+        
+        function showResults(message) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.style.display = 'block';
+            resultsDiv.textContent = message;
+        }
+        
+        function openPrismaStudio() {
+            showResults('🚀 Opening Prisma Studio...\n\nPrisma Studio should open automatically in your browser at:\nhttp://localhost:5555\n\nIf it doesn\'t open automatically, click the link above or run:\nnpx prisma studio');
+        }
+        
+        async function showTicketCount() {
+            showResults('📊 Getting ticket count...\n\n');
+            
+            try {
+                const tickets = await makeRequest(`${BASE_URL}/tickets?page=1&pageSize=100`);
+                const count = tickets.data.length;
+                
+                let results = `📋 Total Tickets: ${count}\n\n`;
+                
+                if (count > 0) {
+                    results += `Recent Tickets:\n`;
+                    tickets.data.slice(0, 5).forEach((ticket, index) => {
+                        results += `${index + 1}. ${ticket.title} (${ticket.status})\n`;
+                    });
+                    
+                    if (count > 5) {
+                        results += `... and ${count - 5} more tickets\n`;
+                    }
+                } else {
+                    results += `No tickets found in the database.`;
+                }
+                
+                showResults(results);
+                
+            } catch (error) {
+                showResults(`❌ Error getting ticket count: ${error.message}`);
+            }
+        }
+        
+        async function clearAllTickets() {
+            if (!confirm('⚠️ Are you sure you want to delete ALL tickets? This action cannot be undone!')) {
+                return;
+            }
+            
+            showResults('🗑️ Clearing all tickets...\n\n');
+            
+            try {
+                const tickets = await makeRequest(`${BASE_URL}/tickets?page=1&pageSize=100`);
+                const count = tickets.data.length;
+                
+                let results = `Found ${count} tickets to delete\n\n`;
+                
+                for (const ticket of tickets.data) {
+                    try {
+                        await makeRequest(`${BASE_URL}/tickets/${ticket.id}`, {
+                            method: 'DELETE'
+                        });
+                        results += `✅ Deleted: ${ticket.title}\n`;
+                    } catch (error) {
+                        results += `❌ Failed to delete ${ticket.title}: ${error.message}\n`;
+                    }
+                }
+                
+                results += `\n🎉 All tickets cleared!`;
+                showResults(results);
+                
+            } catch (error) {
+                showResults(`❌ Error clearing tickets: ${error.message}`);
+            }
+        }
+    </script>
+</body>
+</html>

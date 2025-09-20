@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PMS - Full Workflow Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .phase-section {
+            margin-bottom: 40px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .phase-header {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            padding: 20px;
+            font-size: 1.3em;
+            font-weight: bold;
+        }
+        
+        .phase-content {
+            padding: 25px;
+            background: #f8f9fa;
+        }
+        
+        .workflow-step {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+        
+        .workflow-step:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }
+        
+        .step-number {
+            background: #3498db;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 20px;
+            flex-shrink: 0;
+        }
+        
+        .step-info {
+            flex: 1;
+        }
+        
+        .step-title {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        
+        .step-description {
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+        
+        .step-status {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+        
+        .status-pending {
+            background: #f39c12;
+            color: white;
+        }
+        
+        .status-completed {
+            background: #27ae60;
+            color: white;
+        }
+        
+        .status-in-progress {
+            background: #3498db;
+            color: white;
+        }
+        
+        .test-section {
+            background: #2c3e50;
+            color: white;
+            padding: 30px;
+            margin-top: 30px;
+            border-radius: 10px;
+        }
+        
+        .test-button {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.1em;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin: 10px;
+        }
+        
+        .test-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        
+        .test-results {
+            background: #34495e;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .phase-flow {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        .phase-box {
+            background: #ecf0f1;
+            padding: 15px 20px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 5px;
+            flex: 1;
+            min-width: 120px;
+            position: relative;
+        }
+        
+        .phase-box::after {
+            content: '→';
+            position: absolute;
+            right: -15px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.5em;
+            color: #3498db;
+        }
+        
+        .phase-box:last-child::after {
+            display: none;
+        }
+        
+        .phase-box.active {
+            background: #3498db;
+            color: white;
+        }
+        
+        .phase-box.completed {
+            background: #27ae60;
+            color: white;
+        }
+        
+        .user-roles {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .role-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .role-title {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .role-permissions {
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+        
+        .permission-tag {
+            display: inline-block;
+            background: #ecf0f1;
+            padding: 2px 8px;
+            border-radius: 12px;
+            margin: 2px;
+            font-size: 0.8em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 PMS Full Workflow Test</h1>
+            <p>Complete Project Management System - All Phases & Test Functions</p>
+        </div>
+        
+        <div class="content">
+            <!-- Workflow Overview -->
+            <div class="phase-section">
+                <div class="phase-header">
+                    📋 Complete Workflow Overview
+                </div>
+                <div class="phase-content">
+                    <div class="phase-flow">
+                        <div class="phase-box completed">SUBMITTED</div>
+                        <div class="phase-box completed">ANALYSIS</div>
+                        <div class="phase-box completed">CONFIRM_DUE</div>
+                        <div class="phase-box active">DESIGN</div>
+                        <div class="phase-box">DEVELOPMENT</div>
+                        <div class="phase-box">TESTING</div>
+                        <div class="phase-box">CUSTOMER_APPROVAL</div>
+                        <div class="phase-box">DEPLOYMENT</div>
+                        <div class="phase-box">VERIFICATION</div>
+                        <div class="phase-box">CLOSED</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detailed Workflow Steps -->
+            <div class="phase-section">
+                <div class="phase-header">
+                    🔄 Detailed Workflow Steps
+                </div>
+                <div class="phase-content">
+                    <div class="workflow-step">
+                        <div class="step-number">1</div>
+                        <div class="step-info">
+                            <div class="step-title">📝 SUBMITTED</div>
+                            <div class="step-description">User creates a new ticket request</div>
+                        </div>
+                        <div class="step-status status-completed">Completed</div>
+                    </div>
+                    
+                    <div class="workflow-step">
+                        <div class="step-number">2</div>
+                        <div class="step-info">
+                            <div class="step-title">🔍 ANALYSIS</div>
+                            <div class="step-description">Admin/Developer analyzes the request and requirements</div>
+                        </div>
+                        <div class="step-status status-completed">Completed</div>
+                    </div>
+                    
+                    <div class="workflow-step">
+                        <div class="step-number">3</div>
+                        <div class="step-info">
+                            <div class="step-title">📅 CONFIRM_DUE</div>
+                            <div class="step-description">Set due date and calculate SLA hours</div>
+                        </div>
+                        <div class="step-status status-completed">Completed</div>
+                    </div>
+                    
+                    <div class="workflow-step">
+                        <div class="step-number">4</div>
+                        <div class="step-info">
+                            <div class="step-title">🎨 DESIGN</div>
+                            <div class="step-description">Design phase with team assignment dialog</div>
+                        </div>
+                        <div class="step-status status-in-progress">In Progress</div>
+                    </div>
+                    
+                    <div class="workflow-step">
+                        <div class="step-number">5</div>
+                        <div class="step-info">
+                            <div class="step-title">💻 DEVELOPMENT</div>
+                            <div class="step-description">Development team implements the solution</div>
+                        </div>
+                        <div class="step-status status-pending">Pending</div>
+                    </div>
+                    
+                    <div class="workflow-step">
+                        <div class="step-number">6</div>
+                        <div class="step-info">
+                            <div class="step-title">🧪 TESTING</div>
+                            <div class="step-description">QA team tests the implementation</div>
+                        </div>
+                        <div class="step-status status-pending">Pending</div>
+                    </div>
+                    
+                    <div class="workflow-step">
+                        <div class="step-number">7</div>
+                        <div class="step-info">
+                            <div class="step-title">✅ CUSTOMER_APPROVAL</div>
+                            <div class="step-description">Customer approves with document upload</div>
+                        </div>
+                        <div class="step-status status-pending">Pending</div>
+                    </div>
+                    
+                    <div class="workflow-step">
+                        <div class="step-number">8</div>
+                        <div class="step-info">
+                            <div class="step-title">🚀 DEPLOYMENT</div>
+                            <div class="step-description">Deploy to production environment</div>
+                        </div>
+                        <div class="step-status status-pending">Pending</div>
+                    </div>
+                    
+                    <div class="workflow-step">
+                        <div class="step-number">9</div>
+                        <div class="step-info">
+                            <div class="step-title">🔍 VERIFICATION</div>
+                            <div class="step-description">Final verification and testing</div>
+                        </div>
+                        <div class="step-status status-pending">Pending</div>
+                    </div>
+                    
+                    <div class="workflow-step">
+                        <div class="step-number">10</div>
+                        <div class="step-info">
+                            <div class="step-title">🏁 CLOSED</div>
+                            <div class="step-description">Ticket completed and closed</div>
+                        </div>
+                        <div class="step-status status-pending">Pending</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Roles & Permissions -->
+            <div class="phase-section">
+                <div class="phase-header">
+                    👥 User Roles & Permissions
+                </div>
+                <div class="phase-content">
+                    <div class="user-roles">
+                        <div class="role-card">
+                            <div class="role-title">🔧 ADMIN</div>
+                            <div class="role-permissions">
+                                <span class="permission-tag">All Phases</span>
+                                <span class="permission-tag">User Management</span>
+                                <span class="permission-tag">SLA Configuration</span>
+                            </div>
+                        </div>
+                        
+                        <div class="role-card">
+                            <div class="role-title">👨‍💻 DEVELOPER</div>
+                            <div class="role-permissions">
+                                <span class="permission-tag">ANALYSIS</span>
+                                <span class="permission-tag">CONFIRM_DUE</span>
+                                <span class="permission-tag">DESIGN</span>
+                                <span class="permission-tag">DEVELOPMENT</span>
+                                <span class="permission-tag">TESTING</span>
+                            </div>
+                        </div>
+                        
+                        <div class="role-card">
+                            <div class="role-title">🧪 QA_ENGINEER</div>
+                            <div class="role-permissions">
+                                <span class="permission-tag">TESTING</span>
+                                <span class="permission-tag">CUSTOMER_APPROVAL</span>
+                            </div>
+                        </div>
+                        
+                        <div class="role-card">
+                            <div class="role-title">👤 CREATOR</div>
+                            <div class="role-permissions">
+                                <span class="permission-tag">SUBMITTED</span>
+                                <span class="permission-tag">CUSTOMER_APPROVAL</span>
+                                <span class="permission-tag">VERIFICATION</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Test Functions -->
+            <div class="test-section">
+                <h2>🧪 Test Functions</h2>
+                <p>Click the buttons below to test different aspects of the system:</p>
+                
+                <button class="test-button" onclick="runFullWorkflowTest()">
+                    🚀 Run Full Workflow Test
+                </button>
+                
+                <button class="test-button" onclick="testUserAssignment()">
+                    👥 Test User Assignment
+                </button>
+                
+                <button class="test-button" onclick="testSLA()">
+                    ⏱️ Test SLA Calculation
+                </button>
+                
+                <button class="test-button" onclick="testRolePermissions()">
+                    🔒 Test Role Permissions
+                </button>
+                
+                <button class="test-button" onclick="clearAllTickets()">
+                    🗑️ Clear All Tickets
+                </button>
+                
+                <div id="test-results" class="test-results" style="display: none;">
+                    Test results will appear here...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const BASE_URL = 'http://localhost:3000';
+        
+        async function makeRequest(url, options = {}) {
+            const response = await fetch(url, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...options.headers,
+                },
+                ...options,
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(`HTTP ${response.status}: ${errorData.error || response.statusText}`);
+            }
+            
+            return response.json();
+        }
+        
+        function showResults(results) {
+            const resultsDiv = document.getElementById('test-results');
+            resultsDiv.style.display = 'block';
+            resultsDiv.textContent = results;
+        }
+        
+        async function runFullWorkflowTest() {
+            showResults('🚀 Starting Full Workflow Test...\n\n');
+            
+            try {
+                // Get users
+                const users = await makeRequest(`${BASE_URL}/users`);
+                const admin = users.find(u => u.role === 'ADMIN');
+                const developer = users.find(u => u.role === 'DEVELOPER');
+                const qa = users.find(u => u.role === 'QA_ENGINEER');
+                
+                let results = `👥 Available Users:\n`;
+                results += `• Admin: ${admin.name}\n`;
+                results += `• Developer: ${developer.name}\n`;
+                results += `• QA: ${qa.name}\n\n`;
+
+                // Create ticket
+                results += `📝 Creating ticket...\n`;
+                const ticketResponse = await makeRequest(`${BASE_URL}/public/requests`, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        title: 'HTML Full Workflow Test',
+                        description: 'Testing complete workflow from HTML interface',
+                        requesterEmail: 'customer@pms.com',
+                        requesterName: 'HTML Test Customer',
+                        details: {
+                            project: 'HTML Test Project',
+                            platform: 'Web',
+                            priority: 'HIGH',
+                            category: 'FEATURE_REQUEST'
+                        }
+                    })
+                });
+
+                const ticketId = ticketResponse.id;
+                results += `✅ Ticket created: ${ticketId}\n`;
+
+                // Assign to developer
+                results += `\n🎯 Assigning to developer...\n`;
+                const assignResponse = await makeRequest(`${BASE_URL}/tickets/${ticketId}/assign`, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        assignedToId: developer.id,
+                        teamMembers: [],
+                        comment: 'Assigned to developer'
+                    })
+                });
+                results += `✅ Assigned to: ${assignResponse.assignedTo?.name}\n`;
+
+                // Move through workflow
+                const phases = [
+                    { to: 'ANALYSIS', comment: 'Starting analysis' },
+                    { to: 'CONFIRM_DUE', comment: 'Setting due date', slaHours: 72 },
+                    { to: 'DESIGN', comment: 'Moving to design', assignedToId: developer.id },
+                    { to: 'DEVELOPMENT', comment: 'Starting development' },
+                    { to: 'TESTING', comment: 'Starting testing' },
+                    { to: 'CUSTOMER_APPROVAL', comment: 'Customer approval' },
+                    { to: 'DEPLOYMENT', comment: 'Deploying' },
+                    { to: 'VERIFICATION', comment: 'Verifying' },
+                    { to: 'CLOSED', comment: 'Closing ticket' }
+                ];
+
+                for (const phase of phases) {
+                    results += `\n🔄 Moving to ${phase.to}...\n`;
+                    const response = await makeRequest(`${BASE_URL}/tickets/${ticketId}/transition`, {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            to: phase.to,
+                            userRole: 'ADMIN',
+                            currentUserId: admin.id,
+                            comment: phase.comment,
+                            ...(phase.slaHours && { slaHours: phase.slaHours }),
+                            ...(phase.assignedToId && { assignedToId: phase.assignedToId })
+                        })
+                    });
+                    results += `✅ ${phase.to}: ${response.status}\n`;
+                }
+
+                // Final state
+                results += `\n📊 Final ticket state:\n`;
+                const finalTicket = await makeRequest(`${BASE_URL}/tickets/${ticketId}`);
+                results += `Status: ${finalTicket.status}\n`;
+                results += `Assigned To: ${finalTicket.assignedTo?.name || 'Unassigned'}\n`;
+                results += `SLA Status: ${finalTicket.slaStatus || 'Not calculated'}\n`;
+                results += `Total Stages: ${finalTicket.stages.length}\n`;
+
+                results += `\n🎉 Full Workflow Test Completed Successfully!`;
+
+            } catch (error) {
+                results += `\n❌ Test failed: ${error.message}`;
+            }
+            
+            showResults(results);
+        }
+        
+        async function testUserAssignment() {
+            showResults('👥 Testing User Assignment...\n\n');
+            
+            try {
+                const users = await makeRequest(`${BASE_URL}/users`);
+                const developer = users.find(u => u.role === 'DEVELOPER');
+                const qa = users.find(u => u.role === 'QA_ENGINEER');
+                
+                // Create ticket
+                const ticketResponse = await makeRequest(`${BASE_URL}/public/requests`, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        title: 'Assignment Test',
+                        description: 'Testing user assignment functionality',
+                        requesterEmail: 'test@example.com',
+                        requesterName: 'Test User',
+                        details: { project: 'Test', platform: 'Web', priority: 'MEDIUM', category: 'REQUEST' }
+                    })
+                });
+
+                const ticketId = ticketResponse.id;
+                let results = `✅ Ticket created: ${ticketId}\n`;
+
+                // Assign to developer
+                results += `\n🎯 Assigning to developer...\n`;
+                const assignResponse = await makeRequest(`${BASE_URL}/tickets/${ticketId}/assign`, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        assignedToId: developer.id,
+                        teamMembers: [qa.id],
+                        comment: 'Assigned to development team'
+                    })
+                });
+                results += `✅ Assigned to: ${assignResponse.assignedTo?.name}\n`;
+                results += `✅ Team members: ${assignResponse.teamMembers}\n`;
+
+                // Test assignment restrictions
+                results += `\n🔒 Testing assignment restrictions...\n`;
+                try {
+                    await makeRequest(`${BASE_URL}/tickets/${ticketId}/transition`, {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            to: 'ANALYSIS',
+                            userRole: 'QA_ENGINEER',
+                            currentUserId: qa.id,
+                            comment: 'QA trying to take action'
+                        })
+                    });
+                    results += `❌ PROBLEM: QA was able to take action (should be blocked)\n`;
+                } catch (error) {
+                    results += `✅ CORRECT: QA blocked - ${error.message}\n`;
+                }
+
+                results += `\n🎉 User Assignment Test Completed!`;
+
+            } catch (error) {
+                results += `\n❌ Test failed: ${error.message}`;
+            }
+            
+            showResults(results);
+        }
+        
+        async function testSLA() {
+            showResults('⏱️ Testing SLA Calculation...\n\n');
+            
+            try {
+                const users = await makeRequest(`${BASE_URL}/users`);
+                const admin = users.find(u => u.role === 'ADMIN');
+                
+                // Create ticket
+                const ticketResponse = await makeRequest(`${BASE_URL}/public/requests`, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        title: 'SLA Test',
+                        description: 'Testing SLA calculation',
+                        requesterEmail: 'sla@test.com',
+                        requesterName: 'SLA Test User',
+                        details: { project: 'SLA Test', platform: 'Web', priority: 'HIGH', category: 'INCIDENT' }
+                    })
+                });
+
+                const ticketId = ticketResponse.id;
+                let results = `✅ Ticket created: ${ticketId}\n`;
+
+                // Move to CONFIRM_DUE with SLA
+                results += `\n📅 Setting SLA (48 hours)...\n`;
+                const slaResponse = await makeRequest(`${BASE_URL}/tickets/${ticketId}/transition`, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        to: 'CONFIRM_DUE',
+                        userRole: 'ADMIN',
+                        currentUserId: admin.id,
+                        slaHours: 48,
+                        comment: 'SLA set to 48 hours'
+                    })
+                });
+                results += `✅ SLA set: ${slaResponse.totalSlaHours} hours\n`;
+
+                // Check SLA status
+                const ticket = await makeRequest(`${BASE_URL}/tickets/${ticketId}`);
+                results += `✅ SLA Status: ${ticket.slaStatus}\n`;
+
+                results += `\n🎉 SLA Test Completed!`;
+
+            } catch (error) {
+                results += `\n❌ Test failed: ${error.message}`;
+            }
+            
+            showResults(results);
+        }
+        
+        async function testRolePermissions() {
+            showResults('🔒 Testing Role Permissions...\n\n');
+            
+            try {
+                const users = await makeRequest(`${BASE_URL}/users`);
+                const developer = users.find(u => u.role === 'DEVELOPER');
+                const qa = users.find(u => u.role === 'QA_ENGINEER');
+                
+                // Create ticket
+                const ticketResponse = await makeRequest(`${BASE_URL}/public/requests`, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        title: 'Role Permission Test',
+                        description: 'Testing role-based permissions',
+                        requesterEmail: 'role@test.com',
+                        requesterName: 'Role Test User',
+                        details: { project: 'Role Test', platform: 'Web', priority: 'MEDIUM', category: 'CHANGE' }
+                    })
+                });
+
+                const ticketId = ticketResponse.id;
+                let results = `✅ Ticket created: ${ticketId}\n`;
+
+                // Test developer permissions
+                results += `\n👨‍💻 Testing developer permissions...\n`;
+                try {
+                    const devResponse = await makeRequest(`${BASE_URL}/tickets/${ticketId}/transition`, {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            to: 'ANALYSIS',
+                            userRole: 'DEVELOPER',
+                            currentUserId: developer.id,
+                            comment: 'Developer taking action'
+                        })
+                    });
+                    results += `✅ Developer can do ANALYSIS: ${devResponse.status}\n`;
+                } catch (error) {
+                    results += `❌ Developer blocked: ${error.message}\n`;
+                }
+
+                // Test QA permissions
+                results += `\n🧪 Testing QA permissions...\n`;
+                try {
+                    const qaResponse = await makeRequest(`${BASE_URL}/tickets/${ticketId}/transition`, {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            to: 'TESTING',
+                            userRole: 'QA_ENGINEER',
+                            currentUserId: qa.id,
+                            comment: 'QA taking action'
+                        })
+                    });
+                    results += `✅ QA can do TESTING: ${qaResponse.status}\n`;
+                } catch (error) {
+                    results += `❌ QA blocked: ${error.message}\n`;
+                }
+
+                results += `\n🎉 Role Permission Test Completed!`;
+
+            } catch (error) {
+                results += `\n❌ Test failed: ${error.message}`;
+            }
+            
+            showResults(results);
+        }
+        
+        async function clearAllTickets() {
+            showResults('🗑️ Clearing All Tickets...\n\n');
+            
+            try {
+                // Get all tickets
+                const tickets = await makeRequest(`${BASE_URL}/tickets?page=1&pageSize=100`);
+                let results = `Found ${tickets.data.length} tickets to delete\n\n`;
+                
+                // Delete each ticket
+                for (const ticket of tickets.data) {
+                    try {
+                        await makeRequest(`${BASE_URL}/tickets/${ticket.id}`, {
+                            method: 'DELETE'
+                        });
+                        results += `✅ Deleted: ${ticket.title}\n`;
+                    } catch (error) {
+                        results += `❌ Failed to delete ${ticket.title}: ${error.message}\n`;
+                    }
+                }
+                
+                results += `\n🎉 All tickets cleared!`;
+                
+            } catch (error) {
+                results += `\n❌ Clear failed: ${error.message}`;
+            }
+            
+            showResults(results);
+        }
+    </script>
+</body>
+</html>
