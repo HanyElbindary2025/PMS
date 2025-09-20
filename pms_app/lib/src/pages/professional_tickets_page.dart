@@ -142,6 +142,19 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
       if (assignmentResult['comment'] != null) {
         comment = assignmentResult['comment'];
       }
+    } else if (to == 'DEVELOPMENT') {
+      // Show assignment dialog when moving to development
+      final assignmentResult = await _showDevelopmentAssignmentDialog();
+      if (assignmentResult == null) return;
+      if (assignmentResult['assignedToId'] != null) {
+        body['assignedToId'] = assignmentResult['assignedToId'];
+      }
+      if (assignmentResult['teamMembers'] != null && assignmentResult['teamMembers'].isNotEmpty) {
+        body['teamMembers'] = assignmentResult['teamMembers'];
+      }
+      if (assignmentResult['comment'] != null) {
+        comment = assignmentResult['comment'];
+      }
     } else if (to == 'TESTING') {
       // Show assignment dialog when moving to testing
       final assignmentResult = await _showTestingAssignmentDialog();
@@ -1456,6 +1469,142 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
                 });
               },
               child: const Text('Assign & Move to Design'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Show development assignment dialog
+  Future<Map<String, dynamic>?> _showDevelopmentAssignmentDialog() async {
+    final commentController = TextEditingController();
+    String? selectedAssigneeId;
+    List<String> selectedTeamMembers = [];
+    List<Map<String, dynamic>> users = [];
+
+    // Load users
+    try {
+      final response = await http.get(
+        Uri.parse('http://localhost:3000/users'),
+        headers: {'Content-Type': 'application/json'},
+      );
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        users = List<Map<String, dynamic>>.from(data);
+      }
+    } catch (e) {
+      print('Error loading users: $e');
+    }
+
+    return showDialog<Map<String, dynamic>>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: Row(
+            children: [
+              Icon(Icons.code, color: Colors.green),
+              const SizedBox(width: 8),
+              const Text('Assign to Development Team'),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Assign this ticket to a development team member:'),
+                const SizedBox(height: 16),
+                
+                // Primary Assignee
+                const Text('Primary Developer:', style: TextStyle(fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                DropdownButtonFormField<String>(
+                  value: selectedAssigneeId,
+                  decoration: const InputDecoration(
+                    labelText: 'Select Developer',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: [
+                    const DropdownMenuItem<String>(
+                      value: null,
+                      child: Text('No Primary Developer'),
+                    ),
+                    ...users.where((user) => 
+                      user['role'] == 'DEVELOPER' || 
+                      user['role'] == 'SOLUTION_ARCHITECT'
+                    ).map((user) => DropdownMenuItem<String>(
+                      value: user['id'],
+                      child: Text('${user['name']} (${user['role']})'),
+                    )),
+                  ],
+                  onChanged: (value) {
+                    setState(() {
+                      selectedAssigneeId = value;
+                    });
+                  },
+                ),
+                
+                const SizedBox(height: 16),
+                
+                // Team Members
+                const Text('Development Team:', style: TextStyle(fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: users.where((user) => 
+                    user['role'] == 'DEVELOPER' || 
+                    user['role'] == 'SOLUTION_ARCHITECT' ||
+                    user['role'] == 'TECHNICAL_ANALYST'
+                  ).map((user) {
+                    final isSelected = selectedTeamMembers.contains(user['id']);
+                    return FilterChip(
+                      label: Text('${user['name']} (${user['role']})'),
+                      selected: isSelected,
+                      onSelected: (selected) {
+                        setState(() {
+                          if (selected) {
+                            selectedTeamMembers.add(user['id']);
+                          } else {
+                            selectedTeamMembers.remove(user['id']);
+                          }
+                        });
+                      },
+                    );
+                  }).toList(),
+                ),
+                
+                const SizedBox(height: 16),
+
+                // Comment
+                const Text('Comment:', style: TextStyle(fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: commentController,
+                  decoration: const InputDecoration(
+                    hintText: 'Optional comment about development assignment...',
+                    border: OutlineInputBorder(),
+                  ),
+                  maxLines: 2,
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop({
+                  'assignedToId': selectedAssigneeId,
+                  'teamMembers': selectedTeamMembers,
+                  'comment': commentController.text.trim().isNotEmpty ? commentController.text.trim() : null,
+                });
+              },
+              child: const Text('Assign & Start Development'),
             ),
           ],
         ),
