@@ -1,13 +1,12 @@
 import 'dart:convert';
 import 'dart:async';
-import 'dart:io';
+import 'dart:html' as html;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 import 'package:excel/excel.dart' as excel;
-import 'package:path_provider/path_provider.dart';
 import '../widgets/team_assignment_widget.dart';
 
 class ProfessionalTicketsPage extends StatefulWidget {
@@ -2371,25 +2370,16 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
       final timestamp = DateFormat('yyyy-MM-dd_HH-mm-ss').format(DateTime.now());
       final filename = 'PMS_Tickets_Export_$timestamp.xlsx';
 
-      // Get downloads directory
-      Directory? downloadsDir;
-      if (Platform.isWindows) {
-        downloadsDir = Directory('${Platform.environment['USERPROFILE']}\\Downloads');
-      } else if (Platform.isMacOS) {
-        downloadsDir = Directory('${Platform.environment['HOME']}/Downloads');
-      } else if (Platform.isLinux) {
-        downloadsDir = Directory('${Platform.environment['HOME']}/Downloads');
-      }
-
-      if (downloadsDir == null || !downloadsDir.existsSync()) {
-        downloadsDir = await getApplicationDocumentsDirectory();
-      }
-
-      final filePath = '${downloadsDir.path}/$filename';
-      final file = File(filePath);
+      // For web, use download functionality
+      final bytes = excelFile.encode()!;
       
-      // Save Excel file
-      await file.writeAsBytes(excelFile.encode()!);
+      // Create download link for web
+      final blob = html.Blob([bytes]);
+      final url = html.Url.createObjectUrlFromBlob(blob);
+      final anchor = html.AnchorElement(href: url)
+        ..setAttribute('download', filename)
+        ..click();
+      html.Url.revokeObjectUrl(url);
 
       // Close loading dialog
       Navigator.of(context).pop();
@@ -2397,17 +2387,9 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
       // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('✅ Excel file exported successfully!\nLocation: $filePath'),
+          content: Text('✅ Excel file exported successfully!\nFile: $filename'),
           backgroundColor: Colors.green,
-          duration: const Duration(seconds: 5),
-          action: SnackBarAction(
-            label: 'Open Folder',
-            textColor: Colors.white,
-            onPressed: () {
-              // Open file explorer to the downloads folder
-              Process.run('explorer', [downloadsDir!.path], runInShell: true);
-            },
-          ),
+          duration: const Duration(seconds: 3),
         ),
       );
 
