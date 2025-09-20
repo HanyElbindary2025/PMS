@@ -1,33 +1,34 @@
 @echo off
-echo Stopping all PMS processes...
+title PMS System - Stopping All Services
+color 0C
+
+echo.
+echo ========================================
+echo    PMS System - Stopping All Services
+echo ========================================
 echo.
 
-echo Killing Node.js processes...
-taskkill /f /im node.exe 2>nul
-if %errorlevel% equ 0 (
-    echo Backend server stopped.
+echo Stopping Backend Server...
+taskkill /f /im node.exe >nul 2>&1
+if %errorlevel% == 0 (
+    echo    Backend stopped successfully
 ) else (
-    echo No Node.js processes found.
+    echo    No backend process found
 )
 
 echo.
-echo Killing Flutter processes...
-taskkill /f /im flutter.exe 2>nul
-if %errorlevel% equ 0 (
-    echo Flutter app stopped.
+echo Stopping Flutter Frontend...
+taskkill /f /im flutter.exe >nul 2>&1
+if %errorlevel% == 0 (
+    echo    Frontend stopped successfully
 ) else (
-    echo No Flutter processes found.
+    echo    No frontend process found
 )
 
 echo.
-echo Killing Dart processes...
-taskkill /f /im dart.exe 2>nul
-if %errorlevel% equ 0 (
-    echo Dart processes stopped.
-) else (
-    echo No Dart processes found.
-)
-
+echo ========================================
+echo    All Services Stopped!
+echo ========================================
 echo.
-echo All PMS processes have been stopped.
-pause
+echo Press any key to exit...
+pause >nul

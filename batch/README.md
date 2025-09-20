@@ -1,70 +1,59 @@
-# PMS Batch Files & PowerShell Scripts
+# PMS System - Batch Files
 
-This folder contains batch files and PowerShell scripts to easily start and manage the PMS application.
+This folder contains batch files to easily manage the PMS system.
 
-## 🚀 Quick Start
+## 🚀 **Quick Start:**
 
-### Option 1: Batch Files (Windows)
-- **`setup-project.bat`** - First time setup (installs dependencies, sets up database)
-- **`start-both.bat`** - Starts both backend and frontend servers
-- **`start-backend.bat`** - Starts only the backend server
-- **`start-frontend.bat`** - Starts only the frontend server
-- **`start-database.bat`** - Starts Prisma Studio (database management)
-- **`stop-all.bat`** - Stops all running PMS processes
+### **Start Everything:**
+```bash
+batch\start-all.bat
+```
+This will:
+- Stop any existing processes
+- Start the backend server (Node.js)
+- Start the Flutter frontend
+- Open your browser automatically
 
-### Option 2: PowerShell Scripts (Windows)
-- **`start-both.ps1`** - Starts both servers with colored output
-- **`start-backend.ps1`** - Starts backend with colored output
-- **`start-frontend.ps1`** - Starts frontend with colored output
-- **`stop-all.ps1`** - Stops all processes with colored output
+### **Stop Everything:**
+```bash
+batch\stop-all.bat
+```
+This will stop all running services.
 
-## 📋 Usage Instructions
+### **Test System:**
+```bash
+batch\test-system.bat
+```
+This will test if the backend is running correctly.
 
-### First Time Setup
-1. Double-click `setup-project.bat`
-2. Wait for all dependencies to install
-3. Run `start-both.bat` to start the application
+## 🌐 **System URLs:**
+- **Backend**: http://localhost:3000
+- **Frontend**: http://localhost:8080
 
-### Daily Usage
-1. **Start Everything**: Double-click `start-both.bat`
-2. **Access Application**: 
-   - Frontend: http://localhost:8080
-   - Backend API: http://localhost:3000
-   - Database Studio: http://localhost:5555
-3. **Stop Everything**: Double-click `stop-all.bat`
+## 👥 **Test Accounts:**
+- **admin@pms.com** (Admin - Full permissions)
+- **developer@pms.com** (Developer)
+- **qa@pms.com** (QA Engineer)
 
-### Individual Services
-- **Backend Only**: `start-backend.bat`
-- **Frontend Only**: `start-frontend.bat`
-- **Database Studio**: `start-database.bat`
+## 📋 **Manual Commands:**
 
-## 🔧 Troubleshooting
+If you prefer to run manually:
 
-### If PowerShell scripts don't run:
-1. Right-click PowerShell and "Run as Administrator"
-2. Run: `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser`
-3. Try running the PowerShell scripts again
+### **Backend:**
+```bash
+npm run dev
+```
 
-### If ports are already in use:
-1. Run `stop-all.bat` to kill all processes
-2. Wait a few seconds
-3. Run `start-both.bat` again
+### **Frontend:**
+```bash
+cd pms_app
+flutter run -d web-server --web-port 8080
+```
 
-### If dependencies are missing:
-1. Run `setup-project.bat` again
-2. Make sure Node.js and Flutter are installed
+## 🔧 **Troubleshooting:**
 
-## 📱 Access Points
-
-- **Web Application**: http://localhost:8080
-- **Backend API**: http://localhost:3000
-- **Database Studio**: http://localhost:5555
-- **Health Check**: http://localhost:3000/health
-
-## 🎯 Features
-
-- **Automatic dependency installation**
-- **Colored console output** (PowerShell)
-- **Multiple window support** (each service in separate window)
-- **Easy process management**
-- **Error handling and status messages**
+If you get errors:
+1. Run `batch\stop-all.bat` first
+2. Then run `batch\start-all.bat`
+3. Wait for both services to start completely
+4. Open http://localhost:8080 in your browser
