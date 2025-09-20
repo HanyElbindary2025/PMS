@@ -1,27 +1,36 @@
 @echo off
-title PMS System - Testing
+title PMS System Test
 color 0B
 
 echo.
 echo ========================================
-echo    PMS System - Testing
+echo    PMS System Test
 echo ========================================
 echo.
 
-echo Testing Backend Connection...
-cd /d %~dp0..
-node quick-test.js
+echo Testing Backend...
+curl -s http://localhost:3000/health >nul 2>&1
+if %errorlevel% == 0 (
+    echo ✅ Backend is running on http://localhost:3000
+) else (
+    echo ❌ Backend is not running
+)
+
+echo.
+echo Testing Frontend...
+curl -s http://localhost:8080 >nul 2>&1
+if %errorlevel% == 0 (
+    echo ✅ Frontend is running on http://localhost:8080
+) else (
+    echo ❌ Frontend is not running
+)
 
 echo.
 echo ========================================
 echo    Test Complete!
 echo ========================================
 echo.
-echo If you see "Backend is running" above,
-echo then the system is working correctly.
-echo.
-echo Open your browser and go to:
-echo http://localhost:8080
+echo If both are ✅, open: http://localhost:8080
 echo.
 echo Press any key to exit...
 pause >nul
