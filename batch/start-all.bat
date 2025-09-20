@@ -14,7 +14,7 @@ taskkill /f /im flutter.exe >nul 2>&1
 timeout /t 2 /nobreak >nul
 
 echo [2/4] Starting Backend Server...
-start "PMS Backend" cmd /k "cd /d %~dp0.. && npm run dev"
+start "PMS Backend" cmd /k "cd /d %~dp0.. && set DATABASE_URL=file:./prisma/dev.db && npm run dev"
 echo    Backend starting on http://localhost:3000
 timeout /t 5 /nobreak >nul
 
