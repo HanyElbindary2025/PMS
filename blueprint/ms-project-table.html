@@ -1156,6 +1156,7 @@
             }
 
             row.className = `task-row ${rowClass}`;
+            row.setAttribute('data-task-id', task.id);
             
             // Calculate indentation
             const indent = level * 20;
@@ -1275,9 +1276,35 @@
                 // If progress was updated, recalculate parent progress
                 if (field === 'percentComplete') {
                     updateParentProgress(task.parentId);
+                    // Update progress bar color immediately
+                    updateProgressBarColor(taskId, value);
                 }
                 
                 saveDataToStorage(); // Save to localStorage
+            }
+        }
+
+        // Update progress bar color dynamically
+        function updateProgressBarColor(taskId, percentComplete) {
+            const row = document.querySelector(`tr[data-task-id="${taskId}"]`);
+            if (row) {
+                const progressFill = row.querySelector('.progress-fill');
+                if (progressFill) {
+                    // Remove existing color classes
+                    progressFill.classList.remove('progress-red', 'progress-yellow', 'progress-green');
+                    
+                    // Add appropriate color class
+                    if (percentComplete >= 100) {
+                        progressFill.classList.add('progress-green');
+                    } else if (percentComplete >= 50) {
+                        progressFill.classList.add('progress-yellow');
+                    } else if (percentComplete > 0) {
+                        progressFill.classList.add('progress-red');
+                    }
+                    
+                    // Update width
+                    progressFill.style.width = `${percentComplete}%`;
+                }
             }
         }
 
@@ -1301,6 +1328,11 @@
                     if (task.parentId) {
                         updateParentDates(task.parentId);
                     }
+                }
+                
+                // If progress was updated, update progress bar color
+                if (field === 'percentComplete') {
+                    updateProgressBarColor(taskId, value);
                 }
                 
                 console.log(`Updated task ${taskId}: ${field} = ${value}, duration = ${task.duration}`);
