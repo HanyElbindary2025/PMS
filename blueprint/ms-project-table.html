@@ -624,8 +624,9 @@
             <div class="table-header">
                 <h3 class="table-title">Task Management Table</h3>
                 <div class="table-actions">
-                    <button class="btn btn-secondary" onclick="exportTable()">📤 Export</button>
-                    <button class="btn btn-secondary" onclick="importTable()">📥 Import</button>
+            <button class="btn btn-secondary" onclick="exportTable()">📤 Export</button>
+            <button class="btn btn-secondary" onclick="importTable()">📥 Import</button>
+            <button class="btn btn-secondary" onclick="downloadImportTemplate()" style="background: #17a2b8; color: white;">📋 Import Template</button>
                 </div>
             </div>
             
@@ -2093,6 +2094,141 @@
             a.download = 'tasks.csv';
             a.click();
             window.URL.revokeObjectURL(url);
+        }
+
+        // Download import template with all valid options
+        function downloadImportTemplate() {
+            const headers = [
+                'Task Name', 'Task Type', 'Project', 'Category', 'Status', '% Complete', 
+                'Duration', 'Start Date', 'Finish Date', 'Deadline', 'Resource Names', 'Resource Group', 'Notes', 'Milestone', 'Active'
+            ];
+
+            // Create sample data with all valid options
+            const sampleData = [
+                // Parent task example
+                [
+                    'Sample Project Implementation',
+                    'task',
+                    'WE Project',
+                    'Development',
+                    'Not Started',
+                    0,
+                    10,
+                    '2024-12-01',
+                    '2024-12-10',
+                    '2024-12-15',
+                    'John Doe',
+                    'Development Team',
+                    'Main project task',
+                    'false',
+                    'true'
+                ],
+                // Subtask examples
+                [
+                    'Analysis Phase',
+                    'subtask',
+                    'WE Project',
+                    'Development',
+                    'In Progress',
+                    25,
+                    3,
+                    '2024-12-01',
+                    '2024-12-03',
+                    '2024-12-05',
+                    'John Doe',
+                    'Development Team',
+                    'Project analysis',
+                    'false',
+                    'true'
+                ],
+                [
+                    'Design Phase',
+                    'subtask',
+                    'WE Project',
+                    'Design',
+                    'Not Started',
+                    0,
+                    4,
+                    '2024-12-04',
+                    '2024-12-07',
+                    '2024-12-08',
+                    'Jane Smith',
+                    'Design Team',
+                    'UI/UX design',
+                    'false',
+                    'true'
+                ],
+                [
+                    'Testing Phase',
+                    'subtask',
+                    'WE Project',
+                    'Testing',
+                    'Not Started',
+                    0,
+                    3,
+                    '2024-12-08',
+                    '2024-12-10',
+                    '2024-12-12',
+                    'Bob Wilson',
+                    'QA Team',
+                    'Quality assurance',
+                    'false',
+                    'true'
+                ]
+            ];
+
+            // Create CSV content with headers and sample data
+            const csvContent = [
+                headers.join(','),
+                ...sampleData.map(row => row.map(cell => `"${cell}"`).join(','))
+            ].join('\n');
+
+            // Add instructions as comments
+            const instructions = `# IMPORT TEMPLATE INSTRUCTIONS
+# 
+# VALID VALUES FOR EACH COLUMN:
+# Task Type: task, subtask
+# Project: ${projects.map(p => p.name).join(', ')}
+# Category: ${config.categories.join(', ')}
+# Status: Not Started, In Progress, Completed, Late, On Schedule
+# % Complete: 0-100 (numbers only)
+# Duration: Number of days (numbers only)
+# Start Date: YYYY-MM-DD format (e.g., 2024-12-01)
+# Finish Date: YYYY-MM-DD format (e.g., 2024-12-10)
+# Deadline: YYYY-MM-DD format (e.g., 2024-12-15)
+# Resource Names: Person names (text)
+# Resource Group: ${config.resourceGroups.join(', ')}
+# Notes: Any text description
+# Milestone: true, false
+# Active: true, false
+#
+# IMPORTANT NOTES:
+# - Use 'task' for parent tasks, 'subtask' for child tasks
+# - Subtasks will automatically be linked to the first 'task' in the file
+# - Dates must be in YYYY-MM-DD format
+# - Remove this instruction section before importing
+#
+`;
+
+            const fullContent = instructions + '\n' + csvContent;
+
+            const blob = new Blob([fullContent], { type: 'text/csv;charset=utf-8;' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'task_import_template.csv';
+            a.click();
+            window.URL.revokeObjectURL(url);
+
+            // Show success message
+            const saveStatus = document.getElementById('saveStatus');
+            saveStatus.textContent = '📋 Template Downloaded';
+            saveStatus.style.color = '#17a2b8';
+            
+            setTimeout(() => {
+                saveStatus.textContent = '💾 Ready';
+                saveStatus.style.color = '#6c757d';
+            }, 2000);
         }
 
         // Import table from Excel/CSV
