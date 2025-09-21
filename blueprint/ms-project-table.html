@@ -188,6 +188,61 @@
             color: #dc3545;
         }
 
+        .project-name {
+            font-weight: 700;
+            color: #ff8c00;
+            background: #fff3e0;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            border-left: 4px solid #ff8c00;
+        }
+
+        .summary-task {
+            font-weight: 700;
+            color: #2c3e50;
+            background: #f8f9fa;
+            border-left: 4px solid #007bff;
+        }
+
+        .summary-task.collapsed {
+            background: #e3f2fd;
+        }
+
+        .expand-collapse-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            color: #666;
+            margin-right: 0.5rem;
+            width: 20px;
+            height: 20px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .expand-collapse-btn:hover {
+            color: #333;
+        }
+
+        .task-indent {
+            display: inline-block;
+            width: 20px;
+        }
+
+        .task-row.project-row {
+            background: #fff3e0;
+        }
+
+        .task-row.summary-row {
+            background: #f8f9fa;
+        }
+
+        .task-row.subtask-row {
+            background: white;
+        }
+
         .progress-bar {
             width: 60px;
             height: 8px;
@@ -567,9 +622,17 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Parent Task (for subtasks):</label>
+                    <label>Task Type:</label>
+                    <select id="taskType" onchange="updateTaskTypeOptions()">
+                        <option value="project">Project (Orange)</option>
+                        <option value="summary">Summary Task (Blue)</option>
+                        <option value="subtask">Subtask (Normal)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Parent Task (for subtasks and summary tasks):</label>
                     <select id="taskParent">
-                        <option value="">None (Main Task)</option>
+                        <option value="">None (Top Level)</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -676,15 +739,17 @@
     </div>
 
     <script>
-        // Sample data
+        // Sample data with proper hierarchy
         let tasks = [
+            // Project Level (Orange)
             {
                 id: 1,
                 projectId: 1,
                 parentId: null,
-                taskName: "STP Project",
-                category: "Development",
-                notes: "Main project for STP",
+                taskName: "WE Project",
+                taskType: "project",
+                category: "Project",
+                notes: "Main WE project",
                 isMilestone: false,
                 isActive: true,
                 percentComplete: 70,
@@ -697,13 +762,40 @@
                 predecessors: "",
                 deadline: "2024-12-31",
                 resourceNames: "John Doe, Sarah Miller",
-                resourceGroup: "Development Team"
+                resourceGroup: "Development Team",
+                isExpanded: true
             },
+            // Summary Task Level
             {
                 id: 2,
                 projectId: 1,
                 parentId: 1,
+                taskName: "Phase 1: Planning",
+                taskType: "summary",
+                category: "Planning",
+                notes: "Planning phase summary",
+                isMilestone: false,
+                isActive: true,
+                percentComplete: 100,
+                status: "Completed",
+                duration: 10,
+                startDate: "2024-12-01",
+                finishDate: "2024-12-10",
+                lateStartDate: "2024-12-01",
+                lateFinishDate: "2024-12-10",
+                predecessors: "",
+                deadline: "2024-12-10",
+                resourceNames: "John Doe",
+                resourceGroup: "Development Team",
+                isExpanded: true
+            },
+            // Subtask Level
+            {
+                id: 3,
+                projectId: 1,
+                parentId: 2,
                 taskName: "Analysis",
+                taskType: "subtask",
                 category: "Development",
                 notes: "Project analysis phase",
                 isMilestone: false,
@@ -721,33 +813,104 @@
                 resourceGroup: "Development Team"
             },
             {
-                id: 3,
+                id: 4,
+                projectId: 1,
+                parentId: 2,
+                taskName: "RAT Meeting",
+                taskType: "subtask",
+                category: "Development",
+                notes: "Requirements and Architecture Team meeting",
+                isMilestone: false,
+                isActive: true,
+                percentComplete: 100,
+                status: "Completed",
+                duration: 1,
+                startDate: "2024-12-06",
+                finishDate: "2024-12-06",
+                lateStartDate: "2024-12-06",
+                lateFinishDate: "2024-12-06",
+                predecessors: "3",
+                deadline: "2024-12-06",
+                resourceNames: "John Doe, Sarah Miller",
+                resourceGroup: "Development Team"
+            },
+            // Another Summary Task
+            {
+                id: 5,
                 projectId: 1,
                 parentId: 1,
-                taskName: "Development",
+                taskName: "Phase 2: Development",
+                taskType: "summary",
                 category: "Development",
-                notes: "Main development phase",
+                notes: "Development phase summary",
                 isMilestone: false,
                 isActive: true,
                 percentComplete: 60,
                 status: "Late",
                 duration: 15,
-                startDate: "2024-12-06",
-                finishDate: "2024-12-20",
-                lateStartDate: "2024-12-06",
-                lateFinishDate: "2024-12-20",
+                startDate: "2024-12-11",
+                finishDate: "2024-12-25",
+                lateStartDate: "2024-12-11",
+                lateFinishDate: "2024-12-25",
                 predecessors: "2",
-                deadline: "2024-12-20",
+                deadline: "2024-12-25",
                 resourceNames: "John Doe, Alex Lee",
+                resourceGroup: "Development Team",
+                isExpanded: true
+            },
+            {
+                id: 6,
+                projectId: 1,
+                parentId: 5,
+                taskName: "Frontend Development",
+                taskType: "subtask",
+                category: "Development",
+                notes: "Frontend development work",
+                isMilestone: false,
+                isActive: true,
+                percentComplete: 80,
+                status: "In Progress",
+                duration: 8,
+                startDate: "2024-12-11",
+                finishDate: "2024-12-18",
+                lateStartDate: "2024-12-11",
+                lateFinishDate: "2024-12-18",
+                predecessors: "4",
+                deadline: "2024-12-18",
+                resourceNames: "Alex Lee",
                 resourceGroup: "Development Team"
             },
             {
-                id: 4,
+                id: 7,
+                projectId: 1,
+                parentId: 5,
+                taskName: "Backend Development",
+                taskType: "subtask",
+                category: "Development",
+                notes: "Backend development work",
+                isMilestone: false,
+                isActive: true,
+                percentComplete: 40,
+                status: "Late",
+                duration: 7,
+                startDate: "2024-12-19",
+                finishDate: "2024-12-25",
+                lateStartDate: "2024-12-19",
+                lateFinishDate: "2024-12-25",
+                predecessors: "6",
+                deadline: "2024-12-25",
+                resourceNames: "John Doe",
+                resourceGroup: "Development Team"
+            },
+            // Another Project
+            {
+                id: 8,
                 projectId: 2,
                 parentId: null,
-                taskName: "Mobilum Project",
-                category: "Development",
-                notes: "Mobilum project implementation",
+                taskName: "Etisalat Project",
+                taskType: "project",
+                category: "Project",
+                notes: "Main Etisalat project",
                 isMilestone: false,
                 isActive: true,
                 percentComplete: 0,
@@ -760,13 +923,37 @@
                 predecessors: "",
                 deadline: "2025-01-10",
                 resourceNames: "Mike Chen",
-                resourceGroup: "Development Team"
+                resourceGroup: "Development Team",
+                isExpanded: false
+            },
+            {
+                id: 9,
+                projectId: 2,
+                parentId: 8,
+                taskName: "Phase 1: Analysis",
+                taskType: "summary",
+                category: "Analysis",
+                notes: "Etisalat analysis phase",
+                isMilestone: false,
+                isActive: true,
+                percentComplete: 0,
+                status: "Late",
+                duration: 5,
+                startDate: "2024-12-15",
+                finishDate: "2024-12-19",
+                lateStartDate: "2024-12-15",
+                lateFinishDate: "2024-12-19",
+                predecessors: "",
+                deadline: "2024-12-19",
+                resourceNames: "Mike Chen",
+                resourceGroup: "Development Team",
+                isExpanded: false
             }
         ];
 
         let projects = [
-            { id: 1, name: "STP Project", description: "STP implementation project" },
-            { id: 2, name: "Mobilum Project", description: "Mobilum development project" },
+            { id: 1, name: "WE Project", description: "WE implementation project" },
+            { id: 2, name: "Etisalat Project", description: "Etisalat development project" },
             { id: 3, name: "NetEco Project", description: "NetEco system project" }
         ];
 
@@ -791,91 +978,169 @@
 
         // Populate project selects in modals
         function populateProjectSelects() {
-            const selects = ['taskProject', 'taskParent'];
-            selects.forEach(selectId => {
-                const select = document.getElementById(selectId);
-                if (selectId === 'taskProject') {
-                    select.innerHTML = '<option value="">Select Project</option>';
-                    projects.forEach(project => {
-                        select.innerHTML += `<option value="${project.id}">${project.name}</option>`;
-                    });
-                } else {
-                    select.innerHTML = '<option value="">None (Main Task)</option>';
-                    tasks.filter(task => !task.parentId).forEach(task => {
-                        select.innerHTML += `<option value="${task.id}">${task.taskName}</option>`;
-                    });
-                }
+            const projectSelect = document.getElementById('taskProject');
+            projectSelect.innerHTML = '<option value="">Select Project</option>';
+            projects.forEach(project => {
+                projectSelect.innerHTML += `<option value="${project.id}">${project.name}</option>`;
             });
+            
+            updateTaskTypeOptions();
         }
 
-        // Populate task table
+        // Update task type options based on selection
+        function updateTaskTypeOptions() {
+            const taskType = document.getElementById('taskType').value;
+            const parentSelect = document.getElementById('taskParent');
+            
+            parentSelect.innerHTML = '<option value="">None (Top Level)</option>';
+            
+            if (taskType === 'subtask') {
+                // Subtasks can be under projects or summary tasks
+                tasks.filter(task => task.taskType === 'project' || task.taskType === 'summary').forEach(task => {
+                    const indent = task.taskType === 'summary' ? '  ' : '';
+                    parentSelect.innerHTML += `<option value="${task.id}">${indent}${task.taskName}</option>`;
+                });
+            } else if (taskType === 'summary') {
+                // Summary tasks can be under projects
+                tasks.filter(task => task.taskType === 'project').forEach(task => {
+                    parentSelect.innerHTML += `<option value="${task.id}">${task.taskName}</option>`;
+                });
+            }
+            // Projects are always top level, so no parent options needed
+        }
+
+        // Populate task table with proper hierarchy
         function populateTaskTable() {
             const tbody = document.getElementById('taskTableBody');
             tbody.innerHTML = '';
 
-            // Sort tasks: main tasks first, then subtasks
-            const sortedTasks = [...tasks].sort((a, b) => {
-                if (a.parentId === null && b.parentId !== null) return -1;
-                if (a.parentId !== null && b.parentId === null) return 1;
-                if (a.parentId === b.parentId) return a.id - b.id;
-                return 0;
+            // Build hierarchical structure
+            const taskMap = new Map();
+            const rootTasks = [];
+
+            // First pass: create task map
+            tasks.forEach(task => {
+                taskMap.set(task.id, { ...task, children: [] });
             });
 
-            sortedTasks.forEach(task => {
-                const project = projects.find(p => p.id === task.projectId);
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td><input type="checkbox" class="checkbox" onchange="toggleTaskSelection(${task.id})"></td>
-                    <td>Manual</td>
-                    <td><input type="text" class="text-input" value="${task.category || ''}" onchange="updateTask(${task.id}, 'category', this.value)"></td>
-                    <td><input type="text" class="text-input" value="${task.notes || ''}" onchange="updateTask(${task.id}, 'notes', this.value)"></td>
-                    <td><input type="checkbox" class="checkbox" ${task.isMilestone ? 'checked' : ''} onchange="updateTask(${task.id}, 'isMilestone', this.checked)"></td>
-                    <td><input type="checkbox" class="checkbox" ${task.isActive ? 'checked' : ''} onchange="updateTask(${task.id}, 'isActive', this.checked)"></td>
-                    <td>
-                        <span class="task-name ${task.parentId ? 'subtask' : ''} ${task.isMilestone ? 'milestone' : ''}">
-                            ${task.isMilestone ? '🔷 ' : ''}${task.taskName}
-                        </span>
-                    </td>
-                    <td>
-                        <div class="progress-bar">
-                            <div class="progress-fill ${getProgressClass(task.percentComplete)}" style="width: ${task.percentComplete}%"></div>
-                        </div>
-                        <input type="number" class="text-input" value="${task.percentComplete}" min="0" max="100" style="width: 50px; margin-left: 5px;" onchange="updateTask(${task.id}, 'percentComplete', parseInt(this.value))">
-                    </td>
-                    <td>
-                        <select class="select-input" onchange="updateTask(${task.id}, 'status', this.value)">
-                            <option value="Not Started" ${task.status === 'Not Started' ? 'selected' : ''}>Not Started</option>
-                            <option value="In Progress" ${task.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
-                            <option value="Completed" ${task.status === 'Completed' ? 'selected' : ''}>Completed</option>
-                            <option value="Late" ${task.status === 'Late' ? 'selected' : ''}>Late</option>
-                            <option value="On Schedule" ${task.status === 'On Schedule' ? 'selected' : ''}>On Schedule</option>
-                        </select>
-                    </td>
-                    <td><input type="number" class="text-input" value="${task.duration || ''}" onchange="updateTask(${task.id}, 'duration', parseInt(this.value))"></td>
-                    <td><input type="date" class="date-input" value="${task.startDate || ''}" onchange="updateTask(${task.id}, 'startDate', this.value)"></td>
-                    <td><input type="date" class="date-input" value="${task.finishDate || ''}" onchange="updateTask(${task.id}, 'finishDate', this.value)"></td>
-                    <td><input type="date" class="date-input" value="${task.lateStartDate || ''}" onchange="updateTask(${task.id}, 'lateStartDate', this.value)"></td>
-                    <td><input type="date" class="date-input" value="${task.lateFinishDate || ''}" onchange="updateTask(${task.id}, 'lateFinishDate', this.value)"></td>
-                    <td><input type="text" class="text-input" value="${task.predecessors || ''}" onchange="updateTask(${task.id}, 'predecessors', this.value)"></td>
-                    <td><input type="date" class="date-input" value="${task.deadline || ''}" onchange="updateTask(${task.id}, 'deadline', this.value)"></td>
-                    <td><input type="text" class="text-input" value="${task.resourceNames || ''}" onchange="updateTask(${task.id}, 'resourceNames', this.value)"></td>
-                    <td>
-                        <select class="select-input" onchange="updateTask(${task.id}, 'resourceGroup', this.value)">
-                            <option value="">Select Group</option>
-                            <option value="Development Team" ${task.resourceGroup === 'Development Team' ? 'selected' : ''}>Development Team</option>
-                            <option value="QA Team" ${task.resourceGroup === 'QA Team' ? 'selected' : ''}>QA Team</option>
-                            <option value="Design Team" ${task.resourceGroup === 'Design Team' ? 'selected' : ''}>Design Team</option>
-                        </select>
-                    </td>
-                    <td>
-                        <div class="action-buttons">
-                            <button class="action-btn edit" onclick="editTask(${task.id})">✏️</button>
-                            <button class="action-btn delete" onclick="deleteTask(${task.id})">🗑️</button>
-                        </div>
-                    </td>
-                `;
-                tbody.appendChild(row);
+            // Second pass: build hierarchy
+            tasks.forEach(task => {
+                if (task.parentId === null) {
+                    rootTasks.push(taskMap.get(task.id));
+                } else {
+                    const parent = taskMap.get(task.parentId);
+                    if (parent) {
+                        parent.children.push(taskMap.get(task.id));
+                    }
+                }
             });
+
+            // Render tasks hierarchically
+            rootTasks.forEach(task => {
+                renderTaskRow(task, 0);
+            });
+        }
+
+        // Render task row with proper indentation and styling
+        function renderTaskRow(task, level) {
+            const tbody = document.getElementById('taskTableBody');
+            const row = document.createElement('tr');
+            
+            // Determine row class based on task type
+            let rowClass = '';
+            let taskNameClass = '';
+            let taskNameContent = '';
+            
+            if (task.taskType === 'project') {
+                rowClass = 'project-row';
+                taskNameClass = 'project-name';
+                taskNameContent = task.taskName;
+            } else if (task.taskType === 'summary') {
+                rowClass = 'summary-row';
+                taskNameClass = 'summary-task';
+                const expandIcon = task.isExpanded ? '▼' : '▶';
+                taskNameContent = `
+                    <button class="expand-collapse-btn" onclick="toggleTaskExpansion(${task.id})">${expandIcon}</button>
+                    ${task.taskName}
+                `;
+            } else {
+                rowClass = 'subtask-row';
+                taskNameClass = 'task-name subtask';
+                taskNameContent = task.taskName;
+            }
+
+            row.className = `task-row ${rowClass}`;
+            
+            // Calculate indentation
+            const indent = level * 20;
+            
+            row.innerHTML = `
+                <td><input type="checkbox" class="checkbox" onchange="toggleTaskSelection(${task.id})"></td>
+                <td>Manual</td>
+                <td><input type="text" class="text-input" value="${task.category || ''}" onchange="updateTask(${task.id}, 'category', this.value)"></td>
+                <td><input type="text" class="text-input" value="${task.notes || ''}" onchange="updateTask(${task.id}, 'notes', this.value)"></td>
+                <td><input type="checkbox" class="checkbox" ${task.isMilestone ? 'checked' : ''} onchange="updateTask(${task.id}, 'isMilestone', this.checked)"></td>
+                <td><input type="checkbox" class="checkbox" ${task.isActive ? 'checked' : ''} onchange="updateTask(${task.id}, 'isActive', this.checked)"></td>
+                <td style="padding-left: ${indent}px;">
+                    <span class="${taskNameClass} ${task.isMilestone ? 'milestone' : ''}">
+                        ${task.isMilestone ? '🔷 ' : ''}${taskNameContent}
+                    </span>
+                </td>
+                <td>
+                    <div class="progress-bar">
+                        <div class="progress-fill ${getProgressClass(task.percentComplete)}" style="width: ${task.percentComplete}%"></div>
+                    </div>
+                    <input type="number" class="text-input" value="${task.percentComplete}" min="0" max="100" style="width: 50px; margin-left: 5px;" onchange="updateTask(${task.id}, 'percentComplete', parseInt(this.value))">
+                </td>
+                <td>
+                    <select class="select-input" onchange="updateTask(${task.id}, 'status', this.value)">
+                        <option value="Not Started" ${task.status === 'Not Started' ? 'selected' : ''}>Not Started</option>
+                        <option value="In Progress" ${task.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
+                        <option value="Completed" ${task.status === 'Completed' ? 'selected' : ''}>Completed</option>
+                        <option value="Late" ${task.status === 'Late' ? 'selected' : ''}>Late</option>
+                        <option value="On Schedule" ${task.status === 'On Schedule' ? 'selected' : ''}>On Schedule</option>
+                    </select>
+                </td>
+                <td><input type="number" class="text-input" value="${task.duration || ''}" onchange="updateTask(${task.id}, 'duration', parseInt(this.value))"></td>
+                <td><input type="date" class="date-input" value="${task.startDate || ''}" onchange="updateTask(${task.id}, 'startDate', this.value)"></td>
+                <td><input type="date" class="date-input" value="${task.finishDate || ''}" onchange="updateTask(${task.id}, 'finishDate', this.value)"></td>
+                <td><input type="date" class="date-input" value="${task.lateStartDate || ''}" onchange="updateTask(${task.id}, 'lateStartDate', this.value)"></td>
+                <td><input type="date" class="date-input" value="${task.lateFinishDate || ''}" onchange="updateTask(${task.id}, 'lateFinishDate', this.value)"></td>
+                <td><input type="text" class="text-input" value="${task.predecessors || ''}" onchange="updateTask(${task.id}, 'predecessors', this.value)"></td>
+                <td><input type="date" class="date-input" value="${task.deadline || ''}" onchange="updateTask(${task.id}, 'deadline', this.value)"></td>
+                <td><input type="text" class="text-input" value="${task.resourceNames || ''}" onchange="updateTask(${task.id}, 'resourceNames', this.value)"></td>
+                <td>
+                    <select class="select-input" onchange="updateTask(${task.id}, 'resourceGroup', this.value)">
+                        <option value="">Select Group</option>
+                        <option value="Development Team" ${task.resourceGroup === 'Development Team' ? 'selected' : ''}>Development Team</option>
+                        <option value="QA Team" ${task.resourceGroup === 'QA Team' ? 'selected' : ''}>QA Team</option>
+                        <option value="Design Team" ${task.resourceGroup === 'Design Team' ? 'selected' : ''}>Design Team</option>
+                    </select>
+                </td>
+                <td>
+                    <div class="action-buttons">
+                        <button class="action-btn edit" onclick="editTask(${task.id})">✏️</button>
+                        <button class="action-btn delete" onclick="deleteTask(${task.id})">🗑️</button>
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(row);
+
+            // Render children if expanded
+            if (task.taskType === 'summary' && task.isExpanded && task.children) {
+                task.children.forEach(child => {
+                    renderTaskRow(child, level + 1);
+                });
+            }
+        }
+
+        // Toggle task expansion
+        function toggleTaskExpansion(taskId) {
+            const task = tasks.find(t => t.id === taskId);
+            if (task) {
+                task.isExpanded = !task.isExpanded;
+                populateTaskTable();
+            }
         }
 
         // Get progress bar class based on percentage
@@ -1024,6 +1289,7 @@
                 editingTaskId = taskId;
                 document.getElementById('modalTitle').textContent = 'Edit Task';
                 document.getElementById('taskProject').value = task.projectId;
+                document.getElementById('taskType').value = task.taskType || 'subtask';
                 document.getElementById('taskParent').value = task.parentId || '';
                 document.getElementById('taskName').value = task.taskName;
                 document.getElementById('taskCategory').value = task.category || '';
@@ -1038,6 +1304,10 @@
                 document.getElementById('taskDeadline').value = task.deadline || '';
                 document.getElementById('taskResourceNames').value = task.resourceNames || '';
                 document.getElementById('taskResourceGroup').value = task.resourceGroup || '';
+                
+                // Update parent options based on task type
+                updateTaskTypeOptions();
+                
                 document.getElementById('taskModal').style.display = 'block';
             }
         }
@@ -1074,6 +1344,7 @@
                 projectId: parseInt(document.getElementById('taskProject').value),
                 parentId: document.getElementById('taskParent').value ? parseInt(document.getElementById('taskParent').value) : null,
                 taskName: document.getElementById('taskName').value,
+                taskType: document.getElementById('taskType').value,
                 category: document.getElementById('taskCategory').value,
                 notes: document.getElementById('taskNotes').value,
                 isMilestone: document.getElementById('taskMilestone').checked,
@@ -1085,7 +1356,8 @@
                 finishDate: document.getElementById('taskFinishDate').value,
                 deadline: document.getElementById('taskDeadline').value,
                 resourceNames: document.getElementById('taskResourceNames').value,
-                resourceGroup: document.getElementById('taskResourceGroup').value
+                resourceGroup: document.getElementById('taskResourceGroup').value,
+                isExpanded: true // Default to expanded for new tasks
             };
 
             if (editingTaskId) {
