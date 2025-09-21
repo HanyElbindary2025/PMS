@@ -1,0 +1,4 @@
+Task Name,Task Type,Project,Category,Status,% Complete,Duration,Start Date,Finish Date,Deadline,Resource Names,Resource Group,Notes
+parent_Task,task,WE Project,Development,Not Started,0,11,9/21/2025,10/1/2025,10/11/2025,Hany ALi,QA Team,
+child_task,subtask,WE Project,Design,Not Started,0,9,9/24/2025,10/2/2025,10/11/2025,ali,Development Team,
+samar arfdo,subtask,WE Project,Documentation,Not Started,0,1,10/11/2025,10/11/2025,10/11/2025,samar,Development Team,

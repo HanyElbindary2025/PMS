@@ -2152,6 +2152,33 @@
             return dateStr; // Return original if can't parse
         }
 
+        // Establish parent-child relationships for imported tasks
+        function establishParentChildRelationships(importedTasks) {
+            console.log('Establishing parent-child relationships for imported tasks...');
+            
+            // Find the first task (parent) and all subtasks
+            const parentTask = importedTasks.find(task => task.taskType === 'task');
+            const subtasks = importedTasks.filter(task => task.taskType === 'subtask');
+            
+            console.log('Parent task:', parentTask ? parentTask.taskName : 'None found');
+            console.log('Subtasks:', subtasks.map(t => t.taskName));
+            
+            if (parentTask && subtasks.length > 0) {
+                // Set all subtasks to have the parent task as their parent
+                subtasks.forEach(subtask => {
+                    subtask.parentId = parentTask.id;
+                    console.log(`Set ${subtask.taskName} parent to ${parentTask.taskName} (id: ${parentTask.id})`);
+                });
+                
+                // Set parent task to be expanded
+                parentTask.isExpanded = true;
+                
+                console.log(`Established relationships: ${parentTask.taskName} has ${subtasks.length} children`);
+            } else {
+                console.log('No parent-child relationships to establish');
+            }
+        }
+
         // Import from CSV
         function importFromCSV(csvText) {
             try {
@@ -2197,6 +2224,8 @@
                                     taskData.taskType = 'subtask';
                                 } else if (value.toLowerCase() === 'summary') {
                                     taskData.taskType = 'task'; // Convert summary to task
+                                } else if (value.toLowerCase() === 'tasks') {
+                                    taskData.taskType = 'task'; // Convert "tasks" to "task"
                                 } else {
                                     taskData.taskType = 'task'; // Default to task
                                 }
@@ -2266,6 +2295,9 @@
                 console.log('Total imported tasks:', importedTasks.length);
                 
                 if (importedTasks.length > 0) {
+                    // Establish parent-child relationships
+                    establishParentChildRelationships(importedTasks);
+                    
                     tasks = [...tasks, ...importedTasks];
                     updateAllParentProgress();
                     populateTaskTable();
@@ -2280,7 +2312,7 @@
                         saveStatus.style.color = '#6c757d';
                     }, 2000);
                     
-                    alert(`Successfully imported ${importedTasks.length} tasks!`);
+                    alert(`Successfully imported ${importedTasks.length} tasks with parent-child relationships!`);
                 } else {
                     alert('No valid tasks found in the CSV file. Please check the format and ensure task names are not empty.');
                 }
