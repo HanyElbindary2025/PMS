@@ -16,9 +16,14 @@ timeout /t 2 /nobreak >nul
 
 echo [2/4] Setting up environment...
 set DATABASE_URL=file:./prisma/dev.db
-echo DATABASE_URL="file:./prisma/dev.db" > .env
-echo PORT=3000 >> .env
-echo NODE_ENV=development >> .env
+if not exist .env (
+    echo DATABASE_URL="file:./prisma/dev.db" > .env
+    echo PORT=3000 >> .env
+    echo NODE_ENV=development >> .env
+    echo    ✅ Created .env file
+) else (
+    echo    ✅ .env file already exists
+)
 
 echo [3/4] Starting Backend Server...
 start "PMS Backend" cmd /k "cd /d %~dp0 && set DATABASE_URL=file:./prisma/dev.db && npm run dev"
