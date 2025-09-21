@@ -254,10 +254,27 @@
 
         .progress-fill {
             height: 100%;
-            background: #28a745;
+            background: #6c757d;
             transition: width 0.3s ease;
         }
 
+        .progress-fill.progress-green {
+            background: #28a745;
+        }
+
+        .progress-fill.progress-yellow {
+            background: #ffc107;
+        }
+
+        .progress-fill.progress-red {
+            background: #dc3545;
+        }
+
+        .progress-fill.progress-gray {
+            background: #6c757d;
+        }
+
+        /* Legacy classes for backward compatibility */
         .progress-fill.warning {
             background: #ffc107;
         }
@@ -1261,9 +1278,10 @@
 
         // Get progress bar class based on percentage
         function getProgressClass(percent) {
-            if (percent === 100) return 'success';
-            if (percent >= 80) return 'warning';
-            return 'danger';
+            if (percent >= 100) return 'progress-green';
+            if (percent >= 50) return 'progress-yellow';
+            if (percent > 0) return 'progress-red';
+            return 'progress-gray';
         }
 
         // Update task field
@@ -1304,6 +1322,17 @@
                     
                     // Update width
                     progressFill.style.width = `${percentComplete}%`;
+                }
+            }
+        }
+
+        // Update progress input field value
+        function updateProgressInputField(taskId, percentComplete) {
+            const row = document.querySelector(`tr[data-task-id="${taskId}"]`);
+            if (row) {
+                const progressInput = row.querySelector('input[type="number"]');
+                if (progressInput) {
+                    progressInput.value = percentComplete;
                 }
             }
         }
@@ -1375,6 +1404,12 @@
             
             // Update parent progress
             parent.percentComplete = averageProgress;
+            
+            // Update the progress bar color in the UI
+            updateProgressBarColor(parent.id, averageProgress);
+            
+            // Update the progress input field in the UI
+            updateProgressInputField(parent.id, averageProgress);
             
             console.log(`Updated parent task "${parent.taskName}" progress to ${averageProgress}% based on ${children.length} children`);
             
@@ -2249,3 +2284,4 @@
     </script>
 </body>
 </html>
+
