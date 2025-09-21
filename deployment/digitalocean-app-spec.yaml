@@ -1,0 +1,29 @@
+name: pms-backend
+services:
+- name: api
+  source_dir: /
+  github:
+    repo: HanyElbindary2025/PMS
+    branch: master
+  run_command: npm start
+  environment_slug: node-js
+  instance_count: 1
+  instance_size_slug: basic-xxs
+  http_port: 3000
+  routes:
+  - path: /
+  envs:
+  - key: NODE_ENV
+    value: production
+  - key: DATABASE_URL
+    value: ${db.DATABASE_URL}
+  - key: PORT
+    value: "3000"
+  - key: JWT_SECRET
+    value: "your-super-secret-jwt-key-change-this"
+databases:
+- name: db
+  engine: PG
+  version: "13"
+  size: db-s-1vcpu-1gb
+  num_nodes: 1
