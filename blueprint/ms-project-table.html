@@ -513,6 +513,7 @@
             <button class="btn btn-success" onclick="showBulkActions()">📝 Bulk Update</button>
             <button class="btn btn-danger" onclick="deleteSelected()">🗑️ Delete Selected</button>
             <button class="btn btn-danger" onclick="clearAllData()" style="background: #dc3545;">🗑️ Clear All Data</button>
+            <button class="btn btn-secondary" onclick="updateAllParentProgress()" style="background: #17a2b8;">🔄 Recalc Progress</button>
             <span id="saveStatus" style="color: #28a745; font-weight: bold; margin-left: 1rem;">💾 Data Saved</span>
             
             <div class="filter-group">
@@ -740,9 +741,9 @@
     </div>
 
     <script>
-        // Sample data with proper hierarchy - simplified for testing
+        // Sample data with proper hierarchy - demonstrates auto-progress calculation
         let tasks = [
-            // Project Level (Orange)
+            // Project Level (Orange) - Progress will be auto-calculated from children
             {
                 id: 1,
                 projectId: 1,
@@ -750,11 +751,11 @@
                 taskName: "WE Project",
                 taskType: "project",
                 category: "Project",
-                notes: "Main WE project",
+                notes: "Main WE project - progress auto-calculated from children",
                 isMilestone: false,
                 isActive: true,
-                percentComplete: 70,
-                status: "Late",
+                percentComplete: 0, // Will be auto-calculated
+                status: "In Progress",
                 duration: 31,
                 startDate: "2024-12-01",
                 finishDate: "2024-12-31",
@@ -764,7 +765,7 @@
                 resourceGroup: "Development Team",
                 isExpanded: true
             },
-            // Summary Task Level
+            // Summary Task Level - Progress will be auto-calculated from children
             {
                 id: 2,
                 projectId: 1,
@@ -772,11 +773,11 @@
                 taskName: "Phase 1: Planning",
                 taskType: "summary",
                 category: "Planning",
-                notes: "Planning phase summary",
+                notes: "Planning phase summary - progress auto-calculated from children",
                 isMilestone: false,
                 isActive: true,
-                percentComplete: 100,
-                status: "Completed",
+                percentComplete: 0, // Will be auto-calculated
+                status: "In Progress",
                 duration: 10,
                 startDate: "2024-12-01",
                 finishDate: "2024-12-10",
@@ -785,6 +786,67 @@
                 resourceNames: "John Doe",
                 resourceGroup: "Development Team",
                 isExpanded: true
+            },
+            // Subtask Level - Manual progress (these drive parent progress)
+            {
+                id: 3,
+                projectId: 1,
+                parentId: 2,
+                taskName: "Task 1: Analysis",
+                taskType: "subtask",
+                category: "Development",
+                notes: "Project analysis phase - manual progress",
+                isMilestone: false,
+                isActive: true,
+                percentComplete: 20, // Manual progress
+                status: "In Progress",
+                duration: 5,
+                startDate: "2024-12-01",
+                finishDate: "2024-12-05",
+                predecessors: "",
+                deadline: "2024-12-05",
+                resourceNames: "John Doe",
+                resourceGroup: "Development Team"
+            },
+            {
+                id: 4,
+                projectId: 1,
+                parentId: 2,
+                taskName: "Task 2: Design",
+                taskType: "subtask",
+                category: "Development",
+                notes: "Design phase - manual progress",
+                isMilestone: false,
+                isActive: true,
+                percentComplete: 15, // Manual progress
+                status: "In Progress",
+                duration: 3,
+                startDate: "2024-12-06",
+                finishDate: "2024-12-08",
+                predecessors: "3",
+                deadline: "2024-12-08",
+                resourceNames: "Sarah Miller",
+                resourceGroup: "Development Team"
+            },
+            {
+                id: 5,
+                projectId: 1,
+                parentId: 2,
+                taskName: "Task 3: Review",
+                taskType: "subtask",
+                category: "Development",
+                notes: "Review phase - manual progress",
+                isMilestone: false,
+                isActive: true,
+                percentComplete: 50, // Manual progress
+                status: "In Progress",
+                duration: 2,
+                startDate: "2024-12-09",
+                finishDate: "2024-12-10",
+                predecessors: "4",
+                deadline: "2024-12-10",
+                resourceNames: "John Doe, Sarah Miller",
+                resourceGroup: "Development Team"
             }
         ];
 
@@ -800,6 +862,7 @@
         // Initialize the application
         function init() {
             loadDataFromStorage();
+            updateAllParentProgress(); // Calculate parent progress on load
             populateProjectFilter();
             populateTaskTable();
             populateProjectSelects();
@@ -985,7 +1048,8 @@
                     <div class="progress-bar">
                         <div class="progress-fill ${getProgressClass(task.percentComplete)}" style="width: ${task.percentComplete}%"></div>
                     </div>
-                    <input type="number" class="text-input" value="${task.percentComplete}" min="0" max="100" style="width: 50px; margin-left: 5px;" onchange="updateTask(${task.id}, 'percentComplete', parseInt(this.value))">
+                    <input type="number" class="text-input" value="${task.percentComplete}" min="0" max="100" style="width: 50px; margin-left: 5px;" onchange="updateTask(${task.id}, 'percentComplete', parseInt(this.value))" ${(task.taskType === 'project' || task.taskType === 'summary') ? 'readonly style="background: #f8f9fa; width: 50px; margin-left: 5px;" title="Auto-calculated from child tasks"' : ''}>
+                    ${(task.taskType === 'project' || task.taskType === 'summary') ? '<small style="color: #666; font-size: 0.7rem; display: block;">Auto-calc</small>' : ''}
                 </td>
                 <td>
                     <select class="select-input" onchange="updateTask(${task.id}, 'status', this.value)">
@@ -1049,6 +1113,12 @@
             if (task) {
                 task[field] = value;
                 console.log(`Updated task ${taskId}: ${field} = ${value}`);
+                
+                // If progress was updated, recalculate parent progress
+                if (field === 'percentComplete') {
+                    updateParentProgress(task.parentId);
+                }
+                
                 saveDataToStorage(); // Save to localStorage
             }
         }
@@ -1090,6 +1160,46 @@
             } else {
                 durationField.value = '';
             }
+        }
+
+        // Update parent task progress based on children
+        function updateParentProgress(parentId) {
+            if (!parentId) return;
+            
+            const parent = tasks.find(t => t.id === parentId);
+            if (!parent) return;
+            
+            // Find all direct children of this parent
+            const children = tasks.filter(t => t.parentId === parentId);
+            
+            if (children.length === 0) return;
+            
+            // Calculate average progress of children
+            const totalProgress = children.reduce((sum, child) => sum + (child.percentComplete || 0), 0);
+            const averageProgress = Math.round(totalProgress / children.length);
+            
+            // Update parent progress
+            parent.percentComplete = averageProgress;
+            
+            console.log(`Updated parent task "${parent.taskName}" progress to ${averageProgress}% based on ${children.length} children`);
+            
+            // Recursively update grandparent if this parent has a parent
+            if (parent.parentId) {
+                updateParentProgress(parent.parentId);
+            }
+            
+            // Refresh the table to show updated progress
+            populateTaskTable();
+        }
+
+        // Calculate and update all parent task progress
+        function updateAllParentProgress() {
+            // Find all parent tasks (projects and summary tasks)
+            const parentTasks = tasks.filter(t => t.taskType === 'project' || t.taskType === 'summary');
+            
+            parentTasks.forEach(parent => {
+                updateParentProgress(parent.id);
+            });
         }
 
         // Toggle task selection
