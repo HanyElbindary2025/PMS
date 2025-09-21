@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MS Project Style Table - Task Management</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f7fa;
+            color: #333;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .toolbar {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 1rem;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5a6fd8;
+        }
+
+        .btn-secondary {
+            background: #e9ecef;
+            color: #495057;
+        }
+
+        .btn-secondary:hover {
+            background: #dee2e6;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .filter-group input,
+        .filter-group select {
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .table-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .table-header {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .table-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .table-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        .task-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 1200px;
+        }
+
+        .task-table th {
+            background: #e9ecef;
+            padding: 0.75rem 0.5rem;
+            text-align: left;
+            font-weight: 600;
+            color: #495057;
+            border-bottom: 2px solid #dee2e6;
+            white-space: nowrap;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .task-table td {
+            padding: 0.5rem;
+            border-bottom: 1px solid #f1f3f4;
+            vertical-align: middle;
+        }
+
+        .task-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .task-table tr.selected {
+            background: #e3f2fd;
+        }
+
+        .task-name {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .task-name.subtask {
+            padding-left: 2rem;
+            color: #666;
+        }
+
+        .task-name.milestone {
+            font-style: italic;
+            color: #dc3545;
+        }
+
+        .progress-bar {
+            width: 60px;
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+            display: inline-block;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #28a745;
+            transition: width 0.3s ease;
+        }
+
+        .progress-fill.warning {
+            background: #ffc107;
+        }
+
+        .progress-fill.danger {
+            background: #dc3545;
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-not-started {
+            background: #e9ecef;
+            color: #495057;
+        }
+
+        .status-in-progress {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-completed {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .status-late {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-on-schedule {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .checkbox {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        .date-input {
+            border: none;
+            background: transparent;
+            padding: 0.25rem;
+            font-size: 0.9rem;
+            width: 100%;
+        }
+
+        .date-input:focus {
+            outline: 2px solid #667eea;
+            border-radius: 4px;
+        }
+
+        .text-input {
+            border: none;
+            background: transparent;
+            padding: 0.25rem;
+            font-size: 0.9rem;
+            width: 100%;
+        }
+
+        .text-input:focus {
+            outline: 2px solid #667eea;
+            border-radius: 4px;
+        }
+
+        .select-input {
+            border: none;
+            background: transparent;
+            padding: 0.25rem;
+            font-size: 0.9rem;
+            width: 100%;
+        }
+
+        .select-input:focus {
+            outline: 2px solid #667eea;
+            border-radius: 4px;
+        }
+
+        .milestone-icon {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.25rem;
+        }
+
+        .action-btn {
+            padding: 0.25rem 0.5rem;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.2s ease;
+        }
+
+        .action-btn:hover {
+            background: #f8f9fa;
+        }
+
+        .action-btn.edit {
+            color: #007bff;
+        }
+
+        .action-btn.delete {
+            color: #dc3545;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 2rem;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .close {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        .form-group textarea {
+            height: 100px;
+            resize: vertical;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            margin-top: 2rem;
+        }
+
+        .bulk-actions {
+            background: #fff3cd;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .bulk-actions.show {
+            display: block;
+        }
+
+        .bulk-actions h4 {
+            margin-bottom: 1rem;
+            color: #856404;
+        }
+
+        .bulk-actions .form-group {
+            margin-bottom: 0.5rem;
+        }
+
+        .bulk-actions .form-group label {
+            margin-bottom: 0.25rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 1rem;
+            }
+            
+            .toolbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .filter-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .table-wrapper {
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🏢 MS Project Style Task Management</h1>
+    </div>
+
+    <div class="container">
+        <div class="toolbar">
+            <button class="btn btn-primary" onclick="openAddTaskModal()">➕ Add Task</button>
+            <button class="btn btn-secondary" onclick="openAddProjectModal()">📁 Add Project</button>
+            <button class="btn btn-success" onclick="showBulkActions()">📝 Bulk Update</button>
+            <button class="btn btn-danger" onclick="deleteSelected()">🗑️ Delete Selected</button>
+            
+            <div class="filter-group">
+                <input type="text" id="searchInput" placeholder="Search tasks..." onkeyup="filterTasks()">
+                <select id="projectFilter" onchange="filterTasks()">
+                    <option value="">All Projects</option>
+                </select>
+                <select id="statusFilter" onchange="filterTasks()">
+                    <option value="">All Status</option>
+                    <option value="Not Started">Not Started</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Late">Late</option>
+                    <option value="On Schedule">On Schedule</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="bulk-actions" id="bulkActions">
+            <h4>Bulk Update Selected Tasks</h4>
+            <div class="form-group">
+                <label>Status:</label>
+                <select id="bulkStatus">
+                    <option value="">No Change</option>
+                    <option value="Not Started">Not Started</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Late">Late</option>
+                    <option value="On Schedule">On Schedule</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Category:</label>
+                <select id="bulkCategory">
+                    <option value="">No Change</option>
+                    <option value="Development">Development</option>
+                    <option value="Testing">Testing</option>
+                    <option value="Design">Design</option>
+                    <option value="Documentation">Documentation</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Resource Group:</label>
+                <select id="bulkResourceGroup">
+                    <option value="">No Change</option>
+                    <option value="Development Team">Development Team</option>
+                    <option value="QA Team">QA Team</option>
+                    <option value="Design Team">Design Team</option>
+                </select>
+            </div>
+            <button class="btn btn-primary" onclick="applyBulkUpdate()">Apply Changes</button>
+            <button class="btn btn-secondary" onclick="hideBulkActions()">Cancel</button>
+        </div>
+
+        <div class="table-container">
+            <div class="table-header">
+                <h3 class="table-title">Task Management Table</h3>
+                <div class="table-actions">
+                    <button class="btn btn-secondary" onclick="exportTable()">📤 Export</button>
+                    <button class="btn btn-secondary" onclick="importTable()">📥 Import</button>
+                </div>
+            </div>
+            
+            <div class="table-wrapper">
+                <table class="task-table" id="taskTable">
+                    <thead>
+                        <tr>
+                            <th><input type="checkbox" id="selectAll" onchange="toggleSelectAll()"></th>
+                            <th>Task Mode</th>
+                            <th>Category</th>
+                            <th>Notes</th>
+                            <th>Milestone</th>
+                            <th>Active</th>
+                            <th>Task Name</th>
+                            <th>% Complete</th>
+                            <th>Status</th>
+                            <th>Duration</th>
+                            <th>Start</th>
+                            <th>Finish</th>
+                            <th>Late Start</th>
+                            <th>Late Finish</th>
+                            <th>Predecessors</th>
+                            <th>Deadline</th>
+                            <th>Resource Names</th>
+                            <th>Resource Group</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="taskTableBody">
+                        <!-- Tasks will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Task Modal -->
+    <div id="taskModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Add New Task</h3>
+                <span class="close" onclick="closeModal()">&times;</span>
+            </div>
+            <form id="taskForm">
+                <div class="form-group">
+                    <label>Project:</label>
+                    <select id="taskProject" required>
+                        <option value="">Select Project</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Parent Task (for subtasks):</label>
+                    <select id="taskParent">
+                        <option value="">None (Main Task)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Task Name:</label>
+                    <input type="text" id="taskName" required>
+                </div>
+                <div class="form-group">
+                    <label>Category:</label>
+                    <select id="taskCategory">
+                        <option value="">Select Category</option>
+                        <option value="Development">Development</option>
+                        <option value="Testing">Testing</option>
+                        <option value="Design">Design</option>
+                        <option value="Documentation">Documentation</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Notes:</label>
+                    <textarea id="taskNotes"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="taskMilestone"> Is Milestone
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="taskActive" checked> Is Active
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label>% Complete:</label>
+                    <input type="number" id="taskPercentComplete" min="0" max="100" value="0">
+                </div>
+                <div class="form-group">
+                    <label>Status:</label>
+                    <select id="taskStatus">
+                        <option value="Not Started">Not Started</option>
+                        <option value="In Progress">In Progress</option>
+                        <option value="Completed">Completed</option>
+                        <option value="Late">Late</option>
+                        <option value="On Schedule">On Schedule</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Duration (days):</label>
+                    <input type="number" id="taskDuration" min="0">
+                </div>
+                <div class="form-group">
+                    <label>Start Date:</label>
+                    <input type="date" id="taskStartDate">
+                </div>
+                <div class="form-group">
+                    <label>Finish Date:</label>
+                    <input type="date" id="taskFinishDate">
+                </div>
+                <div class="form-group">
+                    <label>Deadline:</label>
+                    <input type="date" id="taskDeadline">
+                </div>
+                <div class="form-group">
+                    <label>Resource Names:</label>
+                    <input type="text" id="taskResourceNames" placeholder="John Doe, Jane Smith">
+                </div>
+                <div class="form-group">
+                    <label>Resource Group:</label>
+                    <select id="taskResourceGroup">
+                        <option value="">Select Group</option>
+                        <option value="Development Team">Development Team</option>
+                        <option value="QA Team">QA Team</option>
+                        <option value="Design Team">Design Team</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Task</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Project Modal -->
+    <div id="projectModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Add New Project</h3>
+                <span class="close" onclick="closeProjectModal()">&times;</span>
+            </div>
+            <form id="projectForm">
+                <div class="form-group">
+                    <label>Project Name:</label>
+                    <input type="text" id="projectName" required>
+                </div>
+                <div class="form-group">
+                    <label>Description:</label>
+                    <textarea id="projectDescription"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeProjectModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Project</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Sample data
+        let tasks = [
+            {
+                id: 1,
+                projectId: 1,
+                parentId: null,
+                taskName: "STP Project",
+                category: "Development",
+                notes: "Main project for STP",
+                isMilestone: false,
+                isActive: true,
+                percentComplete: 70,
+                status: "Late",
+                duration: 30,
+                startDate: "2024-12-01",
+                finishDate: "2024-12-31",
+                lateStartDate: "2024-12-01",
+                lateFinishDate: "2024-12-31",
+                predecessors: "",
+                deadline: "2024-12-31",
+                resourceNames: "John Doe, Sarah Miller",
+                resourceGroup: "Development Team"
+            },
+            {
+                id: 2,
+                projectId: 1,
+                parentId: 1,
+                taskName: "Analysis",
+                category: "Development",
+                notes: "Project analysis phase",
+                isMilestone: false,
+                isActive: true,
+                percentComplete: 100,
+                status: "Completed",
+                duration: 5,
+                startDate: "2024-12-01",
+                finishDate: "2024-12-05",
+                lateStartDate: "2024-12-01",
+                lateFinishDate: "2024-12-05",
+                predecessors: "",
+                deadline: "2024-12-05",
+                resourceNames: "John Doe",
+                resourceGroup: "Development Team"
+            },
+            {
+                id: 3,
+                projectId: 1,
+                parentId: 1,
+                taskName: "Development",
+                category: "Development",
+                notes: "Main development phase",
+                isMilestone: false,
+                isActive: true,
+                percentComplete: 60,
+                status: "Late",
+                duration: 15,
+                startDate: "2024-12-06",
+                finishDate: "2024-12-20",
+                lateStartDate: "2024-12-06",
+                lateFinishDate: "2024-12-20",
+                predecessors: "2",
+                deadline: "2024-12-20",
+                resourceNames: "John Doe, Alex Lee",
+                resourceGroup: "Development Team"
+            },
+            {
+                id: 4,
+                projectId: 2,
+                parentId: null,
+                taskName: "Mobilum Project",
+                category: "Development",
+                notes: "Mobilum project implementation",
+                isMilestone: false,
+                isActive: true,
+                percentComplete: 0,
+                status: "Late",
+                duration: 25,
+                startDate: "2024-12-15",
+                finishDate: "2025-01-10",
+                lateStartDate: "2024-12-15",
+                lateFinishDate: "2025-01-10",
+                predecessors: "",
+                deadline: "2025-01-10",
+                resourceNames: "Mike Chen",
+                resourceGroup: "Development Team"
+            }
+        ];
+
+        let projects = [
+            { id: 1, name: "STP Project", description: "STP implementation project" },
+            { id: 2, name: "Mobilum Project", description: "Mobilum development project" },
+            { id: 3, name: "NetEco Project", description: "NetEco system project" }
+        ];
+
+        let selectedTasks = new Set();
+        let editingTaskId = null;
+
+        // Initialize the application
+        function init() {
+            populateProjectFilter();
+            populateTaskTable();
+            populateProjectSelects();
+        }
+
+        // Populate project filter dropdown
+        function populateProjectFilter() {
+            const filter = document.getElementById('projectFilter');
+            filter.innerHTML = '<option value="">All Projects</option>';
+            projects.forEach(project => {
+                filter.innerHTML += `<option value="${project.id}">${project.name}</option>`;
+            });
+        }
+
+        // Populate project selects in modals
+        function populateProjectSelects() {
+            const selects = ['taskProject', 'taskParent'];
+            selects.forEach(selectId => {
+                const select = document.getElementById(selectId);
+                if (selectId === 'taskProject') {
+                    select.innerHTML = '<option value="">Select Project</option>';
+                    projects.forEach(project => {
+                        select.innerHTML += `<option value="${project.id}">${project.name}</option>`;
+                    });
+                } else {
+                    select.innerHTML = '<option value="">None (Main Task)</option>';
+                    tasks.filter(task => !task.parentId).forEach(task => {
+                        select.innerHTML += `<option value="${task.id}">${task.taskName}</option>`;
+                    });
+                }
+            });
+        }
+
+        // Populate task table
+        function populateTaskTable() {
+            const tbody = document.getElementById('taskTableBody');
+            tbody.innerHTML = '';
+
+            // Sort tasks: main tasks first, then subtasks
+            const sortedTasks = [...tasks].sort((a, b) => {
+                if (a.parentId === null && b.parentId !== null) return -1;
+                if (a.parentId !== null && b.parentId === null) return 1;
+                if (a.parentId === b.parentId) return a.id - b.id;
+                return 0;
+            });
+
+            sortedTasks.forEach(task => {
+                const project = projects.find(p => p.id === task.projectId);
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><input type="checkbox" class="checkbox" onchange="toggleTaskSelection(${task.id})"></td>
+                    <td>Manual</td>
+                    <td><input type="text" class="text-input" value="${task.category || ''}" onchange="updateTask(${task.id}, 'category', this.value)"></td>
+                    <td><input type="text" class="text-input" value="${task.notes || ''}" onchange="updateTask(${task.id}, 'notes', this.value)"></td>
+                    <td><input type="checkbox" class="checkbox" ${task.isMilestone ? 'checked' : ''} onchange="updateTask(${task.id}, 'isMilestone', this.checked)"></td>
+                    <td><input type="checkbox" class="checkbox" ${task.isActive ? 'checked' : ''} onchange="updateTask(${task.id}, 'isActive', this.checked)"></td>
+                    <td>
+                        <span class="task-name ${task.parentId ? 'subtask' : ''} ${task.isMilestone ? 'milestone' : ''}">
+                            ${task.isMilestone ? '🔷 ' : ''}${task.taskName}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="progress-bar">
+                            <div class="progress-fill ${getProgressClass(task.percentComplete)}" style="width: ${task.percentComplete}%"></div>
+                        </div>
+                        <input type="number" class="text-input" value="${task.percentComplete}" min="0" max="100" style="width: 50px; margin-left: 5px;" onchange="updateTask(${task.id}, 'percentComplete', parseInt(this.value))">
+                    </td>
+                    <td>
+                        <select class="select-input" onchange="updateTask(${task.id}, 'status', this.value)">
+                            <option value="Not Started" ${task.status === 'Not Started' ? 'selected' : ''}>Not Started</option>
+                            <option value="In Progress" ${task.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
+                            <option value="Completed" ${task.status === 'Completed' ? 'selected' : ''}>Completed</option>
+                            <option value="Late" ${task.status === 'Late' ? 'selected' : ''}>Late</option>
+                            <option value="On Schedule" ${task.status === 'On Schedule' ? 'selected' : ''}>On Schedule</option>
+                        </select>
+                    </td>
+                    <td><input type="number" class="text-input" value="${task.duration || ''}" onchange="updateTask(${task.id}, 'duration', parseInt(this.value))"></td>
+                    <td><input type="date" class="date-input" value="${task.startDate || ''}" onchange="updateTask(${task.id}, 'startDate', this.value)"></td>
+                    <td><input type="date" class="date-input" value="${task.finishDate || ''}" onchange="updateTask(${task.id}, 'finishDate', this.value)"></td>
+                    <td><input type="date" class="date-input" value="${task.lateStartDate || ''}" onchange="updateTask(${task.id}, 'lateStartDate', this.value)"></td>
+                    <td><input type="date" class="date-input" value="${task.lateFinishDate || ''}" onchange="updateTask(${task.id}, 'lateFinishDate', this.value)"></td>
+                    <td><input type="text" class="text-input" value="${task.predecessors || ''}" onchange="updateTask(${task.id}, 'predecessors', this.value)"></td>
+                    <td><input type="date" class="date-input" value="${task.deadline || ''}" onchange="updateTask(${task.id}, 'deadline', this.value)"></td>
+                    <td><input type="text" class="text-input" value="${task.resourceNames || ''}" onchange="updateTask(${task.id}, 'resourceNames', this.value)"></td>
+                    <td>
+                        <select class="select-input" onchange="updateTask(${task.id}, 'resourceGroup', this.value)">
+                            <option value="">Select Group</option>
+                            <option value="Development Team" ${task.resourceGroup === 'Development Team' ? 'selected' : ''}>Development Team</option>
+                            <option value="QA Team" ${task.resourceGroup === 'QA Team' ? 'selected' : ''}>QA Team</option>
+                            <option value="Design Team" ${task.resourceGroup === 'Design Team' ? 'selected' : ''}>Design Team</option>
+                        </select>
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="action-btn edit" onclick="editTask(${task.id})">✏️</button>
+                            <button class="action-btn delete" onclick="deleteTask(${task.id})">🗑️</button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Get progress bar class based on percentage
+        function getProgressClass(percent) {
+            if (percent === 100) return 'success';
+            if (percent >= 80) return 'warning';
+            return 'danger';
+        }
+
+        // Update task field
+        function updateTask(taskId, field, value) {
+            const task = tasks.find(t => t.id === taskId);
+            if (task) {
+                task[field] = value;
+                console.log(`Updated task ${taskId}: ${field} = ${value}`);
+                // Here you would save to database
+            }
+        }
+
+        // Toggle task selection
+        function toggleTaskSelection(taskId) {
+            if (selectedTasks.has(taskId)) {
+                selectedTasks.delete(taskId);
+            } else {
+                selectedTasks.add(taskId);
+            }
+            updateBulkActionsVisibility();
+        }
+
+        // Toggle select all
+        function toggleSelectAll() {
+            const selectAll = document.getElementById('selectAll');
+            const checkboxes = document.querySelectorAll('.checkbox');
+            
+            checkboxes.forEach(checkbox => {
+                if (checkbox !== selectAll) {
+                    checkbox.checked = selectAll.checked;
+                    const taskId = parseInt(checkbox.onchange.toString().match(/\d+/)[0]);
+                    if (selectAll.checked) {
+                        selectedTasks.add(taskId);
+                    } else {
+                        selectedTasks.delete(taskId);
+                    }
+                }
+            });
+            updateBulkActionsVisibility();
+        }
+
+        // Update bulk actions visibility
+        function updateBulkActionsVisibility() {
+            const bulkActions = document.getElementById('bulkActions');
+            if (selectedTasks.size > 0) {
+                bulkActions.classList.add('show');
+            } else {
+                bulkActions.classList.remove('show');
+            }
+        }
+
+        // Show bulk actions
+        function showBulkActions() {
+            if (selectedTasks.size === 0) {
+                alert('Please select tasks first');
+                return;
+            }
+            document.getElementById('bulkActions').classList.add('show');
+        }
+
+        // Hide bulk actions
+        function hideBulkActions() {
+            document.getElementById('bulkActions').classList.remove('show');
+        }
+
+        // Apply bulk update
+        function applyBulkUpdate() {
+            const status = document.getElementById('bulkStatus').value;
+            const category = document.getElementById('bulkCategory').value;
+            const resourceGroup = document.getElementById('bulkResourceGroup').value;
+
+            selectedTasks.forEach(taskId => {
+                const task = tasks.find(t => t.id === taskId);
+                if (task) {
+                    if (status) task.status = status;
+                    if (category) task.category = category;
+                    if (resourceGroup) task.resourceGroup = resourceGroup;
+                }
+            });
+
+            populateTaskTable();
+            hideBulkActions();
+            selectedTasks.clear();
+            updateBulkActionsVisibility();
+        }
+
+        // Delete selected tasks
+        function deleteSelected() {
+            if (selectedTasks.size === 0) {
+                alert('Please select tasks first');
+                return;
+            }
+
+            if (confirm(`Are you sure you want to delete ${selectedTasks.size} task(s)?`)) {
+                selectedTasks.forEach(taskId => {
+                    tasks = tasks.filter(t => t.id !== taskId);
+                });
+                populateTaskTable();
+                selectedTasks.clear();
+                updateBulkActionsVisibility();
+            }
+        }
+
+        // Filter tasks
+        function filterTasks() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const projectFilter = document.getElementById('projectFilter').value;
+            const statusFilter = document.getElementById('statusFilter').value;
+
+            const rows = document.querySelectorAll('#taskTableBody tr');
+            rows.forEach(row => {
+                const taskName = row.querySelector('.task-name').textContent.toLowerCase();
+                const taskId = row.querySelector('.checkbox').onchange.toString().match(/\d+/)[0];
+                const task = tasks.find(t => t.id === parseInt(taskId));
+                
+                let show = true;
+                
+                if (searchTerm && !taskName.includes(searchTerm)) show = false;
+                if (projectFilter && task.projectId !== parseInt(projectFilter)) show = false;
+                if (statusFilter && task.status !== statusFilter) show = false;
+                
+                row.style.display = show ? '' : 'none';
+            });
+        }
+
+        // Open add task modal
+        function openAddTaskModal() {
+            editingTaskId = null;
+            document.getElementById('modalTitle').textContent = 'Add New Task';
+            document.getElementById('taskForm').reset();
+            document.getElementById('taskActive').checked = true;
+            document.getElementById('taskModal').style.display = 'block';
+        }
+
+        // Edit task
+        function editTask(taskId) {
+            const task = tasks.find(t => t.id === taskId);
+            if (task) {
+                editingTaskId = taskId;
+                document.getElementById('modalTitle').textContent = 'Edit Task';
+                document.getElementById('taskProject').value = task.projectId;
+                document.getElementById('taskParent').value = task.parentId || '';
+                document.getElementById('taskName').value = task.taskName;
+                document.getElementById('taskCategory').value = task.category || '';
+                document.getElementById('taskNotes').value = task.notes || '';
+                document.getElementById('taskMilestone').checked = task.isMilestone;
+                document.getElementById('taskActive').checked = task.isActive;
+                document.getElementById('taskPercentComplete').value = task.percentComplete;
+                document.getElementById('taskStatus').value = task.status;
+                document.getElementById('taskDuration').value = task.duration || '';
+                document.getElementById('taskStartDate').value = task.startDate || '';
+                document.getElementById('taskFinishDate').value = task.finishDate || '';
+                document.getElementById('taskDeadline').value = task.deadline || '';
+                document.getElementById('taskResourceNames').value = task.resourceNames || '';
+                document.getElementById('taskResourceGroup').value = task.resourceGroup || '';
+                document.getElementById('taskModal').style.display = 'block';
+            }
+        }
+
+        // Delete task
+        function deleteTask(taskId) {
+            if (confirm('Are you sure you want to delete this task?')) {
+                tasks = tasks.filter(t => t.id !== taskId);
+                populateTaskTable();
+            }
+        }
+
+        // Close modal
+        function closeModal() {
+            document.getElementById('taskModal').style.display = 'none';
+        }
+
+        // Open add project modal
+        function openAddProjectModal() {
+            document.getElementById('projectForm').reset();
+            document.getElementById('projectModal').style.display = 'block';
+        }
+
+        // Close project modal
+        function closeProjectModal() {
+            document.getElementById('projectModal').style.display = 'none';
+        }
+
+        // Handle task form submission
+        document.getElementById('taskForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const taskData = {
+                projectId: parseInt(document.getElementById('taskProject').value),
+                parentId: document.getElementById('taskParent').value ? parseInt(document.getElementById('taskParent').value) : null,
+                taskName: document.getElementById('taskName').value,
+                category: document.getElementById('taskCategory').value,
+                notes: document.getElementById('taskNotes').value,
+                isMilestone: document.getElementById('taskMilestone').checked,
+                isActive: document.getElementById('taskActive').checked,
+                percentComplete: parseInt(document.getElementById('taskPercentComplete').value),
+                status: document.getElementById('taskStatus').value,
+                duration: parseInt(document.getElementById('taskDuration').value) || null,
+                startDate: document.getElementById('taskStartDate').value,
+                finishDate: document.getElementById('taskFinishDate').value,
+                deadline: document.getElementById('taskDeadline').value,
+                resourceNames: document.getElementById('taskResourceNames').value,
+                resourceGroup: document.getElementById('taskResourceGroup').value
+            };
+
+            if (editingTaskId) {
+                // Update existing task
+                const taskIndex = tasks.findIndex(t => t.id === editingTaskId);
+                if (taskIndex !== -1) {
+                    tasks[taskIndex] = { ...tasks[taskIndex], ...taskData };
+                }
+            } else {
+                // Add new task
+                const newId = Math.max(...tasks.map(t => t.id)) + 1;
+                tasks.push({ id: newId, ...taskData });
+            }
+
+            populateTaskTable();
+            populateProjectSelects();
+            closeModal();
+        });
+
+        // Handle project form submission
+        document.getElementById('projectForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const projectData = {
+                name: document.getElementById('projectName').value,
+                description: document.getElementById('projectDescription').value
+            };
+
+            const newId = Math.max(...projects.map(p => p.id)) + 1;
+            projects.push({ id: newId, ...projectData });
+
+            populateProjectFilter();
+            populateProjectSelects();
+            closeProjectModal();
+        });
+
+        // Export table
+        function exportTable() {
+            const data = tasks.map(task => ({
+                'Task Name': task.taskName,
+                'Project': projects.find(p => p.id === task.projectId)?.name || '',
+                'Category': task.category || '',
+                'Status': task.status,
+                '% Complete': task.percentComplete,
+                'Start Date': task.startDate || '',
+                'Finish Date': task.finishDate || '',
+                'Resource Names': task.resourceNames || '',
+                'Resource Group': task.resourceGroup || ''
+            }));
+
+            const csv = [
+                Object.keys(data[0]).join(','),
+                ...data.map(row => Object.values(row).map(val => `"${val}"`).join(','))
+            ].join('\n');
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'tasks.csv';
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+
+        // Import table
+        function importTable() {
+            alert('Import functionality would be implemented here');
+        }
+
+        // Close modals when clicking outside
+        window.onclick = function(event) {
+            const taskModal = document.getElementById('taskModal');
+            const projectModal = document.getElementById('projectModal');
+            if (event.target === taskModal) {
+                closeModal();
+            }
+            if (event.target === projectModal) {
+                closeProjectModal();
+            }
+        }
+
+        // Initialize the application
+        init();
+    </script>
+</body>
+</html>
