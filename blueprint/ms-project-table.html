@@ -376,6 +376,37 @@
             color: #dc3545;
         }
 
+        .indent-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 0.8rem;
+            color: #666;
+            margin: 0 2px;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+
+        .indent-btn:hover {
+            background: #f8f9fa;
+            color: #333;
+        }
+
+        .outline-level {
+            font-weight: bold;
+            color: #495057;
+            text-align: center;
+            min-width: 30px;
+        }
+
+        .task-indent-level {
+            display: inline-block;
+            width: 20px;
+            text-align: center;
+            color: #666;
+            font-size: 0.8rem;
+        }
+
         .modal {
             display: none;
             position: fixed;
@@ -514,6 +545,8 @@
             <button class="btn btn-danger" onclick="deleteSelected()">🗑️ Delete Selected</button>
             <button class="btn btn-danger" onclick="clearAllData()" style="background: #dc3545;">🗑️ Clear All Data</button>
             <button class="btn btn-secondary" onclick="updateAllParentProgress()" style="background: #17a2b8;">🔄 Recalc Progress</button>
+            <button class="btn btn-secondary" onclick="expandAllTasks()" style="background: #28a745;">📂 Expand All</button>
+            <button class="btn btn-secondary" onclick="collapseAllTasks()" style="background: #6c757d;">📁 Collapse All</button>
             <span id="saveStatus" style="color: #28a745; font-weight: bold; margin-left: 1rem;">💾 Data Saved</span>
             
             <div class="filter-group">
@@ -582,6 +615,7 @@
                     <thead>
                         <tr>
                             <th><input type="checkbox" id="selectAll" onchange="toggleSelectAll()"></th>
+                            <th>Outline</th>
                             <th>Task Mode</th>
                             <th>Category</th>
                             <th>Notes</th>
@@ -1032,17 +1066,25 @@
             // Calculate indentation
             const indent = level * 20;
             
+            // Calculate outline level
+            const outlineLevel = level + 1;
+            
             row.innerHTML = `
                 <td><input type="checkbox" class="checkbox" onchange="toggleTaskSelection(${task.id})"></td>
+                <td class="outline-level">${outlineLevel}</td>
                 <td>Manual</td>
                 <td><input type="text" class="text-input" value="${task.category || ''}" onchange="updateTask(${task.id}, 'category', this.value)"></td>
                 <td><input type="text" class="text-input" value="${task.notes || ''}" onchange="updateTask(${task.id}, 'notes', this.value)"></td>
                 <td><input type="checkbox" class="checkbox" ${task.isMilestone ? 'checked' : ''} onchange="updateTask(${task.id}, 'isMilestone', this.checked)"></td>
                 <td><input type="checkbox" class="checkbox" ${task.isActive ? 'checked' : ''} onchange="updateTask(${task.id}, 'isActive', this.checked)"></td>
                 <td style="padding-left: ${indent}px;">
-                    <span class="${taskNameClass} ${task.isMilestone ? 'milestone' : ''}">
-                        ${task.isMilestone ? '🔷 ' : ''}${taskNameContent}
-                    </span>
+                    <div style="display: flex; align-items: center; gap: 5px;">
+                        <button class="indent-btn" onclick="indentTask(${task.id})" title="Indent (make child)">→</button>
+                        <button class="indent-btn" onclick="outdentTask(${task.id})" title="Outdent (make parent)">←</button>
+                        <span class="${taskNameClass} ${task.isMilestone ? 'milestone' : ''}">
+                            ${task.isMilestone ? '🔷 ' : ''}${taskNameContent}
+                        </span>
+                    </div>
                 </td>
                 <td>
                     <div class="progress-bar">
@@ -1061,8 +1103,8 @@
                     </select>
                 </td>
                 <td><input type="number" class="text-input" value="${task.duration || ''}" onchange="updateTask(${task.id}, 'duration', parseInt(this.value))"></td>
-                <td><input type="date" class="date-input" value="${task.startDate || ''}" onchange="updateTaskWithDuration(${task.id}, 'startDate', this.value)"></td>
-                <td><input type="date" class="date-input" value="${task.finishDate || ''}" onchange="updateTaskWithDuration(${task.id}, 'finishDate', this.value)"></td>
+                <td><input type="date" class="date-input" value="${task.startDate || ''}" onchange="updateTaskWithDuration(${task.id}, 'startDate', this.value)" ${(task.taskType === 'project' || task.taskType === 'summary') ? 'readonly style="background: #f8f9fa;" title="Auto-calculated from child tasks"' : ''}></td>
+                <td><input type="date" class="date-input" value="${task.finishDate || ''}" onchange="updateTaskWithDuration(${task.id}, 'finishDate', this.value)" ${(task.taskType === 'project' || task.taskType === 'summary') ? 'readonly style="background: #f8f9fa;" title="Auto-calculated from child tasks"' : ''}></td>
                 <td><input type="text" class="text-input" value="${task.predecessors || ''}" onchange="updateTask(${task.id}, 'predecessors', this.value)"></td>
                 <td><input type="date" class="date-input" value="${task.deadline || ''}" onchange="updateTask(${task.id}, 'deadline', this.value)"></td>
                 <td><input type="text" class="text-input" value="${task.resourceNames || ''}" onchange="updateTask(${task.id}, 'resourceNames', this.value)"></td>
@@ -1138,6 +1180,11 @@
                         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // +1 to include both start and end days
                         task.duration = diffDays;
                     }
+                    
+                    // Update parent dates when child dates change
+                    if (task.parentId) {
+                        updateParentDates(task.parentId);
+                    }
                 }
                 
                 console.log(`Updated task ${taskId}: ${field} = ${value}, duration = ${task.duration}`);
@@ -1199,7 +1246,127 @@
             
             parentTasks.forEach(parent => {
                 updateParentProgress(parent.id);
+                updateParentDates(parent.id);
             });
+        }
+
+        // Update parent task dates based on children
+        function updateParentDates(parentId) {
+            if (!parentId) return;
+            
+            const parent = tasks.find(t => t.id === parentId);
+            if (!parent) return;
+            
+            // Find all direct children of this parent
+            const children = tasks.filter(t => t.parentId === parentId);
+            
+            if (children.length === 0) return;
+            
+            // Calculate earliest start and latest finish
+            const startDates = children.map(child => child.startDate).filter(date => date);
+            const finishDates = children.map(child => child.finishDate).filter(date => date);
+            
+            if (startDates.length > 0) {
+                const earliestStart = startDates.sort()[0];
+                parent.startDate = earliestStart;
+            }
+            
+            if (finishDates.length > 0) {
+                const latestFinish = finishDates.sort().reverse()[0];
+                parent.finishDate = latestFinish;
+            }
+            
+            // Recalculate duration if both dates exist
+            if (parent.startDate && parent.finishDate) {
+                const start = new Date(parent.startDate);
+                const finish = new Date(parent.finishDate);
+                const diffTime = Math.abs(finish - start);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+                parent.duration = diffDays;
+            }
+            
+            console.log(`Updated parent task "${parent.taskName}" dates: ${parent.startDate} to ${parent.finishDate}`);
+            
+            // Recursively update grandparent if this parent has a parent
+            if (parent.parentId) {
+                updateParentDates(parent.parentId);
+            }
+        }
+
+        // Indent task (make it a child of the previous task)
+        function indentTask(taskId) {
+            const task = tasks.find(t => t.id === taskId);
+            if (!task) return;
+            
+            // Find the task's current position in the flat list
+            const currentIndex = tasks.findIndex(t => t.id === taskId);
+            if (currentIndex <= 0) return; // Can't indent the first task
+            
+            // Find the previous task at the same or higher level
+            let parentTask = null;
+            for (let i = currentIndex - 1; i >= 0; i--) {
+                const prevTask = tasks[i];
+                if (prevTask.taskType === 'project' || prevTask.taskType === 'summary') {
+                    parentTask = prevTask;
+                    break;
+                }
+            }
+            
+            if (parentTask) {
+                task.parentId = parentTask.id;
+                task.taskType = 'subtask';
+                console.log(`Indented task "${task.taskName}" under "${parentTask.taskName}"`);
+                populateTaskTable();
+                updateAllParentProgress();
+                saveDataToStorage();
+            }
+        }
+
+        // Outdent task (make it a sibling of its parent)
+        function outdentTask(taskId) {
+            const task = tasks.find(t => t.id === taskId);
+            if (!task || !task.parentId) return;
+            
+            const parent = tasks.find(t => t.id === task.parentId);
+            if (!parent) return;
+            
+            // If parent is a project, make this a summary task
+            // If parent is a summary task, make this a summary task too
+            if (parent.taskType === 'project') {
+                task.taskType = 'summary';
+                task.parentId = parent.id; // Keep same parent
+            } else {
+                // Make it a sibling of the parent
+                task.parentId = parent.parentId;
+                task.taskType = 'summary';
+            }
+            
+            console.log(`Outdented task "${task.taskName}"`);
+            populateTaskTable();
+            updateAllParentProgress();
+            saveDataToStorage();
+        }
+
+        // Expand all tasks
+        function expandAllTasks() {
+            tasks.forEach(task => {
+                if (task.taskType === 'summary' || task.taskType === 'project') {
+                    task.isExpanded = true;
+                }
+            });
+            populateTaskTable();
+            saveDataToStorage();
+        }
+
+        // Collapse all tasks
+        function collapseAllTasks() {
+            tasks.forEach(task => {
+                if (task.taskType === 'summary' || task.taskType === 'project') {
+                    task.isExpanded = false;
+                }
+            });
+            populateTaskTable();
+            saveDataToStorage();
         }
 
         // Toggle task selection
