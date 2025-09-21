@@ -896,10 +896,12 @@
         // Initialize the application
         function init() {
             loadDataFromStorage();
+            console.log('Initial tasks:', tasks);
             updateAllParentProgress(); // Calculate parent progress on load
             populateProjectFilter();
             populateTaskTable();
             populateProjectSelects();
+            console.log('After initialization, tasks:', tasks);
         }
 
         // Load data from localStorage
@@ -1006,11 +1008,13 @@
             const tbody = document.getElementById('taskTableBody');
             tbody.innerHTML = '';
 
+            console.log('populateTaskTable called with tasks:', tasks);
+
             // Build hierarchical structure
             const taskMap = new Map();
             const rootTasks = [];
 
-            // First pass: create task map
+            // First pass: create task map with original task objects
             tasks.forEach(task => {
                 taskMap.set(task.id, { ...task, children: [] });
             });
@@ -1027,8 +1031,12 @@
                 }
             });
 
+            console.log('Root tasks:', rootTasks);
+            console.log('Task map:', taskMap);
+
             // Render tasks hierarchically
             rootTasks.forEach(task => {
+                console.log(`Rendering root task: ${task.taskName}, isExpanded: ${task.isExpanded}, children: ${task.children.length}`);
                 renderTaskRow(task, 0);
             });
         }
@@ -1046,7 +1054,17 @@
             if (task.taskType === 'project') {
                 rowClass = 'project-row';
                 taskNameClass = 'project-name';
-                taskNameContent = task.taskName;
+                // Check if project has children to show expand/collapse button
+                const hasChildren = task.children && task.children.length > 0;
+                if (hasChildren) {
+                    const expandIcon = task.isExpanded ? '▼' : '▶';
+                    taskNameContent = `
+                        <button class="expand-collapse-btn" onclick="toggleTaskExpansion(${task.id}); event.stopPropagation();" title="Click to ${task.isExpanded ? 'collapse' : 'expand'}">${expandIcon}</button>
+                        ${task.taskName}
+                    `;
+                } else {
+                    taskNameContent = task.taskName;
+                }
             } else if (task.taskType === 'summary') {
                 rowClass = 'summary-row';
                 taskNameClass = 'summary-task';
@@ -1126,7 +1144,7 @@
             tbody.appendChild(row);
 
             // Render children if expanded
-            if (task.taskType === 'summary' && task.isExpanded && task.children) {
+            if ((task.taskType === 'summary' || task.taskType === 'project') && task.isExpanded && task.children) {
                 task.children.forEach(child => {
                     renderTaskRow(child, level + 1);
                 });
