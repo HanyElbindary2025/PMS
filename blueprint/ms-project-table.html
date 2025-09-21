@@ -547,6 +547,7 @@
             <button class="btn btn-secondary" onclick="updateAllParentProgress()" style="background: #17a2b8;">🔄 Recalc Progress</button>
             <button class="btn btn-secondary" onclick="expandAllTasks()" style="background: #28a745;">📂 Expand All</button>
             <button class="btn btn-secondary" onclick="collapseAllTasks()" style="background: #6c757d;">📁 Collapse All</button>
+            <button class="btn btn-secondary" onclick="loadSampleData()" style="background: #ffc107; color: #000;">📋 Load Sample Data</button>
             <span id="saveStatus" style="color: #28a745; font-weight: bold; margin-left: 1rem;">💾 Data Saved</span>
             
             <div class="filter-group">
@@ -911,10 +912,16 @@
             
             if (savedTasks) {
                 tasks = JSON.parse(savedTasks);
+                console.log('Loaded tasks from localStorage:', tasks);
+            } else {
+                console.log('No saved tasks found, using sample data');
             }
             
             if (savedProjects) {
                 projects = JSON.parse(savedProjects);
+                console.log('Loaded projects from localStorage:', projects);
+            } else {
+                console.log('No saved projects found, using sample data');
             }
         }
 
@@ -1407,6 +1414,141 @@
             });
             populateTaskTable();
             saveDataToStorage();
+        }
+
+        // Load sample data
+        function loadSampleData() {
+            if (confirm('This will replace all current data with sample data. Continue?')) {
+                // Reset to sample data
+                tasks = [
+                    // Project Level (Orange) - Progress will be auto-calculated from children
+                    {
+                        id: 1,
+                        projectId: 1,
+                        parentId: null,
+                        taskName: "WE Project",
+                        taskType: "project",
+                        category: "Project",
+                        notes: "Main WE project - progress auto-calculated from children",
+                        isMilestone: false,
+                        isActive: true,
+                        percentComplete: 0, // Will be auto-calculated
+                        status: "In Progress",
+                        duration: 31,
+                        startDate: "2024-12-01",
+                        finishDate: "2024-12-31",
+                        predecessors: "",
+                        deadline: "2024-12-31",
+                        resourceNames: "John Doe, Sarah Miller",
+                        resourceGroup: "Development Team",
+                        isExpanded: true
+                    },
+                    // Summary Task Level - Progress will be auto-calculated from children
+                    {
+                        id: 2,
+                        projectId: 1,
+                        parentId: 1,
+                        taskName: "Phase 1: Planning",
+                        taskType: "summary",
+                        category: "Planning",
+                        notes: "Planning phase summary - progress auto-calculated from children",
+                        isMilestone: false,
+                        isActive: true,
+                        percentComplete: 0, // Will be auto-calculated
+                        status: "In Progress",
+                        duration: 10,
+                        startDate: "2024-12-01",
+                        finishDate: "2024-12-10",
+                        predecessors: "",
+                        deadline: "2024-12-10",
+                        resourceNames: "John Doe",
+                        resourceGroup: "Development Team",
+                        isExpanded: true
+                    },
+                    // Subtask Level - Manual progress (these drive parent progress)
+                    {
+                        id: 3,
+                        projectId: 1,
+                        parentId: 2,
+                        taskName: "Task 1: Analysis",
+                        taskType: "subtask",
+                        category: "Development",
+                        notes: "Project analysis phase - manual progress",
+                        isMilestone: false,
+                        isActive: true,
+                        percentComplete: 20, // Manual progress
+                        status: "In Progress",
+                        duration: 5,
+                        startDate: "2024-12-01",
+                        finishDate: "2024-12-05",
+                        predecessors: "",
+                        deadline: "2024-12-05",
+                        resourceNames: "John Doe",
+                        resourceGroup: "Development Team"
+                    },
+                    {
+                        id: 4,
+                        projectId: 1,
+                        parentId: 2,
+                        taskName: "Task 2: Design",
+                        taskType: "subtask",
+                        category: "Development",
+                        notes: "Design phase - manual progress",
+                        isMilestone: false,
+                        isActive: true,
+                        percentComplete: 15, // Manual progress
+                        status: "In Progress",
+                        duration: 3,
+                        startDate: "2024-12-06",
+                        finishDate: "2024-12-08",
+                        predecessors: "3",
+                        deadline: "2024-12-08",
+                        resourceNames: "Sarah Miller",
+                        resourceGroup: "Development Team"
+                    },
+                    {
+                        id: 5,
+                        projectId: 1,
+                        parentId: 2,
+                        taskName: "Task 3: Review",
+                        taskType: "subtask",
+                        category: "Development",
+                        notes: "Review phase - manual progress",
+                        isMilestone: false,
+                        isActive: true,
+                        percentComplete: 50, // Manual progress
+                        status: "In Progress",
+                        duration: 2,
+                        startDate: "2024-12-09",
+                        finishDate: "2024-12-10",
+                        predecessors: "4",
+                        deadline: "2024-12-10",
+                        resourceNames: "John Doe, Sarah Miller",
+                        resourceGroup: "Development Team"
+                    }
+                ];
+
+                projects = [
+                    { id: 1, name: "WE Project", description: "WE implementation project" },
+                    { id: 2, name: "Etisalat Project", description: "Etisalat development project" },
+                    { id: 3, name: "NetEco Project", description: "NetEco system project" }
+                ];
+
+                updateAllParentProgress();
+                populateProjectFilter();
+                populateTaskTable();
+                populateProjectSelects();
+                saveDataToStorage();
+                
+                const saveStatus = document.getElementById('saveStatus');
+                saveStatus.textContent = '📋 Sample Data Loaded';
+                saveStatus.style.color = '#ffc107';
+                
+                setTimeout(() => {
+                    saveStatus.textContent = '💾 Auto-saved';
+                    saveStatus.style.color = '#6c757d';
+                }, 2000);
+            }
         }
 
         // Toggle task selection
