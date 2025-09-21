@@ -548,6 +548,7 @@
             <button class="btn btn-secondary" onclick="expandAllTasks()" style="background: #28a745;">📂 Expand All</button>
             <button class="btn btn-secondary" onclick="collapseAllTasks()" style="background: #6c757d;">📁 Collapse All</button>
             <button class="btn btn-secondary" onclick="loadSampleData()" style="background: #ffc107; color: #000;">📋 Load Sample Data</button>
+            <button class="btn btn-secondary" onclick="openConfigModal()" style="background: #6f42c1; color: white;">⚙️ Configuration</button>
             <span id="saveStatus" style="color: #28a745; font-weight: bold; margin-left: 1rem;">💾 Data Saved</span>
             
             <div class="filter-group">
@@ -660,9 +661,8 @@
                 <div class="form-group">
                     <label>Task Type:</label>
                     <select id="taskType" onchange="updateTaskTypeOptions()">
-                        <option value="project">Project (Orange)</option>
-                        <option value="summary">Summary Task (Blue - Parent)</option>
-                        <option value="subtask">Subtask (Normal - Child)</option>
+                        <option value="task">Task (Parent)</option>
+                        <option value="subtask">Subtask (Child)</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -770,6 +770,53 @@
                 <div class="form-actions">
                     <button type="button" class="btn btn-secondary" onclick="closeProjectModal()">Cancel</button>
                     <button type="submit" class="btn btn-primary">Save Project</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Configuration Modal -->
+    <div id="configModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">⚙️ System Configuration</h3>
+                <span class="close" onclick="closeConfigModal()">&times;</span>
+            </div>
+            <form id="configForm">
+                <div class="form-group">
+                    <label>Task Mode:</label>
+                    <select id="taskMode">
+                        <option value="manual">Manual</option>
+                        <option value="auto">Auto (MS Project Style)</option>
+                    </select>
+                    <small style="color: #666;">Auto mode handles scheduling like MS Project</small>
+                </div>
+                
+                <div class="form-group">
+                    <label>Categories:</label>
+                    <div id="categoriesList">
+                        <!-- Categories will be populated here -->
+                    </div>
+                    <div style="display: flex; gap: 10px; margin-top: 10px;">
+                        <input type="text" id="newCategory" placeholder="Add new category" style="flex: 1;">
+                        <button type="button" class="btn btn-primary" onclick="addCategory()">Add</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Resource Groups:</label>
+                    <div id="resourceGroupsList">
+                        <!-- Resource groups will be populated here -->
+                    </div>
+                    <div style="display: flex; gap: 10px; margin-top: 10px;">
+                        <input type="text" id="newResourceGroup" placeholder="Add new resource group" style="flex: 1;">
+                        <button type="button" class="btn btn-primary" onclick="addResourceGroup()">Add</button>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeConfigModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Configuration</button>
                 </div>
             </form>
         </div>
@@ -894,6 +941,13 @@
         let selectedTasks = new Set();
         let editingTaskId = null;
 
+        // Configuration variables
+        let config = {
+            taskMode: 'manual', // 'manual' or 'auto'
+            categories: ['Development', 'Testing', 'Design', 'Documentation', 'Planning'],
+            resourceGroups: ['Development Team', 'QA Team', 'Design Team', 'Management']
+        };
+
         // Initialize the application
         function init() {
             loadDataFromStorage();
@@ -902,6 +956,8 @@
             populateProjectFilter();
             populateTaskTable();
             populateProjectSelects();
+            updateCategoryDropdowns();
+            updateResourceGroupDropdowns();
             console.log('After initialization, tasks:', tasks);
         }
 
@@ -909,6 +965,7 @@
         function loadDataFromStorage() {
             const savedTasks = localStorage.getItem('msProjectTasks');
             const savedProjects = localStorage.getItem('msProjectProjects');
+            const savedConfig = localStorage.getItem('msProjectConfig');
             
             if (savedTasks) {
                 tasks = JSON.parse(savedTasks);
@@ -923,12 +980,20 @@
             } else {
                 console.log('No saved projects found, using sample data');
             }
+
+            if (savedConfig) {
+                config = JSON.parse(savedConfig);
+                console.log('Loaded config from localStorage:', config);
+            } else {
+                console.log('No saved config found, using default config');
+            }
         }
 
         // Save data to localStorage
         function saveDataToStorage() {
             localStorage.setItem('msProjectTasks', JSON.stringify(tasks));
             localStorage.setItem('msProjectProjects', JSON.stringify(projects));
+            localStorage.setItem('msProjectConfig', JSON.stringify(config));
             
             // Show save status
             const saveStatus = document.getElementById('saveStatus');
@@ -996,18 +1061,12 @@
             parentSelect.innerHTML = '<option value="">None (Top Level)</option>';
             
             if (taskType === 'subtask') {
-                // Subtasks can be under projects or summary tasks
-                tasks.filter(task => task.taskType === 'project' || task.taskType === 'summary').forEach(task => {
-                    const indent = task.taskType === 'summary' ? '  ' : '';
-                    parentSelect.innerHTML += `<option value="${task.id}">${indent}${task.taskName}</option>`;
-                });
-            } else if (taskType === 'summary') {
-                // Summary tasks can be under projects
-                tasks.filter(task => task.taskType === 'project').forEach(task => {
+                // Subtasks can be under tasks
+                tasks.filter(task => task.taskType === 'task').forEach(task => {
                     parentSelect.innerHTML += `<option value="${task.id}">${task.taskName}</option>`;
                 });
             }
-            // Projects are always top level, so no parent options needed
+            // Tasks are always top level, so no parent options needed
         }
 
         // Populate task table with proper hierarchy
@@ -1058,10 +1117,10 @@
             let taskNameClass = '';
             let taskNameContent = '';
             
-            if (task.taskType === 'project') {
+            if (task.taskType === 'task') {
                 rowClass = 'project-row';
                 taskNameClass = 'project-name';
-                // Check if project has children to show expand/collapse button
+                // Check if task has children to show expand/collapse button
                 const hasChildren = task.children && task.children.length > 0;
                 if (hasChildren) {
                     const expandIcon = task.isExpanded ? '▼' : '▶';
@@ -1072,14 +1131,6 @@
                 } else {
                     taskNameContent = task.taskName;
                 }
-            } else if (task.taskType === 'summary') {
-                rowClass = 'summary-row';
-                taskNameClass = 'summary-task';
-                const expandIcon = task.isExpanded ? '▼' : '▶';
-                taskNameContent = `
-                    <button class="expand-collapse-btn" onclick="toggleTaskExpansion(${task.id}); event.stopPropagation();" title="Click to ${task.isExpanded ? 'collapse' : 'expand'}">${expandIcon}</button>
-                    ${task.taskName}
-                `;
             } else {
                 rowClass = 'subtask-row';
                 taskNameClass = 'task-name subtask';
@@ -1115,8 +1166,8 @@
                     <div class="progress-bar">
                         <div class="progress-fill ${getProgressClass(task.percentComplete)}" style="width: ${task.percentComplete}%"></div>
                     </div>
-                    <input type="number" class="text-input" value="${task.percentComplete}" min="0" max="100" style="width: 50px; margin-left: 5px;" onchange="updateTask(${task.id}, 'percentComplete', parseInt(this.value))" ${(task.taskType === 'project' || task.taskType === 'summary') ? 'readonly style="background: #f8f9fa; width: 50px; margin-left: 5px;" title="Auto-calculated from child tasks"' : ''}>
-                    ${(task.taskType === 'project' || task.taskType === 'summary') ? '<small style="color: #666; font-size: 0.7rem; display: block;">Auto-calc</small>' : ''}
+                    <input type="number" class="text-input" value="${task.percentComplete}" min="0" max="100" style="width: 50px; margin-left: 5px;" onchange="updateTask(${task.id}, 'percentComplete', parseInt(this.value))" ${task.taskType === 'task' ? 'readonly style="background: #f8f9fa; width: 50px; margin-left: 5px;" title="Auto-calculated from child tasks"' : ''}>
+                    ${task.taskType === 'task' ? '<small style="color: #666; font-size: 0.7rem; display: block;">Auto-calc</small>' : ''}
                 </td>
                 <td>
                     <select class="select-input" onchange="updateTask(${task.id}, 'status', this.value)">
@@ -1128,8 +1179,8 @@
                     </select>
                 </td>
                 <td><input type="number" class="text-input" value="${task.duration || ''}" onchange="updateTask(${task.id}, 'duration', parseInt(this.value))"></td>
-                <td><input type="date" class="date-input" value="${task.startDate || ''}" onchange="updateTaskWithDuration(${task.id}, 'startDate', this.value)" ${(task.taskType === 'project' || task.taskType === 'summary') ? 'readonly style="background: #f8f9fa;" title="Auto-calculated from child tasks"' : ''}></td>
-                <td><input type="date" class="date-input" value="${task.finishDate || ''}" onchange="updateTaskWithDuration(${task.id}, 'finishDate', this.value)" ${(task.taskType === 'project' || task.taskType === 'summary') ? 'readonly style="background: #f8f9fa;" title="Auto-calculated from child tasks"' : ''}></td>
+                <td><input type="date" class="date-input" value="${task.startDate || ''}" onchange="updateTaskWithDuration(${task.id}, 'startDate', this.value)" ${task.taskType === 'task' ? 'readonly style="background: #f8f9fa;" title="Auto-calculated from child tasks"' : ''}></td>
+                <td><input type="date" class="date-input" value="${task.finishDate || ''}" onchange="updateTaskWithDuration(${task.id}, 'finishDate', this.value)" ${task.taskType === 'task' ? 'readonly style="background: #f8f9fa;" title="Auto-calculated from child tasks"' : ''}></td>
                 <td><input type="text" class="text-input" value="${task.predecessors || ''}" onchange="updateTask(${task.id}, 'predecessors', this.value)"></td>
                 <td><input type="date" class="date-input" value="${task.deadline || ''}" onchange="updateTask(${task.id}, 'deadline', this.value)"></td>
                 <td><input type="text" class="text-input" value="${task.resourceNames || ''}" onchange="updateTask(${task.id}, 'resourceNames', this.value)"></td>
@@ -1151,7 +1202,7 @@
             tbody.appendChild(row);
 
             // Render children if expanded
-            if ((task.taskType === 'summary' || task.taskType === 'project') && task.isExpanded && task.children) {
+            if (task.taskType === 'task' && task.isExpanded && task.children) {
                 task.children.forEach(child => {
                     renderTaskRow(child, level + 1);
                 });
@@ -1288,8 +1339,8 @@
 
         // Calculate and update all parent task progress
         function updateAllParentProgress() {
-            // Find all parent tasks (projects and summary tasks)
-            const parentTasks = tasks.filter(t => t.taskType === 'project' || t.taskType === 'summary');
+            // Find all parent tasks (tasks)
+            const parentTasks = tasks.filter(t => t.taskType === 'task');
             
             parentTasks.forEach(parent => {
                 updateParentProgress(parent.id);
@@ -1397,7 +1448,7 @@
         // Expand all tasks
         function expandAllTasks() {
             tasks.forEach(task => {
-                if (task.taskType === 'summary' || task.taskType === 'project') {
+                if (task.taskType === 'task') {
                     task.isExpanded = true;
                 }
             });
@@ -1408,7 +1459,7 @@
         // Collapse all tasks
         function collapseAllTasks() {
             tasks.forEach(task => {
-                if (task.taskType === 'summary' || task.taskType === 'project') {
+                if (task.taskType === 'task') {
                     task.isExpanded = false;
                 }
             });
@@ -1419,16 +1470,16 @@
         // Load sample data
         function loadSampleData() {
             if (confirm('This will replace all current data with sample data. Continue?')) {
-                // Reset to sample data
+                // Reset to simplified sample data
                 tasks = [
-                    // Project Level (Orange) - Progress will be auto-calculated from children
+                    // Task Level - Progress will be auto-calculated from children
                     {
                         id: 1,
                         projectId: 1,
                         parentId: null,
-                        taskName: "WE Project",
-                        taskType: "project",
-                        category: "Project",
+                        taskName: "WE Project Implementation",
+                        taskType: "task",
+                        category: "Development",
                         notes: "Main WE project - progress auto-calculated from children",
                         isMilestone: false,
                         isActive: true,
@@ -1443,34 +1494,12 @@
                         resourceGroup: "Development Team",
                         isExpanded: true
                     },
-                    // Summary Task Level - Progress will be auto-calculated from children
+                    // Subtask Level - Manual progress (these drive parent progress)
                     {
                         id: 2,
                         projectId: 1,
                         parentId: 1,
-                        taskName: "Phase 1: Planning",
-                        taskType: "summary",
-                        category: "Planning",
-                        notes: "Planning phase summary - progress auto-calculated from children",
-                        isMilestone: false,
-                        isActive: true,
-                        percentComplete: 0, // Will be auto-calculated
-                        status: "In Progress",
-                        duration: 10,
-                        startDate: "2024-12-01",
-                        finishDate: "2024-12-10",
-                        predecessors: "",
-                        deadline: "2024-12-10",
-                        resourceNames: "John Doe",
-                        resourceGroup: "Development Team",
-                        isExpanded: true
-                    },
-                    // Subtask Level - Manual progress (these drive parent progress)
-                    {
-                        id: 3,
-                        projectId: 1,
-                        parentId: 2,
-                        taskName: "Task 1: Analysis",
+                        taskName: "Analysis Phase",
                         taskType: "subtask",
                         category: "Development",
                         notes: "Project analysis phase - manual progress",
@@ -1487,12 +1516,12 @@
                         resourceGroup: "Development Team"
                     },
                     {
-                        id: 4,
+                        id: 3,
                         projectId: 1,
-                        parentId: 2,
-                        taskName: "Task 2: Design",
+                        parentId: 1,
+                        taskName: "Design Phase",
                         taskType: "subtask",
-                        category: "Development",
+                        category: "Design",
                         notes: "Design phase - manual progress",
                         isMilestone: false,
                         isActive: true,
@@ -1501,19 +1530,19 @@
                         duration: 3,
                         startDate: "2024-12-06",
                         finishDate: "2024-12-08",
-                        predecessors: "3",
+                        predecessors: "2",
                         deadline: "2024-12-08",
                         resourceNames: "Sarah Miller",
-                        resourceGroup: "Development Team"
+                        resourceGroup: "Design Team"
                     },
                     {
-                        id: 5,
+                        id: 4,
                         projectId: 1,
-                        parentId: 2,
-                        taskName: "Task 3: Review",
+                        parentId: 1,
+                        taskName: "Testing Phase",
                         taskType: "subtask",
-                        category: "Development",
-                        notes: "Review phase - manual progress",
+                        category: "Testing",
+                        notes: "Testing phase - manual progress",
                         isMilestone: false,
                         isActive: true,
                         percentComplete: 50, // Manual progress
@@ -1521,10 +1550,10 @@
                         duration: 2,
                         startDate: "2024-12-09",
                         finishDate: "2024-12-10",
-                        predecessors: "4",
+                        predecessors: "3",
                         deadline: "2024-12-10",
                         resourceNames: "John Doe, Sarah Miller",
-                        resourceGroup: "Development Team"
+                        resourceGroup: "QA Team"
                     }
                 ];
 
@@ -1730,6 +1759,87 @@
             document.getElementById('projectModal').style.display = 'none';
         }
 
+        // Open configuration modal
+        function openConfigModal() {
+            document.getElementById('taskMode').value = config.taskMode;
+            populateCategoriesList();
+            populateResourceGroupsList();
+            document.getElementById('configModal').style.display = 'block';
+        }
+
+        // Close configuration modal
+        function closeConfigModal() {
+            document.getElementById('configModal').style.display = 'none';
+        }
+
+        // Populate categories list
+        function populateCategoriesList() {
+            const categoriesList = document.getElementById('categoriesList');
+            categoriesList.innerHTML = '';
+            
+            config.categories.forEach((category, index) => {
+                const div = document.createElement('div');
+                div.style.cssText = 'display: flex; align-items: center; gap: 10px; margin: 5px 0; padding: 5px; background: #f8f9fa; border-radius: 4px;';
+                div.innerHTML = `
+                    <span style="flex: 1;">${category}</span>
+                    <button type="button" class="btn btn-danger" onclick="removeCategory(${index})" style="padding: 2px 8px; font-size: 0.8rem;">Remove</button>
+                `;
+                categoriesList.appendChild(div);
+            });
+        }
+
+        // Populate resource groups list
+        function populateResourceGroupsList() {
+            const resourceGroupsList = document.getElementById('resourceGroupsList');
+            resourceGroupsList.innerHTML = '';
+            
+            config.resourceGroups.forEach((group, index) => {
+                const div = document.createElement('div');
+                div.style.cssText = 'display: flex; align-items: center; gap: 10px; margin: 5px 0; padding: 5px; background: #f8f9fa; border-radius: 4px;';
+                div.innerHTML = `
+                    <span style="flex: 1;">${group}</span>
+                    <button type="button" class="btn btn-danger" onclick="removeResourceGroup(${index})" style="padding: 2px 8px; font-size: 0.8rem;">Remove</button>
+                `;
+                resourceGroupsList.appendChild(div);
+            });
+        }
+
+        // Add category
+        function addCategory() {
+            const newCategory = document.getElementById('newCategory').value.trim();
+            if (newCategory && !config.categories.includes(newCategory)) {
+                config.categories.push(newCategory);
+                populateCategoriesList();
+                document.getElementById('newCategory').value = '';
+                saveDataToStorage();
+            }
+        }
+
+        // Remove category
+        function removeCategory(index) {
+            config.categories.splice(index, 1);
+            populateCategoriesList();
+            saveDataToStorage();
+        }
+
+        // Add resource group
+        function addResourceGroup() {
+            const newGroup = document.getElementById('newResourceGroup').value.trim();
+            if (newGroup && !config.resourceGroups.includes(newGroup)) {
+                config.resourceGroups.push(newGroup);
+                populateResourceGroupsList();
+                document.getElementById('newResourceGroup').value = '';
+                saveDataToStorage();
+            }
+        }
+
+        // Remove resource group
+        function removeResourceGroup(index) {
+            config.resourceGroups.splice(index, 1);
+            populateResourceGroupsList();
+            saveDataToStorage();
+        }
+
         // Handle task form submission
         document.getElementById('taskForm').addEventListener('submit', function(e) {
             e.preventDefault();
@@ -1789,6 +1899,55 @@
             closeProjectModal();
             saveDataToStorage(); // Save to localStorage
         });
+
+        // Handle configuration form submission
+        document.getElementById('configForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            config.taskMode = document.getElementById('taskMode').value;
+            
+            // Update category dropdowns
+            updateCategoryDropdowns();
+            updateResourceGroupDropdowns();
+            
+            closeConfigModal();
+            saveDataToStorage();
+            
+            const saveStatus = document.getElementById('saveStatus');
+            saveStatus.textContent = '⚙️ Configuration Saved';
+            saveStatus.style.color = '#6f42c1';
+            
+            setTimeout(() => {
+                saveStatus.textContent = '💾 Auto-saved';
+                saveStatus.style.color = '#6c757d';
+            }, 2000);
+        });
+
+        // Update category dropdowns
+        function updateCategoryDropdowns() {
+            const categorySelects = document.querySelectorAll('#taskCategory, #bulkCategory');
+            categorySelects.forEach(select => {
+                const currentValue = select.value;
+                select.innerHTML = '<option value="">Select Category</option>';
+                config.categories.forEach(category => {
+                    select.innerHTML += `<option value="${category}">${category}</option>`;
+                });
+                select.value = currentValue;
+            });
+        }
+
+        // Update resource group dropdowns
+        function updateResourceGroupDropdowns() {
+            const resourceGroupSelects = document.querySelectorAll('#taskResourceGroup, #bulkResourceGroup');
+            resourceGroupSelects.forEach(select => {
+                const currentValue = select.value;
+                select.innerHTML = '<option value="">Select Group</option>';
+                config.resourceGroups.forEach(group => {
+                    select.innerHTML += `<option value="${group}">${group}</option>`;
+                });
+                select.value = currentValue;
+            });
+        }
 
         // Export table
         function exportTable() {
