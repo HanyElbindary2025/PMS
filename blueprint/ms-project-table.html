@@ -2028,11 +2028,54 @@
             input.click();
         }
 
+        // Format date from various formats to YYYY-MM-DD
+        function formatDate(dateStr) {
+            if (!dateStr || dateStr.trim() === '') return '';
+            
+            // Handle MM/DD/YYYY format
+            if (dateStr.includes('/')) {
+                const parts = dateStr.split('/');
+                if (parts.length === 3) {
+                    const month = parts[0].padStart(2, '0');
+                    const day = parts[1].padStart(2, '0');
+                    const year = parts[2];
+                    return `${year}-${month}-${day}`;
+                }
+            }
+            
+            // Handle DD/MM/YYYY format
+            if (dateStr.includes('/') && dateStr.split('/')[0].length > 2) {
+                const parts = dateStr.split('/');
+                if (parts.length === 3) {
+                    const day = parts[0].padStart(2, '0');
+                    const month = parts[1].padStart(2, '0');
+                    const year = parts[2];
+                    return `${year}-${month}-${day}`;
+                }
+            }
+            
+            // If already in YYYY-MM-DD format, return as is
+            if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                return dateStr;
+            }
+            
+            return dateStr; // Return original if can't parse
+        }
+
         // Import from CSV
         function importFromCSV(csvText) {
             try {
-                const lines = csvText.split('\n');
+                console.log('Starting CSV import...');
+                const lines = csvText.split('\n').filter(line => line.trim() !== '');
+                console.log('CSV lines:', lines);
+                
+                if (lines.length < 2) {
+                    alert('CSV file must have at least a header row and one data row.');
+                    return;
+                }
+                
                 const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+                console.log('CSV headers:', headers);
                 
                 const importedTasks = [];
                 let maxId = Math.max(...tasks.map(t => t.id), 0);
@@ -2042,28 +2085,42 @@
                     if (!line) continue;
                     
                     const values = line.split(',').map(v => v.trim().replace(/"/g, ''));
-                    if (values.length < headers.length) continue;
+                    console.log(`Processing line ${i}:`, values);
+                    
+                    if (values.length < headers.length) {
+                        console.warn(`Line ${i} has fewer values than headers, skipping`);
+                        continue;
+                    }
                     
                     const taskData = {};
                     headers.forEach((header, index) => {
                         const value = values[index] || '';
-                        switch (header.toLowerCase()) {
+                        const headerLower = header.toLowerCase().trim();
+                        
+                        switch (headerLower) {
                             case 'task name':
-                                taskData.taskName = value;
+                                taskData.taskName = value.trim();
                                 break;
                             case 'task type':
-                                taskData.taskType = value.toLowerCase() === 'subtask' ? 'subtask' : 'task';
+                                // Convert old types to new simplified types
+                                if (value.toLowerCase() === 'subtask') {
+                                    taskData.taskType = 'subtask';
+                                } else if (value.toLowerCase() === 'summary') {
+                                    taskData.taskType = 'task'; // Convert summary to task
+                                } else {
+                                    taskData.taskType = 'task'; // Default to task
+                                }
                                 break;
                             case 'project':
                                 // Find project by name
-                                const project = projects.find(p => p.name === value);
+                                const project = projects.find(p => p.name === value.trim());
                                 taskData.projectId = project ? project.id : 1;
                                 break;
                             case 'category':
-                                taskData.category = value;
+                                taskData.category = value.trim();
                                 break;
                             case 'status':
-                                taskData.status = value || 'Not Started';
+                                taskData.status = value.trim() || 'Not Started';
                                 break;
                             case '% complete':
                                 taskData.percentComplete = parseInt(value) || 0;
@@ -2072,22 +2129,22 @@
                                 taskData.duration = parseInt(value) || 0;
                                 break;
                             case 'start date':
-                                taskData.startDate = value;
+                                taskData.startDate = formatDate(value);
                                 break;
                             case 'finish date':
-                                taskData.finishDate = value;
+                                taskData.finishDate = formatDate(value);
                                 break;
                             case 'deadline':
-                                taskData.deadline = value;
+                                taskData.deadline = formatDate(value);
                                 break;
                             case 'resource names':
-                                taskData.resourceNames = value;
+                                taskData.resourceNames = value.trim();
                                 break;
                             case 'resource group':
-                                taskData.resourceGroup = value;
+                                taskData.resourceGroup = value.trim();
                                 break;
                             case 'notes':
-                                taskData.notes = value;
+                                taskData.notes = value.trim();
                                 break;
                             case 'milestone':
                                 taskData.isMilestone = value.toLowerCase() === 'true' || value === '1';
@@ -2098,17 +2155,25 @@
                         }
                     });
                     
-                    if (taskData.taskName) {
+                    console.log('Processed task data:', taskData);
+                    
+                    if (taskData.taskName && taskData.taskName.trim() !== '') {
                         maxId++;
                         importedTasks.push({
                             id: maxId,
                             parentId: null,
                             isExpanded: true,
                             predecessors: '',
+                            taskMode: 'manual', // Default task mode
                             ...taskData
                         });
+                        console.log(`Added task: ${taskData.taskName}`);
+                    } else {
+                        console.warn(`Skipping task with empty name at line ${i}`);
                     }
                 }
+                
+                console.log('Total imported tasks:', importedTasks.length);
                 
                 if (importedTasks.length > 0) {
                     tasks = [...tasks, ...importedTasks];
@@ -2124,12 +2189,14 @@
                         saveStatus.textContent = '💾 Auto-saved';
                         saveStatus.style.color = '#6c757d';
                     }, 2000);
+                    
+                    alert(`Successfully imported ${importedTasks.length} tasks!`);
                 } else {
-                    alert('No valid tasks found in the CSV file.');
+                    alert('No valid tasks found in the CSV file. Please check the format and ensure task names are not empty.');
                 }
             } catch (error) {
                 console.error('Import error:', error);
-                alert('Error importing CSV file. Please check the format.');
+                alert(`Error importing CSV file: ${error.message}. Please check the format.`);
             }
         }
 
