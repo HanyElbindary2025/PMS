@@ -590,8 +590,6 @@
                             <th>Duration</th>
                             <th>Start</th>
                             <th>Finish</th>
-                            <th>Late Start</th>
-                            <th>Late Finish</th>
                             <th>Predecessors</th>
                             <th>Deadline</th>
                             <th>Resource Names</th>
@@ -625,8 +623,8 @@
                     <label>Task Type:</label>
                     <select id="taskType" onchange="updateTaskTypeOptions()">
                         <option value="project">Project (Orange)</option>
-                        <option value="summary">Summary Task (Blue)</option>
-                        <option value="subtask">Subtask (Normal)</option>
+                        <option value="summary">Summary Task (Blue - Parent)</option>
+                        <option value="subtask">Subtask (Normal - Child)</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -679,15 +677,16 @@
                 </div>
                 <div class="form-group">
                     <label>Duration (days):</label>
-                    <input type="number" id="taskDuration" min="0">
+                    <input type="number" id="taskDuration" min="0" readonly style="background: #f8f9fa;">
+                    <small style="color: #666;">Auto-calculated from start and finish dates</small>
                 </div>
                 <div class="form-group">
                     <label>Start Date:</label>
-                    <input type="date" id="taskStartDate">
+                    <input type="date" id="taskStartDate" onchange="calculateDuration()">
                 </div>
                 <div class="form-group">
                     <label>Finish Date:</label>
-                    <input type="date" id="taskFinishDate">
+                    <input type="date" id="taskFinishDate" onchange="calculateDuration()">
                 </div>
                 <div class="form-group">
                     <label>Deadline:</label>
@@ -739,7 +738,7 @@
     </div>
 
     <script>
-        // Sample data with proper hierarchy
+        // Sample data with proper hierarchy - simplified for testing
         let tasks = [
             // Project Level (Orange)
             {
@@ -754,11 +753,9 @@
                 isActive: true,
                 percentComplete: 70,
                 status: "Late",
-                duration: 30,
+                duration: 31,
                 startDate: "2024-12-01",
                 finishDate: "2024-12-31",
-                lateStartDate: "2024-12-01",
-                lateFinishDate: "2024-12-31",
                 predecessors: "",
                 deadline: "2024-12-31",
                 resourceNames: "John Doe, Sarah Miller",
@@ -781,173 +778,11 @@
                 duration: 10,
                 startDate: "2024-12-01",
                 finishDate: "2024-12-10",
-                lateStartDate: "2024-12-01",
-                lateFinishDate: "2024-12-10",
                 predecessors: "",
                 deadline: "2024-12-10",
                 resourceNames: "John Doe",
                 resourceGroup: "Development Team",
                 isExpanded: true
-            },
-            // Subtask Level
-            {
-                id: 3,
-                projectId: 1,
-                parentId: 2,
-                taskName: "Analysis",
-                taskType: "subtask",
-                category: "Development",
-                notes: "Project analysis phase",
-                isMilestone: false,
-                isActive: true,
-                percentComplete: 100,
-                status: "Completed",
-                duration: 5,
-                startDate: "2024-12-01",
-                finishDate: "2024-12-05",
-                lateStartDate: "2024-12-01",
-                lateFinishDate: "2024-12-05",
-                predecessors: "",
-                deadline: "2024-12-05",
-                resourceNames: "John Doe",
-                resourceGroup: "Development Team"
-            },
-            {
-                id: 4,
-                projectId: 1,
-                parentId: 2,
-                taskName: "RAT Meeting",
-                taskType: "subtask",
-                category: "Development",
-                notes: "Requirements and Architecture Team meeting",
-                isMilestone: false,
-                isActive: true,
-                percentComplete: 100,
-                status: "Completed",
-                duration: 1,
-                startDate: "2024-12-06",
-                finishDate: "2024-12-06",
-                lateStartDate: "2024-12-06",
-                lateFinishDate: "2024-12-06",
-                predecessors: "3",
-                deadline: "2024-12-06",
-                resourceNames: "John Doe, Sarah Miller",
-                resourceGroup: "Development Team"
-            },
-            // Another Summary Task
-            {
-                id: 5,
-                projectId: 1,
-                parentId: 1,
-                taskName: "Phase 2: Development",
-                taskType: "summary",
-                category: "Development",
-                notes: "Development phase summary",
-                isMilestone: false,
-                isActive: true,
-                percentComplete: 60,
-                status: "Late",
-                duration: 15,
-                startDate: "2024-12-11",
-                finishDate: "2024-12-25",
-                lateStartDate: "2024-12-11",
-                lateFinishDate: "2024-12-25",
-                predecessors: "2",
-                deadline: "2024-12-25",
-                resourceNames: "John Doe, Alex Lee",
-                resourceGroup: "Development Team",
-                isExpanded: true
-            },
-            {
-                id: 6,
-                projectId: 1,
-                parentId: 5,
-                taskName: "Frontend Development",
-                taskType: "subtask",
-                category: "Development",
-                notes: "Frontend development work",
-                isMilestone: false,
-                isActive: true,
-                percentComplete: 80,
-                status: "In Progress",
-                duration: 8,
-                startDate: "2024-12-11",
-                finishDate: "2024-12-18",
-                lateStartDate: "2024-12-11",
-                lateFinishDate: "2024-12-18",
-                predecessors: "4",
-                deadline: "2024-12-18",
-                resourceNames: "Alex Lee",
-                resourceGroup: "Development Team"
-            },
-            {
-                id: 7,
-                projectId: 1,
-                parentId: 5,
-                taskName: "Backend Development",
-                taskType: "subtask",
-                category: "Development",
-                notes: "Backend development work",
-                isMilestone: false,
-                isActive: true,
-                percentComplete: 40,
-                status: "Late",
-                duration: 7,
-                startDate: "2024-12-19",
-                finishDate: "2024-12-25",
-                lateStartDate: "2024-12-19",
-                lateFinishDate: "2024-12-25",
-                predecessors: "6",
-                deadline: "2024-12-25",
-                resourceNames: "John Doe",
-                resourceGroup: "Development Team"
-            },
-            // Another Project
-            {
-                id: 8,
-                projectId: 2,
-                parentId: null,
-                taskName: "Etisalat Project",
-                taskType: "project",
-                category: "Project",
-                notes: "Main Etisalat project",
-                isMilestone: false,
-                isActive: true,
-                percentComplete: 0,
-                status: "Late",
-                duration: 25,
-                startDate: "2024-12-15",
-                finishDate: "2025-01-10",
-                lateStartDate: "2024-12-15",
-                lateFinishDate: "2025-01-10",
-                predecessors: "",
-                deadline: "2025-01-10",
-                resourceNames: "Mike Chen",
-                resourceGroup: "Development Team",
-                isExpanded: false
-            },
-            {
-                id: 9,
-                projectId: 2,
-                parentId: 8,
-                taskName: "Phase 1: Analysis",
-                taskType: "summary",
-                category: "Analysis",
-                notes: "Etisalat analysis phase",
-                isMilestone: false,
-                isActive: true,
-                percentComplete: 0,
-                status: "Late",
-                duration: 5,
-                startDate: "2024-12-15",
-                finishDate: "2024-12-19",
-                lateStartDate: "2024-12-15",
-                lateFinishDate: "2024-12-19",
-                predecessors: "",
-                deadline: "2024-12-19",
-                resourceNames: "Mike Chen",
-                resourceGroup: "Development Team",
-                isExpanded: false
             }
         ];
 
@@ -1102,10 +937,8 @@
                     </select>
                 </td>
                 <td><input type="number" class="text-input" value="${task.duration || ''}" onchange="updateTask(${task.id}, 'duration', parseInt(this.value))"></td>
-                <td><input type="date" class="date-input" value="${task.startDate || ''}" onchange="updateTask(${task.id}, 'startDate', this.value)"></td>
-                <td><input type="date" class="date-input" value="${task.finishDate || ''}" onchange="updateTask(${task.id}, 'finishDate', this.value)"></td>
-                <td><input type="date" class="date-input" value="${task.lateStartDate || ''}" onchange="updateTask(${task.id}, 'lateStartDate', this.value)"></td>
-                <td><input type="date" class="date-input" value="${task.lateFinishDate || ''}" onchange="updateTask(${task.id}, 'lateFinishDate', this.value)"></td>
+                <td><input type="date" class="date-input" value="${task.startDate || ''}" onchange="updateTaskWithDuration(${task.id}, 'startDate', this.value)"></td>
+                <td><input type="date" class="date-input" value="${task.finishDate || ''}" onchange="updateTaskWithDuration(${task.id}, 'finishDate', this.value)"></td>
                 <td><input type="text" class="text-input" value="${task.predecessors || ''}" onchange="updateTask(${task.id}, 'predecessors', this.value)"></td>
                 <td><input type="date" class="date-input" value="${task.deadline || ''}" onchange="updateTask(${task.id}, 'deadline', this.value)"></td>
                 <td><input type="text" class="text-input" value="${task.resourceNames || ''}" onchange="updateTask(${task.id}, 'resourceNames', this.value)"></td>
@@ -1157,6 +990,45 @@
                 task[field] = value;
                 console.log(`Updated task ${taskId}: ${field} = ${value}`);
                 // Here you would save to database
+            }
+        }
+
+        // Update task field and recalculate duration
+        function updateTaskWithDuration(taskId, field, value) {
+            const task = tasks.find(t => t.id === taskId);
+            if (task) {
+                task[field] = value;
+                
+                // Recalculate duration if start or finish date changed
+                if (field === 'startDate' || field === 'finishDate') {
+                    if (task.startDate && task.finishDate) {
+                        const start = new Date(task.startDate);
+                        const finish = new Date(task.finishDate);
+                        const diffTime = Math.abs(finish - start);
+                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // +1 to include both start and end days
+                        task.duration = diffDays;
+                    }
+                }
+                
+                console.log(`Updated task ${taskId}: ${field} = ${value}, duration = ${task.duration}`);
+                // Here you would save to database
+            }
+        }
+
+        // Calculate duration in modal
+        function calculateDuration() {
+            const startDate = document.getElementById('taskStartDate').value;
+            const finishDate = document.getElementById('taskFinishDate').value;
+            const durationField = document.getElementById('taskDuration');
+            
+            if (startDate && finishDate) {
+                const start = new Date(startDate);
+                const finish = new Date(finishDate);
+                const diffTime = Math.abs(finish - start);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // +1 to include both start and end days
+                durationField.value = diffDays;
+            } else {
+                durationField.value = '';
             }
         }
 
@@ -1351,7 +1223,7 @@
                 isActive: document.getElementById('taskActive').checked,
                 percentComplete: parseInt(document.getElementById('taskPercentComplete').value),
                 status: document.getElementById('taskStatus').value,
-                duration: parseInt(document.getElementById('taskDuration').value) || null,
+                duration: parseInt(document.getElementById('taskDuration').value) || 0,
                 startDate: document.getElementById('taskStartDate').value,
                 finishDate: document.getElementById('taskFinishDate').value,
                 deadline: document.getElementById('taskDeadline').value,
@@ -1396,16 +1268,28 @@
 
         // Export table
         function exportTable() {
-            const data = tasks.map(task => ({
+            // Only export tasks that actually exist (not empty array)
+            const validTasks = tasks.filter(task => task.taskName && task.taskName.trim() !== '');
+            
+            if (validTasks.length === 0) {
+                alert('No tasks to export');
+                return;
+            }
+
+            const data = validTasks.map(task => ({
                 'Task Name': task.taskName,
+                'Task Type': task.taskType || 'subtask',
                 'Project': projects.find(p => p.id === task.projectId)?.name || '',
                 'Category': task.category || '',
                 'Status': task.status,
                 '% Complete': task.percentComplete,
+                'Duration': task.duration || '',
                 'Start Date': task.startDate || '',
                 'Finish Date': task.finishDate || '',
+                'Deadline': task.deadline || '',
                 'Resource Names': task.resourceNames || '',
-                'Resource Group': task.resourceGroup || ''
+                'Resource Group': task.resourceGroup || '',
+                'Notes': task.notes || ''
             }));
 
             const csv = [
