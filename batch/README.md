@@ -1,76 +1,51 @@
 # PMS System - Batch Files
 
-This folder contains batch files to easily manage the PMS system.
+This folder contains batch files for easy management of the PMS system.
 
-## 🚀 **Quick Start:**
+## Available Commands
 
-### **Start Everything:**
-```bash
-batch\start-all.bat
-```
-This will:
-- Stop any existing processes
-- Start the backend server (Node.js)
-- Start the Flutter frontend
-- Open your browser automatically
+### 🚀 **start-all.bat**
+- Starts both backend and frontend services
+- Sets up environment variables
+- Opens both services in separate windows
+- **Usage**: Double-click or run from command line
 
-### **Stop Everything:**
-```bash
-batch\stop-all.bat
-```
-This will stop all running services.
+### 🛑 **stop-all.bat**
+- Stops all running services (Node.js, Flutter, Dart)
+- Cleans up all processes
+- **Usage**: Double-click or run from command line
 
-### **Test System:**
-```bash
-batch\test-system.bat
-```
-This will test if the backend is running correctly.
+### 🗄️ **open-database.bat**
+- Opens Prisma Studio for database management
+- Access at: http://localhost:5555
+- **Usage**: Double-click or run from command line
 
-### **Database Management:**
-```bash
-batch\open-database.bat
-```
-Opens Prisma Studio in your browser to view/edit database data.
+### 🧪 **test-system.bat**
+- Tests if all services are running
+- Checks backend, frontend, and database studio
+- **Usage**: Double-click or run from command line
 
-```bash
-batch\database-status.bat
-```
-Checks database status and fixes common issues.
+## System URLs
 
-```bash
-batch\reset-database.bat
-```
-Resets the database (WARNING: deletes all data).
-
-## 🌐 **System URLs:**
-- **Backend**: http://localhost:3000
-- **Frontend**: http://localhost:8080
+- **Main Application**: http://localhost:8080
+- **Backend API**: http://localhost:3000
 - **Database Studio**: http://localhost:5555
 
-## 👥 **Test Accounts:**
-- **admin@pms.com** (Admin - Full permissions)
-- **developer@pms.com** (Developer)
-- **qa@pms.com** (QA Engineer)
+## Test Accounts
 
-## 📋 **Manual Commands:**
+- `admin@pms.com` (Admin - Full access)
+- `developer@pms.com` (Developer - Development tasks)
+- `qa@pms.com` (QA Engineer - Testing tasks)
 
-If you prefer to run manually:
+## Quick Start
 
-### **Backend:**
-```bash
-npm run dev
-```
+1. **Start System**: Run `start-all.bat`
+2. **Wait 30 seconds** for services to start
+3. **Open Browser**: Go to http://localhost:8080
+4. **Login**: Use any test account above
 
-### **Frontend:**
-```bash
-cd pms_app
-flutter run -d web-server --web-port 8080
-```
+## Troubleshooting
 
-## 🔧 **Troubleshooting:**
-
-If you get errors:
-1. Run `batch\stop-all.bat` first
-2. Then run `batch\start-all.bat`
-3. Wait for both services to start completely
-4. Open http://localhost:8080 in your browser
+- **Port conflicts**: Run `stop-all.bat` first, then `start-all.bat`
+- **Database issues**: Run `open-database.bat` to check database
+- **Service status**: Run `test-system.bat` to verify all services

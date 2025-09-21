@@ -1,20 +1,17 @@
 @echo off
-title PMS System - Stop All Services
+title PMS System - Quick Stop
 color 0C
 
 echo.
 echo ========================================
-echo    PMS System - Stopping All Services
+echo    PMS System - Quick Stop
 echo ========================================
 echo.
 
-echo Stopping all processes...
-taskkill /f /im node.exe >nul 2>&1
-taskkill /f /im flutter.exe >nul 2>&1
-taskkill /f /im dart.exe >nul 2>&1
+echo Stopping PMS System...
+call batch\stop-all.bat
 
 echo.
-echo ✅ All services stopped successfully!
+echo System stopped!
 echo.
-echo Press any key to exit...
-pause >nul
+pause
