@@ -1,0 +1,139 @@
+// Prisma schema for PMS production (PostgreSQL)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Lookup {
+  id        String   @id @default(cuid())
+  type      String   // e.g., PROJECT, PLATFORM, CATEGORY, PRIORITY
+  value     String
+  order     Int      @default(0)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([type, value])
+  @@index([type, value])
+}
+
+model User {
+  id          String   @id @default(cuid())
+  email       String   @unique
+  name        String
+  role        String   // ADMIN, SERVICE_MANAGER, SERVICE_DESK, TECHNICAL_ANALYST, DEVELOPER, QA_ENGINEER, etc.
+  department  String?
+  phone       String?
+  isActive    Boolean  @default(true)
+  lastLoginAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  assignedTickets Ticket[] @relation("AssignedTickets")
+  createdTickets  Ticket[] @relation("CreatedTickets")
+
+  @@index([email])
+  @@index([role])
+}
+
+model Ticket {
+  id              String   @id @default(cuid())
+  ticketNumber    String   @unique // PDS-yyyy-m-dd-0000000
+  title           String
+  description     String
+  requesterEmail  String
+  requesterName   String?
+  status          String   @default("SUBMITTED")
+  totalSlaHours   Int?
+  details         String?
+  
+  // Enhanced ITSM fields
+  priority        String?  // HIGH, MEDIUM, LOW
+  impact          String?  // HIGH, MEDIUM, LOW
+  urgency         String?  // HIGH, MEDIUM, LOW
+  category        String?  // INCIDENT, REQUEST, CHANGE, PROBLEM
+  subcategory     String?
+  service         String?
+  businessJustification String?
+  businessValue   String?
+  riskAssessment  String?
+  technicalAnalysis String?
+  dependencies    String?
+  effortEstimate  String?
+  architecture    String?
+  currentPhase    String?
+  progressPercentage Int?  @default(0)
+  blockers        String?
+  slaBreachRisk   String?  // LOW, MEDIUM, HIGH
+  qualityGates    String?
+  acceptanceCriteria String?
+  testResults     String?
+  closureReason   String?
+  lessonsLearned  String?
+  customerSatisfaction String?
+  
+  // Team Assignment fields
+  assignedToId    String?  // Current assignee
+  assignedTo      User?    @relation("AssignedTickets", fields: [assignedToId], references: [id])
+  createdById     String?  // Who created the ticket (if internal)
+  createdBy       User?    @relation("CreatedTickets", fields: [createdById], references: [id])
+  teamMembers     String?  // JSON array of team member IDs
+  escalationLevel Int?     @default(0) // 0 = normal, 1 = escalated, 2 = critical
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  stages          Stage[]
+  attachments     Attachment[]
+  
+  @@index([assignedToId])
+  @@index([status, assignedToId])
+}
+
+model Stage {
+  id         String   @id @default(cuid())
+  ticketId   String
+  ticket     Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  name       String
+  key        String
+  order      Int
+  startedAt  DateTime
+  dueAt      DateTime?
+  completedAt DateTime?
+  slaHours   Int?
+  decision   String?   // APPROVE or REJECT where applicable
+  comment    String?
+  
+  // Enhanced phase-specific data
+  phaseData  String?   // JSON string for phase-specific fields
+  assignee   String?   // Who is responsible for this phase
+  approver   String?   // Who approved this phase
+  attachments String?  // JSON array of attachment IDs for this phase
+
+  @@index([ticketId, order])
+}
+
+model Attachment {
+  id          String   @id @default(cuid())
+  ticketId    String
+  ticket      Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  stageId     String?  // Optional: specific to a stage
+  fileName    String
+  originalName String
+  fileSize    Int
+  mimeType    String
+  filePath    String
+  category    String?  // Requirements, Design, Testing, etc.
+  description String?
+  uploadedBy  String
+  uploadedAt  DateTime @default(now())
+  
+  @@index([ticketId])
+  @@index([stageId])
+}
