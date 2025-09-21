@@ -1052,7 +1052,7 @@
                 taskNameClass = 'summary-task';
                 const expandIcon = task.isExpanded ? '▼' : '▶';
                 taskNameContent = `
-                    <button class="expand-collapse-btn" onclick="toggleTaskExpansion(${task.id})">${expandIcon}</button>
+                    <button class="expand-collapse-btn" onclick="toggleTaskExpansion(${task.id}); event.stopPropagation();" title="Click to ${task.isExpanded ? 'collapse' : 'expand'}">${expandIcon}</button>
                     ${task.taskName}
                 `;
             } else {
@@ -1135,10 +1135,32 @@
 
         // Toggle task expansion
         function toggleTaskExpansion(taskId) {
+            console.log(`toggleTaskExpansion called with taskId: ${taskId}`);
+            console.log(`Current tasks count: ${tasks.length}`);
+            
+            // Create backup before making changes
+            const tasksBackup = JSON.parse(JSON.stringify(tasks));
+            
             const task = tasks.find(t => t.id === taskId);
             if (task) {
+                console.log(`Found task: "${task.taskName}", current isExpanded: ${task.isExpanded}`);
                 task.isExpanded = !task.isExpanded;
-                populateTaskTable();
+                console.log(`New isExpanded: ${task.isExpanded}`);
+                
+                try {
+                    populateTaskTable();
+                    saveDataToStorage(); // Save the expansion state
+                    console.log(`Toggled expansion for task "${task.taskName}" to ${task.isExpanded}`);
+                } catch (error) {
+                    console.error('Error during expansion toggle:', error);
+                    // Restore backup if something went wrong
+                    tasks = tasksBackup;
+                    populateTaskTable();
+                    alert('Error occurred. Data restored to previous state.');
+                }
+            } else {
+                console.error(`Task with id ${taskId} not found!`);
+                console.log('Available task IDs:', tasks.map(t => t.id));
             }
         }
 
