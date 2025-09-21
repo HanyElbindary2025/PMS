@@ -666,6 +666,14 @@
                     </select>
                 </div>
                 <div class="form-group">
+                    <label>Task Mode:</label>
+                    <select id="taskTaskMode">
+                        <option value="manual">Manual</option>
+                        <option value="auto">Auto (MS Project Style)</option>
+                    </select>
+                    <small style="color: #666;">Auto mode handles scheduling like MS Project</small>
+                </div>
+                <div class="form-group">
                     <label>Parent Task (for subtasks and summary tasks):</label>
                     <select id="taskParent">
                         <option value="">None (Top Level)</option>
@@ -790,6 +798,15 @@
                         <option value="auto">Auto (MS Project Style)</option>
                     </select>
                     <small style="color: #666;">Auto mode handles scheduling like MS Project</small>
+                </div>
+                
+                <div class="form-group">
+                    <label>Task Mode for New Tasks:</label>
+                    <select id="newTaskMode">
+                        <option value="manual">Manual</option>
+                        <option value="auto">Auto (MS Project Style)</option>
+                    </select>
+                    <small style="color: #666;">Default mode for new tasks</small>
                 </div>
                 
                 <div class="form-group">
@@ -944,6 +961,7 @@
         // Configuration variables
         let config = {
             taskMode: 'manual', // 'manual' or 'auto'
+            newTaskMode: 'manual', // default mode for new tasks
             categories: ['Development', 'Testing', 'Design', 'Documentation', 'Planning'],
             resourceGroups: ['Development Team', 'QA Team', 'Design Team', 'Management']
         };
@@ -1404,7 +1422,7 @@
             let parentTask = null;
             for (let i = currentIndex - 1; i >= 0; i--) {
                 const prevTask = tasks[i];
-                if (prevTask.taskType === 'project' || prevTask.taskType === 'summary') {
+                if (prevTask.taskType === 'task') {
                     parentTask = prevTask;
                     break;
                 }
@@ -1428,16 +1446,9 @@
             const parent = tasks.find(t => t.id === task.parentId);
             if (!parent) return;
             
-            // If parent is a project, make this a summary task
-            // If parent is a summary task, make this a summary task too
-            if (parent.taskType === 'project') {
-                task.taskType = 'summary';
-                task.parentId = parent.id; // Keep same parent
-            } else {
-                // Make it a sibling of the parent
-                task.parentId = parent.parentId;
-                task.taskType = 'summary';
-            }
+            // Make it a sibling of the parent (same level as parent)
+            task.parentId = parent.parentId;
+            task.taskType = 'task';
             
             console.log(`Outdented task "${task.taskName}"`);
             populateTaskTable();
@@ -1701,6 +1712,7 @@
             document.getElementById('modalTitle').textContent = 'Add New Task';
             document.getElementById('taskForm').reset();
             document.getElementById('taskActive').checked = true;
+            document.getElementById('taskTaskMode').value = config.newTaskMode;
             document.getElementById('taskModal').style.display = 'block';
         }
 
@@ -1712,6 +1724,7 @@
                 document.getElementById('modalTitle').textContent = 'Edit Task';
                 document.getElementById('taskProject').value = task.projectId;
                 document.getElementById('taskType').value = task.taskType || 'subtask';
+                document.getElementById('taskTaskMode').value = task.taskMode || 'manual';
                 document.getElementById('taskParent').value = task.parentId || '';
                 document.getElementById('taskName').value = task.taskName;
                 document.getElementById('taskCategory').value = task.category || '';
@@ -1762,6 +1775,7 @@
         // Open configuration modal
         function openConfigModal() {
             document.getElementById('taskMode').value = config.taskMode;
+            document.getElementById('newTaskMode').value = config.newTaskMode;
             populateCategoriesList();
             populateResourceGroupsList();
             document.getElementById('configModal').style.display = 'block';
@@ -1849,6 +1863,7 @@
                 parentId: document.getElementById('taskParent').value ? parseInt(document.getElementById('taskParent').value) : null,
                 taskName: document.getElementById('taskName').value,
                 taskType: document.getElementById('taskType').value,
+                taskMode: document.getElementById('taskTaskMode').value,
                 category: document.getElementById('taskCategory').value,
                 notes: document.getElementById('taskNotes').value,
                 isMilestone: document.getElementById('taskMilestone').checked,
@@ -1905,6 +1920,7 @@
             e.preventDefault();
             
             config.taskMode = document.getElementById('taskMode').value;
+            config.newTaskMode = document.getElementById('newTaskMode').value;
             
             // Update category dropdowns
             updateCategoryDropdowns();
@@ -1989,9 +2005,132 @@
             window.URL.revokeObjectURL(url);
         }
 
-        // Import table
+        // Import table from Excel/CSV
         function importTable() {
-            alert('Import functionality would be implemented here');
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.csv,.xlsx,.xls';
+            input.onchange = function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const text = e.target.result;
+                        if (file.name.endsWith('.csv')) {
+                            importFromCSV(text);
+                        } else {
+                            alert('Excel files (.xlsx, .xls) are not supported yet. Please use CSV format.');
+                        }
+                    };
+                    reader.readAsText(file);
+                }
+            };
+            input.click();
+        }
+
+        // Import from CSV
+        function importFromCSV(csvText) {
+            try {
+                const lines = csvText.split('\n');
+                const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+                
+                const importedTasks = [];
+                let maxId = Math.max(...tasks.map(t => t.id), 0);
+                
+                for (let i = 1; i < lines.length; i++) {
+                    const line = lines[i].trim();
+                    if (!line) continue;
+                    
+                    const values = line.split(',').map(v => v.trim().replace(/"/g, ''));
+                    if (values.length < headers.length) continue;
+                    
+                    const taskData = {};
+                    headers.forEach((header, index) => {
+                        const value = values[index] || '';
+                        switch (header.toLowerCase()) {
+                            case 'task name':
+                                taskData.taskName = value;
+                                break;
+                            case 'task type':
+                                taskData.taskType = value.toLowerCase() === 'subtask' ? 'subtask' : 'task';
+                                break;
+                            case 'project':
+                                // Find project by name
+                                const project = projects.find(p => p.name === value);
+                                taskData.projectId = project ? project.id : 1;
+                                break;
+                            case 'category':
+                                taskData.category = value;
+                                break;
+                            case 'status':
+                                taskData.status = value || 'Not Started';
+                                break;
+                            case '% complete':
+                                taskData.percentComplete = parseInt(value) || 0;
+                                break;
+                            case 'duration':
+                                taskData.duration = parseInt(value) || 0;
+                                break;
+                            case 'start date':
+                                taskData.startDate = value;
+                                break;
+                            case 'finish date':
+                                taskData.finishDate = value;
+                                break;
+                            case 'deadline':
+                                taskData.deadline = value;
+                                break;
+                            case 'resource names':
+                                taskData.resourceNames = value;
+                                break;
+                            case 'resource group':
+                                taskData.resourceGroup = value;
+                                break;
+                            case 'notes':
+                                taskData.notes = value;
+                                break;
+                            case 'milestone':
+                                taskData.isMilestone = value.toLowerCase() === 'true' || value === '1';
+                                break;
+                            case 'active':
+                                taskData.isActive = value.toLowerCase() !== 'false' && value !== '0';
+                                break;
+                        }
+                    });
+                    
+                    if (taskData.taskName) {
+                        maxId++;
+                        importedTasks.push({
+                            id: maxId,
+                            parentId: null,
+                            isExpanded: true,
+                            predecessors: '',
+                            ...taskData
+                        });
+                    }
+                }
+                
+                if (importedTasks.length > 0) {
+                    tasks = [...tasks, ...importedTasks];
+                    updateAllParentProgress();
+                    populateTaskTable();
+                    saveDataToStorage();
+                    
+                    const saveStatus = document.getElementById('saveStatus');
+                    saveStatus.textContent = `📥 Imported ${importedTasks.length} tasks`;
+                    saveStatus.style.color = '#28a745';
+                    
+                    setTimeout(() => {
+                        saveStatus.textContent = '💾 Auto-saved';
+                        saveStatus.style.color = '#6c757d';
+                    }, 2000);
+                } else {
+                    alert('No valid tasks found in the CSV file.');
+                }
+            } catch (error) {
+                console.error('Import error:', error);
+                alert('Error importing CSV file. Please check the format.');
+            }
         }
 
         // Close modals when clicking outside
