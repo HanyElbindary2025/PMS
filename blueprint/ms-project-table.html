@@ -1293,7 +1293,12 @@
                 
                 // If progress was updated, recalculate parent progress
                 if (field === 'percentComplete') {
-                    updateParentProgress(task.parentId);
+                    console.log(`Progress updated for task "${task.taskName}" (id: ${taskId}) to ${value}%, parentId: ${task.parentId}`);
+                    if (task.parentId) {
+                        updateParentProgress(task.parentId);
+                    } else {
+                        console.log('Task has no parent, skipping parent progress update');
+                    }
                     // Update progress bar color immediately
                     updateProgressBarColor(taskId, value);
                 }
@@ -1388,22 +1393,41 @@
 
         // Update parent task progress based on children
         function updateParentProgress(parentId) {
-            if (!parentId) return;
+            console.log(`updateParentProgress called with parentId: ${parentId}`);
+            
+            if (!parentId) {
+                console.log('No parentId provided, returning');
+                return;
+            }
             
             const parent = tasks.find(t => t.id === parentId);
-            if (!parent) return;
+            if (!parent) {
+                console.log(`Parent task with id ${parentId} not found`);
+                return;
+            }
+            
+            console.log(`Found parent task: "${parent.taskName}" (id: ${parent.id})`);
             
             // Find all direct children of this parent
             const children = tasks.filter(t => t.parentId === parentId);
+            console.log(`Found ${children.length} children for parent "${parent.taskName}":`, children.map(c => `${c.taskName} (${c.percentComplete}%)`));
             
-            if (children.length === 0) return;
+            if (children.length === 0) {
+                console.log('No children found, returning');
+                return;
+            }
             
             // Calculate average progress of children
             const totalProgress = children.reduce((sum, child) => sum + (child.percentComplete || 0), 0);
             const averageProgress = Math.round(totalProgress / children.length);
             
+            console.log(`Calculated average progress: ${totalProgress} / ${children.length} = ${averageProgress}%`);
+            
             // Update parent progress
+            const oldProgress = parent.percentComplete;
             parent.percentComplete = averageProgress;
+            
+            console.log(`Updated parent task "${parent.taskName}" progress from ${oldProgress}% to ${averageProgress}%`);
             
             // Update the progress bar color in the UI
             updateProgressBarColor(parent.id, averageProgress);
@@ -1411,10 +1435,9 @@
             // Update the progress input field in the UI
             updateProgressInputField(parent.id, averageProgress);
             
-            console.log(`Updated parent task "${parent.taskName}" progress to ${averageProgress}% based on ${children.length} children`);
-            
             // Recursively update grandparent if this parent has a parent
             if (parent.parentId) {
+                console.log(`Parent has grandparent, updating grandparent ${parent.parentId}`);
                 updateParentProgress(parent.parentId);
             }
             
