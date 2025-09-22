@@ -18,6 +18,23 @@ app.use(cors());
 app.use(express.json({ limit: '1mb' }));
 app.use(morgan('dev'));
 
+app.get('/', (_req: Request, res: Response) => {
+  res.json({ 
+    message: 'PMS Backend API is running!', 
+    service: 'pms-backend', 
+    version: '0.1.0',
+    endpoints: {
+      health: '/health',
+      tickets: '/tickets',
+      users: '/users',
+      lookups: '/lookups',
+      attachments: '/attachments',
+      events: '/events',
+      public: '/public'
+    }
+  });
+});
+
 app.get('/health', (_req: Request, res: Response) => {
   res.json({ ok: true, service: 'pms-backend', version: '0.1.0' });
 });
