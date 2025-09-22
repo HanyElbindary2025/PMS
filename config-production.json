@@ -1,0 +1,3 @@
+[33m9b07af3[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m, [m[1;31morigin/master[m[33m)[m fix: resolve final TypeScript error in attachments.ts
+[33m54b5f26[m fix: move all @types packages to production dependencies
+[33m3917574[m fix: move @types/node and typescript to production dependencies
