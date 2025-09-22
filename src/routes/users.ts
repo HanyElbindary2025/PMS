@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { z } from 'zod';
 
@@ -6,7 +6,7 @@ const router = Router();
 const prisma = new PrismaClient();
 
 // GET /users - Get all users with optional filtering
-router.get('/', async (req, res) => {
+router.get('/', async (req: Request, res: Response) => {
   try {
     const { role, department, active } = req.query;
     
@@ -45,7 +45,7 @@ router.get('/', async (req, res) => {
 });
 
 // GET /users/:id - Get specific user
-router.get('/:id', async (req, res) => {
+router.get('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     
@@ -97,7 +97,7 @@ const createUserSchema = z.object({
   phone: z.string().optional(),
 });
 
-router.post('/', async (req, res) => {
+router.post('/', async (req: Request, res: Response) => {
   try {
     const parse = createUserSchema.safeParse(req.body);
     if (!parse.success) {
@@ -141,7 +141,7 @@ const updateUserSchema = z.object({
   isActive: z.boolean().optional(),
 });
 
-router.put('/:id', async (req, res) => {
+router.put('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const parse = updateUserSchema.safeParse(req.body);
@@ -163,7 +163,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // DELETE /users/:id - Deactivate user (soft delete)
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     
@@ -180,7 +180,7 @@ router.delete('/:id', async (req, res) => {
 });
 
 // GET /users/roles - Get available roles
-router.get('/roles', async (req, res) => {
+router.get('/roles', async (req: Request, res: Response) => {
   const roles = [
     { value: 'ADMIN', label: 'Administrator', description: 'Full system access' },
     { value: 'SERVICE_MANAGER', label: 'Service Manager', description: 'Manages service delivery' },

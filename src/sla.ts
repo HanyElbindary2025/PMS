@@ -49,7 +49,7 @@ export function startSlaTicker(): void {
 			const mttrHours = mttrMs / (1000 * 60 * 60);
 			
 			// Emit SLA update event
-			bus.emit('event', { 
+			(bus as any).emit('event', { 
 				type: 'sla.tick', 
 				payload: { 
 					id: ticket.id,

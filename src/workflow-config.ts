@@ -373,7 +373,8 @@ export function getPhaseIcon(phase: string): string {
 }
 
 export function calculatePriority(impact: string, urgency: string): string {
-  return PRIORITY_MATRIX[`${impact}-${urgency}`] || 'MEDIUM';
+  const key = `${impact}-${urgency}` as keyof typeof PRIORITY_MATRIX;
+  return PRIORITY_MATRIX[key] || 'MEDIUM';
 }
 
 export function getSLAConfig(priority: string) {
