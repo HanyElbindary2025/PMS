@@ -2,8 +2,8 @@ import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { PrismaClient } from '@prisma/client';
 import multer from 'multer';
-import path from 'path';
-import fs from 'fs';
+import path from 'node:path';
+import fs from 'node:fs';
 import { v4 as uuidv4 } from 'uuid';
 
 export const attachmentsRouter = Router();

@@ -238,7 +238,7 @@ ticketsRouter.post('/:id/transition', async (req: Request, res: Response) => {
   if (!nexts.includes(to)) return res.status(400).json({ error: `Invalid transition from ${existing.status} to ${to}` });
 
   const now = new Date();
-  const nextOrder = (existing.stages.at(-1)?.order ?? 0) + 1;
+  const nextOrder = (existing.stages[existing.stages.length - 1]?.order ?? 0) + 1;
 
   // compute SLA hours automatically on CONFIRM_DUE if dueAt provided
   let computedSla: number | null = null;

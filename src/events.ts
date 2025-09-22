@@ -1,4 +1,4 @@
-import { EventEmitter } from 'events';
+import { EventEmitter } from 'node:events';
 
 export type TicketEvent =
 	| { type: 'ticket.created'; payload: { id: string; status: string } }

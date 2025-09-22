@@ -14,14 +14,14 @@ sseRouter.get('/stream', (req: Request, res: Response) => {
 	};
 
 	const onEvent = (evt: unknown) => write(evt);
-	bus.on('event', onEvent);
+	(bus as any).on('event', onEvent);
 
 	// heartbeat
 	const interval = setInterval(() => res.write(': keep-alive\n\n'), 15000);
 
 	req.on('close', () => {
 		clearInterval(interval);
-		bus.off('event', onEvent);
+		(bus as any).off('event', onEvent);
 	});
 });
 

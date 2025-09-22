@@ -77,7 +77,7 @@ publicRouter.post('/requests', async (req: Request, res: Response) => {
   });
 
   // emit creation event
-  bus.emit('event', { type: 'ticket.created', payload: { id: ticket.id, status: ticket.status } });
+  (bus as any).emit('event', { type: 'ticket.created', payload: { id: ticket.id, status: ticket.status } });
 
   return res.status(201).json({ id: ticket.id, status: ticket.status });
 });
