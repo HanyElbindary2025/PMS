@@ -91,14 +91,17 @@ CREATE TABLE "Stage" (
 -- CreateTable
 CREATE TABLE "Attachment" (
     "id" TEXT NOT NULL,
-    "name" TEXT NOT NULL,
-    "key" TEXT NOT NULL,
-    "size" INTEGER NOT NULL,
-    "mimetype" TEXT NOT NULL,
-    "category" TEXT,
-    "ticketId" TEXT,
+    "ticketId" TEXT NOT NULL,
     "stageId" TEXT,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "fileName" TEXT NOT NULL,
+    "originalName" TEXT NOT NULL,
+    "fileSize" INTEGER NOT NULL,
+    "mimeType" TEXT NOT NULL,
+    "filePath" TEXT NOT NULL,
+    "category" TEXT,
+    "description" TEXT,
+    "uploadedBy" TEXT NOT NULL,
+    "uploadedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "Attachment_pkey" PRIMARY KEY ("id")
 );
@@ -143,10 +146,10 @@ ALTER TABLE "Ticket" ADD CONSTRAINT "Ticket_assignedToId_fkey" FOREIGN KEY ("ass
 ALTER TABLE "Ticket" ADD CONSTRAINT "Ticket_createdById_fkey" FOREIGN KEY ("createdById") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Stage" ADD CONSTRAINT "Stage_ticketId_fkey" FOREIGN KEY ("ticketId") REFERENCES "Ticket"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Stage" ADD CONSTRAINT "Stage_ticketId_fkey" FOREIGN KEY ("ticketId") REFERENCES "Ticket"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Attachment" ADD CONSTRAINT "Attachment_ticketId_fkey" FOREIGN KEY ("ticketId") REFERENCES "Ticket"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "Attachment" ADD CONSTRAINT "Attachment_ticketId_fkey" FOREIGN KEY ("ticketId") REFERENCES "Ticket"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Attachment" ADD CONSTRAINT "Attachment_stageId_fkey" FOREIGN KEY ("stageId") REFERENCES "Stage"("id") ON DELETE SET NULL ON UPDATE CASCADE;
