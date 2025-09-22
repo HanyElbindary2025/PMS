@@ -5,13 +5,13 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "npx prisma generate && tsc -p tsconfig-production.json",
+    "build": "node ./node_modules/prisma/build/index.js generate && tsc -p tsconfig-production.json",
     "start": "node dist/index.js",
     "start:prod": "npm run build && npm run start",
-    "prisma:generate": "npx prisma generate",
-    "prisma:migrate": "npx prisma migrate dev",
-    "prisma:migrate:prod": "npx prisma migrate deploy",
-    "prisma:studio": "npx prisma studio",
+    "prisma:generate": "node ./node_modules/prisma/build/index.js generate",
+    "prisma:migrate": "node ./node_modules/prisma/build/index.js migrate dev",
+    "prisma:migrate:prod": "node ./node_modules/prisma/build/index.js migrate deploy",
+    "prisma:studio": "node ./node_modules/prisma/build/index.js studio",
     "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
