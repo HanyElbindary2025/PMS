@@ -4,6 +4,7 @@ import 'dart:html' as html;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
+import 'package:pms_app/config/app_config.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 import 'package:excel/excel.dart' as excel;
@@ -202,7 +203,7 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
 
     try {
       final res = await http.post(
-        Uri.parse('http://localhost:3000/tickets/$id/transition'),
+        Uri.parse('${AppConfig.baseUrl}/tickets/$id/transition'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode(body),
       );
@@ -764,7 +765,7 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
     );
 
     try {
-      final res = await http.get(Uri.parse('http://localhost:3000/tickets/$id'));
+      final res = await http.get(Uri.parse('${AppConfig.baseUrl}/tickets/$id'));
       Navigator.of(context).pop();
 
       if (res.statusCode != 200) {
@@ -1349,7 +1350,7 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
     // Load users
     try {
       final response = await http.get(
-        Uri.parse('http://localhost:3000/users'),
+        Uri.parse('${AppConfig.baseUrl}/users'),
         headers: {'Content-Type': 'application/json'},
       );
       if (response.statusCode == 200) {
@@ -1486,7 +1487,7 @@ class _ProfessionalTicketsPageState extends State<ProfessionalTicketsPage> {
     // Load users
     try {
       final response = await http.get(
-        Uri.parse('http://localhost:3000/users'),
+        Uri.parse('${AppConfig.baseUrl}/users'),
         headers: {'Content-Type': 'application/json'},
       );
       if (response.statusCode == 200) {

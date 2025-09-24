@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:pms_app/config/app_config.dart';
 
 class AdminSettingsPage extends StatefulWidget {
   const AdminSettingsPage({super.key});
@@ -27,7 +28,7 @@ class _AdminSettingsPageState extends State<AdminSettingsPage> {
   Future<void> _loadLookups() async {
     setState(() => _loading = true);
     try {
-      final res = await http.get(Uri.parse('http://localhost:3000/lookups'));
+      final res = await http.get(Uri.parse('${AppConfig.baseUrl}/lookups'));
       if (res.statusCode == 200) {
         final data = List<Map<String, dynamic>>.from(json.decode(res.body));
         setState(() {
@@ -50,7 +51,7 @@ class _AdminSettingsPageState extends State<AdminSettingsPage> {
 
     try {
       final res = await http.post(
-        Uri.parse('http://localhost:3000/lookups'),
+        Uri.parse('${AppConfig.baseUrl}/lookups'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'type': _selectedType,
@@ -74,7 +75,7 @@ class _AdminSettingsPageState extends State<AdminSettingsPage> {
 
   Future<void> _deleteLookup(String id) async {
     try {
-      final res = await http.delete(Uri.parse('http://localhost:3000/lookups/$id'));
+      final res = await http.delete(Uri.parse('${AppConfig.baseUrl}/lookups/$id'));
       if (res.statusCode == 204) {
         _loadLookups();
         _showSuccess('Lookup deleted successfully');

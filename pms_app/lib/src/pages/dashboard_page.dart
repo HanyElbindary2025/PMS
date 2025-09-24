@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:pms_app/config/app_config.dart';
 
 class DashboardPage extends StatefulWidget {
 	const DashboardPage({super.key});
@@ -24,7 +25,7 @@ class _DashboardPageState extends State<DashboardPage> {
 	Future<void> _load() async {
 		setState(() => loading = true);
 		Future<int> count([String? status]) async {
-			final uri = Uri.parse('http://localhost:3000/tickets').replace(queryParameters: {
+        final uri = Uri.parse('${AppConfig.baseUrl}/tickets').replace(queryParameters: {
 				'page': '1', 'pageSize': '1', if (status != null) 'status': status,
 			});
 			final res = await http.get(uri);

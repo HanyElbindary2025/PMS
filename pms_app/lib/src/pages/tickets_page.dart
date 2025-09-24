@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:pms_app/config/app_config.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class TicketsPage extends StatefulWidget {
@@ -74,8 +75,8 @@ class _TicketsPageState extends State<TicketsPage> {
 		if (decision != null) body['decision'] = decision;
 		if (comment != null) body['comment'] = comment;
 		setState(() { _transitioning = true; });
-		final res = await http.post(
-			Uri.parse('http://localhost:3000/tickets/$id/transition'),
+    final res = await http.post(
+      Uri.parse('${AppConfig.baseUrl}/tickets/$id/transition'),
 			headers: { 'Content-Type': 'application/json' },
 			body: json.encode(body),
 		);
@@ -130,7 +131,7 @@ class _TicketsPageState extends State<TicketsPage> {
   Future<void> _openDetails(String id) async {
 		showDialog(context: context, barrierDismissible: false, builder: (_) => const Center(child: CircularProgressIndicator()));
 		try {
-			final res = await http.get(Uri.parse('http://localhost:3000/tickets/$id'));
+      final res = await http.get(Uri.parse('${AppConfig.baseUrl}/tickets/$id'));
 			Navigator.of(context).pop();
 			if (res.statusCode != 200) {
 				ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to load ticket')));
@@ -222,7 +223,7 @@ class _TicketsPageState extends State<TicketsPage> {
 
   Future<void> _load() async {
 		setState(() => _loading = true);
-		final uri = Uri.parse('http://localhost:3000/tickets').replace(queryParameters: {
+    final uri = Uri.parse('${AppConfig.baseUrl}/tickets').replace(queryParameters: {
 			'page': '$_page', 'pageSize': '$_pageSize', if (_status != null && _status!.isNotEmpty) 'status': _status!,
 		});
 		final res = await http.get(uri);

@@ -191,3 +191,4 @@ git push origin master  # Auto-deploys both backend and frontend
 ---
 
 *This summary was updated on September 23, 2025, after successful backend deployment and frontend deployment configuration.*
+

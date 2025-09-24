@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:pms_app/config/app_config.dart';
 
 class TeamAssignmentWidget extends StatefulWidget {
   final String ticketId;
@@ -38,7 +39,7 @@ class _TeamAssignmentWidgetState extends State<TeamAssignmentWidget> {
   Future<void> _loadUsers() async {
     try {
       final response = await http.get(
-        Uri.parse('http://localhost:3000/users'),
+        Uri.parse('${AppConfig.baseUrl}/users'),
         headers: {'Content-Type': 'application/json'},
       );
 
@@ -75,7 +76,7 @@ class _TeamAssignmentWidgetState extends State<TeamAssignmentWidget> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://localhost:3000/tickets/${widget.ticketId}/assign'),
+        Uri.parse('${AppConfig.baseUrl}/tickets/${widget.ticketId}/assign'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
           if (_selectedAssigneeId != null) 'assignedToId': _selectedAssigneeId,

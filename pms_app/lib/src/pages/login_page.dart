@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../pages/home_page.dart';
+import 'package:pms_app/config/app_config.dart';
 
 class LoginPage extends StatefulWidget {
 	const LoginPage({super.key});
@@ -32,8 +33,8 @@ class _LoginPageState extends State<LoginPage> {
 		
 		// Try to fetch role from backend first
 		try {
-			final response = await http.get(
-				Uri.parse('http://localhost:3000/users'),
+            final response = await http.get(
+                Uri.parse('${AppConfig.baseUrl}/users'),
 				headers: {'Content-Type': 'application/json'},
 			);
 			

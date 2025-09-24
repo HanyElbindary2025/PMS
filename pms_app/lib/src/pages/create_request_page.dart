@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:pms_app/config/app_config.dart';
 
 class CreateRequestPage extends StatefulWidget {
 	const CreateRequestPage({super.key});
@@ -53,7 +54,7 @@ class _CreateRequestPageState extends State<CreateRequestPage> {
 	String? _priority;
 
 	Future<void> _loadLookups() async {
-		final uri = Uri.parse('http://localhost:3000/lookups').replace(queryParameters: {
+    final uri = Uri.parse('${AppConfig.baseUrl}/lookups').replace(queryParameters: {
 			'type': ['PROJECT','PLATFORM','CATEGORY','PRIORITY'],
 		});
 		final res = await http.get(uri);
@@ -108,8 +109,8 @@ class _CreateRequestPageState extends State<CreateRequestPage> {
 				'percentComplete': _percentComplete.text.trim().isNotEmpty ? int.tryParse(_percentComplete.text.trim()) : null,
 			},
 		};
-		final res = await http.post(
-			Uri.parse('http://localhost:3000/public/requests'),
+    final res = await http.post(
+      Uri.parse('${AppConfig.baseUrl}/public/requests'),
 			headers: { 'Content-Type': 'application/json' },
 			body: json.encode(payload),
 		);

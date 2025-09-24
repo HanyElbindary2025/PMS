@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:pms_app/config/app_config.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 
@@ -99,14 +100,14 @@ class _ProfessionalDashboardPageState extends State<ProfessionalDashboardPage> {
 
   Future<void> _loadKPIMetrics() async {
     // Load total tickets
-    final totalRes = await http.get(Uri.parse('http://localhost:3000/tickets?page=1&pageSize=1'));
+    final totalRes = await http.get(Uri.parse('${AppConfig.baseUrl}/tickets?page=1&pageSize=1'));
     if (totalRes.statusCode == 200) {
       final totalBody = json.decode(totalRes.body);
       _totalTickets = totalBody['pagination']?['total'] ?? 0;
     }
 
     // Load closed tickets
-    final closedRes = await http.get(Uri.parse('http://localhost:3000/tickets?page=1&pageSize=1&status=CLOSED'));
+    final closedRes = await http.get(Uri.parse('${AppConfig.baseUrl}/tickets?page=1&pageSize=1&status=CLOSED'));
     if (closedRes.statusCode == 200) {
       final closedBody = json.decode(closedRes.body);
       _closedTickets = closedBody['pagination']?['total'] ?? 0;
@@ -126,7 +127,7 @@ class _ProfessionalDashboardPageState extends State<ProfessionalDashboardPage> {
     _phaseCounts.clear();
     
     for (final phase in _workflowPhases.keys) {
-      final res = await http.get(Uri.parse('http://localhost:3000/tickets?page=1&pageSize=1&status=$phase'));
+      final res = await http.get(Uri.parse('${AppConfig.baseUrl}/tickets?page=1&pageSize=1&status=$phase'));
       if (res.statusCode == 200) {
         final body = json.decode(res.body);
         _phaseCounts[phase] = body['pagination']?['total'] ?? 0;
@@ -138,7 +139,7 @@ class _ProfessionalDashboardPageState extends State<ProfessionalDashboardPage> {
     _priorityCounts.clear();
     
     for (final priority in _priorities.keys) {
-      final res = await http.get(Uri.parse('http://localhost:3000/tickets?page=1&pageSize=1&priority=$priority'));
+      final res = await http.get(Uri.parse('${AppConfig.baseUrl}/tickets?page=1&pageSize=1&priority=$priority'));
       if (res.statusCode == 200) {
         final body = json.decode(res.body);
         _priorityCounts[priority] = body['pagination']?['total'] ?? 0;
@@ -151,7 +152,7 @@ class _ProfessionalDashboardPageState extends State<ProfessionalDashboardPage> {
     
     final categories = ['INCIDENT', 'REQUEST', 'CHANGE', 'PROBLEM'];
     for (final category in categories) {
-      final res = await http.get(Uri.parse('http://localhost:3000/tickets?page=1&pageSize=1&category=$category'));
+      final res = await http.get(Uri.parse('${AppConfig.baseUrl}/tickets?page=1&pageSize=1&category=$category'));
       if (res.statusCode == 200) {
         final body = json.decode(res.body);
         _categoryCounts[category] = body['pagination']?['total'] ?? 0;
@@ -160,7 +161,7 @@ class _ProfessionalDashboardPageState extends State<ProfessionalDashboardPage> {
   }
 
   Future<void> _loadRecentTickets() async {
-    final res = await http.get(Uri.parse('http://localhost:3000/tickets?page=1&pageSize=5'));
+    final res = await http.get(Uri.parse('${AppConfig.baseUrl}/tickets?page=1&pageSize=5'));
     if (res.statusCode == 200) {
       final body = json.decode(res.body);
       _recentTickets = List<Map<String, dynamic>>.from(body['data'] ?? []);

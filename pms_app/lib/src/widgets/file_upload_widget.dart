@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:file_picker/file_picker.dart';
+import 'package:pms_app/config/app_config.dart';
 
 class FileUploadWidget extends StatefulWidget {
   final String ticketId;
@@ -36,7 +37,7 @@ class _FileUploadWidgetState extends State<FileUploadWidget> {
 
   Future<void> _loadExistingFiles() async {
     try {
-      final uri = Uri.parse('http://localhost:3000/attachments/ticket/${widget.ticketId}');
+      final uri = Uri.parse('${AppConfig.baseUrl}/attachments/ticket/${widget.ticketId}');
       if (widget.stageId != null) {
         uri.replace(queryParameters: {'stageId': widget.stageId!});
       }
@@ -101,7 +102,7 @@ class _FileUploadWidgetState extends State<FileUploadWidget> {
   Future<void> _uploadSingleFile(PlatformFile file) async {
     final request = http.MultipartRequest(
       'POST',
-      Uri.parse('http://localhost:3000/attachments/upload'),
+      Uri.parse('${AppConfig.baseUrl}/attachments/upload'),
     );
 
     request.fields['ticketId'] = widget.ticketId;
@@ -133,7 +134,7 @@ class _FileUploadWidgetState extends State<FileUploadWidget> {
   Future<void> _downloadFile(String attachmentId, String fileName) async {
     try {
       final res = await http.get(
-        Uri.parse('http://localhost:3000/attachments/download/$attachmentId'),
+        Uri.parse('${AppConfig.baseUrl}/attachments/download/$attachmentId'),
       );
       
       if (res.statusCode == 200) {
@@ -172,7 +173,7 @@ class _FileUploadWidgetState extends State<FileUploadWidget> {
     if (confirmed == true) {
       try {
         final res = await http.delete(
-          Uri.parse('http://localhost:3000/attachments/$attachmentId'),
+          Uri.parse('${AppConfig.baseUrl}/attachments/$attachmentId'),
         );
         
         if (res.statusCode == 200) {

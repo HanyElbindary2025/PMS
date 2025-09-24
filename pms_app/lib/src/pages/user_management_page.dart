@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:pms_app/config/app_config.dart';
 
 class UserManagementPage extends StatefulWidget {
   const UserManagementPage({super.key});
@@ -45,7 +46,7 @@ class _UserManagementPageState extends State<UserManagementPage> {
   Future<void> _loadUsers() async {
     setState(() => _loading = true);
     try {
-      final response = await http.get(Uri.parse('http://localhost:3000/users'));
+      final response = await http.get(Uri.parse('${AppConfig.baseUrl}/users'));
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         print('Raw API response: $data'); // Debug log
@@ -74,7 +75,7 @@ class _UserManagementPageState extends State<UserManagementPage> {
     setState(() => _creating = true);
     try {
       final response = await http.post(
-        Uri.parse('http://localhost:3000/users'),
+        Uri.parse('${AppConfig.baseUrl}/users'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'email': _emailController.text.trim(),
@@ -121,7 +122,7 @@ class _UserManagementPageState extends State<UserManagementPage> {
 
     if (confirmed == true) {
       try {
-        final response = await http.delete(Uri.parse('http://localhost:3000/users/$userId'));
+        final response = await http.delete(Uri.parse('${AppConfig.baseUrl}/users/$userId'));
         if (response.statusCode == 200) {
           _loadUsers();
           _showSuccess('User deleted successfully');
