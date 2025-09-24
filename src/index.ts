@@ -14,7 +14,33 @@ import { usersRouter } from './routes/users.js';
 const app = express();
 
 app.use(helmet());
-app.use(cors());
+
+// CORS configuration
+const defaultOrigins = ['https://pms-frontend-09gz.onrender.com'];
+const allowedOrigins = (process.env.CORS_ORIGINS || defaultOrigins.join(','))
+  .split(',')
+  .map((o) => o.trim())
+  .filter((o) => o.length > 0);
+
+const corsOptions: cors.CorsOptions = {
+  origin: (origin, callback) => {
+    if (!origin) {
+      // allow non-browser or same-origin requests
+      return callback(null, true);
+    }
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error('Not allowed by CORS'));
+  },
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  exposedHeaders: ['Content-Disposition'],
+  credentials: true,
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 app.use(express.json({ limit: '1mb' }));
 app.use(morgan('dev'));
 
