@@ -2,7 +2,7 @@ class AppConfig {
   // Production backend URL (will be set by Vercel environment variable)
   static const String baseUrl = String.fromEnvironment(
     'BACKEND_URL',
-    defaultValue: 'http://localhost:3000',
+    defaultValue: 'https://pms-backend-qeq7.onrender.com',
   );
   
   // API endpoints
