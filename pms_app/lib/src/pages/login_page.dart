@@ -20,18 +20,16 @@ class _LoginPageState extends State<LoginPage> {
 
 	Future<void> _login() async {
 		setState(() { _loading = true; _error = null; });
-		await Future.delayed(const Duration(milliseconds: 400));
-		// Demo: accept any non-empty email/password, store fake token & role
+		
+		// Validate input
 		if (_email.text.isEmpty || _password.text.isEmpty) {
 			setState(() { _loading = false; _error = 'Please enter email and password'; });
 			return;
 		}
-		final sp = await SharedPreferences.getInstance();
-		final email = _email.text.trim().toLowerCase();
-		String role = 'CREATOR'; // Default role
-		String? userId;
 		
-		// Try to fetch role from backend first
+		final email = _email.text.trim().toLowerCase();
+		
+		// Try to fetch user from backend
 		try {
             final response = await http.get(
                 Uri.parse('${AppConfig.baseUrl}/users'),
@@ -46,80 +44,47 @@ class _LoginPageState extends State<LoginPage> {
           );
           
           if (user != null) {
-            role = user['role'] as String;
-            userId = user['id'] as String;
-            print('✅ Role and ID fetched from backend: $role, $userId for $email');
+            // User found - proceed with login
+            final role = user['role'] as String;
+            final userId = user['id'] as String;
+            final userName = user['name'] as String;
+            
+            print('✅ User authenticated: $userName ($role) - $email');
+            
+            // Store user session
+            final sp = await SharedPreferences.getInstance();
+            await sp.setString('authToken', 'authenticated-token');
+            await sp.setString('userRole', role);
+            await sp.setString('userEmail', email);
+            await sp.setString('userId', userId);
+            await sp.setString('userName', userName);
+            
+            if (!mounted) return;
+            Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const HomePage()));
           } else {
-            print('⚠️ User not found in backend, using fallback role mapping');
-            role = _getFallbackRole(email);
-            userId = null;
+            // User not found - show error
+            setState(() { 
+              _loading = false; 
+              _error = 'Username not found. Please contact your administrator to create an account.'; 
+            });
+            print('❌ Login failed: User not found - $email');
           }
         } else {
-          print('⚠️ Backend not available, using fallback role mapping');
-          role = _getFallbackRole(email);
-          userId = null;
+          setState(() { 
+            _loading = false; 
+            _error = 'Unable to connect to server. Please try again later.'; 
+          });
+          print('❌ Login failed: Backend not available (${response.statusCode})');
         }
 		} catch (e) {
-			print('⚠️ Error fetching role from backend: $e, using fallback role mapping');
-			role = _getFallbackRole(email);
-			userId = null;
+			setState(() { 
+        _loading = false; 
+        _error = 'Connection error. Please check your internet connection and try again.'; 
+      });
+			print('❌ Login failed: Connection error - $e');
 		}
-		
-		await sp.setString('authToken', 'demo-token');
-		await sp.setString('userRole', role);
-		await sp.setString('userEmail', email);
-		if (userId != null) {
-			await sp.setString('userId', userId);
-		}
-		if (!mounted) return;
-		Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const HomePage()));
 	}
 
-	String _getFallbackRole(String email) {
-		// Fallback role mapping for demo accounts
-		switch (email) {
-			// New PMS accounts
-			case 'admin@pms.com':
-				return 'ADMIN';
-			case 'service.manager@pms.com':
-				return 'SERVICE_MANAGER';
-			case 'technical.analyst@pms.com':
-				return 'TECHNICAL_ANALYST';
-			case 'solution.architect@pms.com':
-				return 'SOLUTION_ARCHITECT';
-			case 'developer@pms.com':
-				return 'DEVELOPER';
-			case 'qa.engineer@pms.com':
-				return 'QA_ENGINEER';
-			case 'devops@pms.com':
-				return 'DEVOPS_ENGINEER';
-			case 'customer@pms.com':
-				return 'CREATOR';
-			// Legacy test accounts
-			case 'admin@test.com':
-				return 'ADMIN';
-			case 'manager@test.com':
-				return 'SERVICE_MANAGER';
-			case 'servicedesk@test.com':
-				return 'SERVICE_DESK';
-			case 'analyst@test.com':
-				return 'TECHNICAL_ANALYST';
-			case 'developer@test.com':
-				return 'DEVELOPER';
-			case 'qa@test.com':
-				return 'QA_ENGINEER';
-			case 'architect@test.com':
-				return 'SOLUTION_ARCHITECT';
-			case 'devops@test.com':
-				return 'DEVOPS_ENGINEER';
-			case 'creator@test.com':
-				return 'CREATOR';
-			case 'hany@admin.com':
-				return 'ADMIN';
-			default:
-				return 'CREATOR'; // Default for any other email
-		}
-	}
 
 	@override
 	Widget build(BuildContext context) {
@@ -133,6 +98,9 @@ class _LoginPageState extends State<LoginPage> {
 							mainAxisSize: MainAxisSize.min,
 							children: [
 								const Text('PMS Login', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
+								const SizedBox(height: 8),
+								const Text('Available accounts:', style: TextStyle(fontSize: 12, color: Colors.grey)),
+								const Text('admin@pms.com, service.manager@pms.com, developer@pms.com', style: TextStyle(fontSize: 10, color: Colors.grey)),
 								const SizedBox(height: 16),
 								TextField(controller: _email, decoration: const InputDecoration(labelText: 'Email')), 
 								const SizedBox(height: 12),
