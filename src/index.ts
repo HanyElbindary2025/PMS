@@ -16,7 +16,10 @@ const app = express();
 app.use(helmet());
 
 // CORS configuration
-const defaultOrigins = ['https://pms-frontend-09gz.onrender.com'];
+const defaultOrigins = [
+  'https://pms-frontend-09gz.onrender.com',
+  'https://pmsfrontend-two.vercel.app'
+];
 const allowedOrigins = (process.env.CORS_ORIGINS || defaultOrigins.join(','))
   .split(',')
   .map((o) => o.trim())
