@@ -17,10 +17,16 @@ git config --global --add safe.directory $PWD
 echo "Configuring Flutter for web..."
 flutter config --enable-web --no-analytics
 
+# Clean everything to force fresh build
+echo "Cleaning Flutter build cache..."
+flutter clean
+rm -rf build/
+rm -rf .dart_tool/
+
 # Get dependencies
 echo "Getting dependencies..."
 flutter pub get
 
-# Build web app
+# Build web app with cache busting
 echo "Building web app..."
-flutter build web --release --web-renderer html --base-href=/
+flutter build web --release --web-renderer html --base-href=/ --dart-define=BACKEND_URL=https://pms-backend-qeq7.onrender.com

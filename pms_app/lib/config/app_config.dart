@@ -1,9 +1,9 @@
 class AppConfig {
-  // Production backend URL (will be set by Render environment variable)
-  static const String baseUrl = 'https://pms-backend-qeq7.onrender.com';
+  // Production backend URL (will be set by build-time environment variable)
+  static const String baseUrl = String.fromEnvironment('BACKEND_URL', defaultValue: 'https://pms-backend-qeq7.onrender.com');
   
   // Force rebuild - remove this line after deployment
-  static const String buildTag = 'v4.0.0-vercel-cors-fix';
+  static const String buildTag = 'v5.0.0-nuclear-clean-build';
   
   // API endpoints
   static const String usersEndpoint = '/users';
