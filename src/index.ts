@@ -44,6 +44,13 @@ app.options('*', cors(corsOptions));
 app.use(express.json({ limit: '1mb' }));
 app.use(morgan('dev'));
 
+// Lightweight request logger to help diagnose CORS/origin and URL issues
+app.use((req: Request, _res: Response, next: NextFunction) => {
+  // eslint-disable-next-line no-console
+  console.log(`[req] ${req.method} ${req.originalUrl} origin=${req.headers.origin || 'n/a'}`);
+  next();
+});
+
 app.get('/', (_req: Request, res: Response) => {
   res.json({ 
     message: 'PMS Backend API is running!', 
@@ -63,6 +70,16 @@ app.get('/', (_req: Request, res: Response) => {
 
 app.get('/health', (_req: Request, res: Response) => {
   res.json({ ok: true, service: 'pms-backend', version: '0.1.0' });
+});
+
+// Expose effective CORS allowlist for diagnostics
+app.get('/version', (_req: Request, res: Response) => {
+  res.json({
+    service: 'pms-backend',
+    version: '0.1.0',
+    allowedOrigins,
+    nodeEnv: process.env.NODE_ENV || 'unknown',
+  });
 });
 
 app.use('/public', publicRouter);
