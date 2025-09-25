@@ -1,9 +1,6 @@
 class AppConfig {
   // Production backend URL (will be set by Render environment variable)
-  static const String baseUrl = String.fromEnvironment(
-    'BACKEND_URL',
-    defaultValue: 'https://pms-backend-qeq7.onrender.com',
-  );
+  static const String baseUrl = 'https://pms-backend-qeq7.onrender.com';
   
   // Force rebuild - remove this line after deployment
   static const String buildTag = 'v2.0.0-rebuild';
