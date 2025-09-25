@@ -3,7 +3,7 @@ class AppConfig {
   static const String baseUrl = 'https://pms-backend-qeq7.onrender.com';
   
   // Force rebuild - remove this line after deployment
-  static const String buildTag = 'v3.0.0-nuclear-rebuild';
+  static const String buildTag = 'v4.0.0-vercel-cors-fix';
   
   // API endpoints
   static const String usersEndpoint = '/users';
