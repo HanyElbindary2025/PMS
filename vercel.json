@@ -1,0 +1,5 @@
+{
+  "buildCommand": "cd pms_app && flutter pub get && flutter build web --release --web-renderer html --base-href=/",
+  "outputDirectory": "pms_app/build/web",
+  "installCommand": "cd pms_app && flutter pub get"
+}
