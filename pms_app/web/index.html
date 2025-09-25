@@ -32,17 +32,37 @@
   <title>PMS - Project Management System</title>
   <link rel="manifest" href="manifest.json">
   <!-- Force cache bust - remove after deployment -->
-  <meta name="cache-bust" content="v6.0.0-nuclear-runtime-config">
+  <meta name="cache-bust" content="v7.0.0-http-interceptor-nuclear">
 </head>
 <body>
   <script>
-    // Nuclear solution: Override any localhost references
-    window.addEventListener('load', function() {
-      console.log('🚀 NUCLEAR: Overriding any localhost references');
-      // Force override any cached localhost URLs
-      if (window.flutter_config) {
-        window.flutter_config.baseUrl = 'https://pms-backend-qeq7.onrender.com';
+    // NUCLEAR SOLUTION: Intercept ALL HTTP requests and redirect localhost
+    console.log('🚀 NUCLEAR: Installing HTTP request interceptor');
+    
+    // Override fetch to intercept all requests
+    const originalFetch = window.fetch;
+    window.fetch = function(url, options) {
+      if (typeof url === 'string' && url.includes('localhost:3000')) {
+        console.log('🚀 NUCLEAR: Intercepting localhost request:', url);
+        url = url.replace('http://localhost:3000', 'https://pms-backend-qeq7.onrender.com');
+        console.log('🚀 NUCLEAR: Redirected to:', url);
       }
+      return originalFetch(url, options);
+    };
+    
+    // Override XMLHttpRequest as well
+    const originalXHROpen = XMLHttpRequest.prototype.open;
+    XMLHttpRequest.prototype.open = function(method, url, ...args) {
+      if (typeof url === 'string' && url.includes('localhost:3000')) {
+        console.log('🚀 NUCLEAR: Intercepting XHR localhost request:', url);
+        url = url.replace('http://localhost:3000', 'https://pms-backend-qeq7.onrender.com');
+        console.log('🚀 NUCLEAR: XHR redirected to:', url);
+      }
+      return originalXHROpen.call(this, method, url, ...args);
+    };
+    
+    window.addEventListener('load', function() {
+      console.log('🚀 NUCLEAR: HTTP interceptor installed and ready');
     });
   </script>
   <script src="flutter_bootstrap.js" async></script>

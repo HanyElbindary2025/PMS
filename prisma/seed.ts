@@ -112,6 +112,13 @@ async function main() {
       department: 'Management',
       phone: '+1-555-0109',
     },
+    {
+      email: 'hany@pms.com',
+      name: 'Hany Elbindary',
+      role: 'ADMIN',
+      department: 'IT',
+      phone: '+1-555-0110',
+    },
   ];
 
   for (const user of users) {
