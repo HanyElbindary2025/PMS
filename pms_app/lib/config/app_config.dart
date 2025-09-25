@@ -1,9 +1,11 @@
+import 'runtime_config.dart';
+
 class AppConfig {
-  // Production backend URL (will be set by build-time environment variable)
-  static const String baseUrl = String.fromEnvironment('BACKEND_URL', defaultValue: 'https://pms-backend-qeq7.onrender.com');
+  // Use runtime configuration to avoid any build-time issues
+  static String get baseUrl => RuntimeConfig.baseUrl;
   
   // Force rebuild - remove this line after deployment
-  static const String buildTag = 'v5.0.0-nuclear-clean-build';
+  static const String buildTag = 'v6.0.0-runtime-config-nuclear';
   
   // API endpoints
   static const String usersEndpoint = '/users';

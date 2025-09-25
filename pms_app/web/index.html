@@ -32,9 +32,19 @@
   <title>PMS - Project Management System</title>
   <link rel="manifest" href="manifest.json">
   <!-- Force cache bust - remove after deployment -->
-  <meta name="cache-bust" content="v3.0.0-$(DateTime.now().millisecondsSinceEpoch)">
+  <meta name="cache-bust" content="v6.0.0-nuclear-runtime-config">
 </head>
 <body>
+  <script>
+    // Nuclear solution: Override any localhost references
+    window.addEventListener('load', function() {
+      console.log('🚀 NUCLEAR: Overriding any localhost references');
+      // Force override any cached localhost URLs
+      if (window.flutter_config) {
+        window.flutter_config.baseUrl = 'https://pms-backend-qeq7.onrender.com';
+      }
+    });
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>
