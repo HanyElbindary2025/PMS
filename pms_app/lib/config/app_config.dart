@@ -5,6 +5,9 @@ class AppConfig {
     defaultValue: 'https://pms-backend-qeq7.onrender.com',
   );
   
+  // Force rebuild - remove this line after deployment
+  static const String buildTag = 'v2.0.0-$(DateTime.now().millisecondsSinceEpoch)';
+  
   // API endpoints
   static const String usersEndpoint = '/users';
   static const String ticketsEndpoint = '/tickets';
