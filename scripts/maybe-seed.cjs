@@ -5,7 +5,7 @@
 */
 const { spawnSync } = require('node:child_process');
 
-const shouldSeed = String(process.env.SEED_ON_START || '').toLowerCase() === 'true';
+const shouldSeed = String(process.env.SEED_ON_START || 'true').toLowerCase() === 'true';
 
 if (!shouldSeed) {
   console.log('Skipping DB seed (SEED_ON_START not true).');
