@@ -29,8 +29,10 @@
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
 
-  <title>pms_app</title>
+  <title>PMS - Project Management System</title>
   <link rel="manifest" href="manifest.json">
+  <!-- Force cache bust - remove after deployment -->
+  <meta name="cache-bust" content="v3.0.0-$(DateTime.now().millisecondsSinceEpoch)">
 </head>
 <body>
   <script src="flutter_bootstrap.js" async></script>
