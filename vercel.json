@@ -1,5 +1,5 @@
 {
-  "buildCommand": "curl -L https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_3.24.1-stable.tar.xz | tar -xJ && export PATH=$PATH:$PWD/flutter/bin && flutter config --enable-web && flutter pub get && flutter build web --release --web-renderer html --base-href=/",
+  "buildCommand": "chmod +x build.sh && ./build.sh",
   "outputDirectory": "build/web",
-  "installCommand": "curl -L https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_3.24.1-stable.tar.xz | tar -xJ && export PATH=$PATH:$PWD/flutter/bin && flutter config --enable-web"
+  "installCommand": "echo 'Install handled by build script'"
 }
